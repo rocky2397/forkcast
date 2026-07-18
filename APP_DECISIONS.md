@@ -1,7 +1,8 @@
-# Recipes App — Product & Architecture Decisions
+# Forkcast — Product & Architecture Decisions
 
 **Date:** 2026-07-18
-**Status:** Agreed (pre-implementation). Update this file whenever a decision changes.
+**Status:** Prototyping. Update this file whenever a decision changes.
+**Repo:** https://github.com/rocky2397/forkcast (this clone on the RecipesDev volume is canonical)
 **Companion doc:** `EPICURE_PAPER_NOTES.md` (the embeddings this app builds on)
 
 ---
@@ -64,7 +65,7 @@ A personal **food inventory app** that:
 
 | # | Decision | Choice | Rationale / alternatives rejected |
 |---|---|---|---|
-| D1 | Recipe source | **Curated dataset** — import a public corpus (RecipeNLG as primary candidate, 2.2M recipes; same corpus family Epicure trained on), normalize a usable subset to the 1,790 canonical ingredients once, store locally | Deterministic, free at runtime, offline-capable. Rejected: LLM-generated on demand (cost per query, unstable, unverified nutrition); hybrid (revisit in Phase 3 if dataset coverage disappoints) |
+| D1 *(amended 2026-07-18 after prototype)* | Recipe source | **Curated dataset: food.com dump** (`AkashPS11/recipes_data_food.com` on HuggingFace, 1M+ recipes, CSV) — parsed ingredient lists **plus per-serving nutrition already included** (kcal, fat, sat. fat, carbs, sugar, fiber, protein, sodium), servings, ratings, categories. RecipeNLG demoted to fallback (its HF mirror needs a legacy loading script / manual download, and it carries no nutrition) | Validated by prototype (`prototype/recipe_coverage.py`, n=1,228): **94.9% of ingredient mentions map to Epicure's 1,790 vocab; 95.1% of recipes match at ≥80%; 68.5% fully** — with a small alias table (pepper→black_pepper, cilantro→coriander, gingerroot→ginger, …) expected ~97%+. Built-in nutrition removes the per-recipe USDA computation from Phase 1 entirely. Rejected: LLM-generated recipes (cost, unstable, unverified nutrition) |
 | D2 | Stack | **FastAPI (Python) backend + React PWA frontend** | Backend uses `epicure.py` + numpy directly and pandas for USDA data — the whole data side stays in its native ecosystem. Rejected: full-TS Next.js (would need embedding export + operator reimplementation); Python+HTMX (weaker phone/app-like UX for logging and charts) |
 | D3 | MVP focus | **Inventory → recipe suggestions first** | The novel, Epicure-powered part; macros shown per recipe from day one; taste data starts accumulating as soon as cooks are logged. Rejected: macro-tracker-first (commodity feature, delays the differentiator) |
 | D4 | Platform path | **PWA website with login first**, installable on phone; native app only if PWA proves limiting | Matches "website first, phone later" with zero rewrite |
@@ -227,7 +228,39 @@ data lands on the internal drive.
 
 ---
 
-## 8. Attribution
+## 8. Prototype findings (2026-07-18)
+
+Environment is live: APFS dev volume mounted, venv (Python 3.12, pinned — the
+system `python3` is Anaconda's 3.8 via PATH shadowing), Epicure-Cooc weights
+downloaded to the SSD HF cache, loader smoke-tested.
+
+1. **Epicure loader verified.** `neighbors("chicken")` reproduces the paper's
+   Table 6 exactly (garlic .39, onion .37, black_pepper .36, turkey .35,
+   carrot .34). Vocab confirmed at 1,790.
+2. **Recipe coverage validated** — see amended D1. The main risk of the
+   curated-dataset plan is retired.
+3. **⚠️ Shipped cuisine poles ≠ paper's.** `supervised_poles.json` contains
+   "heuristically constructed" cuisine directions (model card's own words).
+   SLERP toward them works mechanically but the top ranks are dominated by
+   universal staples (salt, onion, garlic) — the paper's hero results
+   (rice+South_Asian → dals) sit at ranks 14–25. Mean-centering does not fix
+   it. **Consequence for Phase 3 (cuisine dial):** filter universal staples
+   from steering results (build our own "universal" list, e.g. top-N by
+   corpus frequency) or re-derive cuisine poles from tagged ingredients.
+   The 0° case and plain neighbors are unaffected.
+4. **Companion dataset gaps:** `vocab.csv` ships name + node IDs only — **no
+   USDA/FlavorDB anchor columns** (despite the paper's claim), and no
+   per-ingredient universal/cuisine tags. Ingredient-level nutrition mapping
+   (needed for ad-hoc whole-food logging in Phase 2) is our own task —
+   mitigated by food.com per-recipe nutrition (D1) and label scanning (D9).
+5. **Alias table** is the cheapest next quality win for the normalizer:
+   ~10–20 entries fix the bulk of unmatched terms (pepper, green pepper,
+   cilantro, cornflour, gingerroot, cayenne, catsup, bay leaves, …), plus
+   proper plural handling for multi-word terms ("bay leaves" → bay_leaf).
+
+---
+
+## 9. Attribution
 
 Epicure embeddings: Radzikowski & Chen (KAIKAKU.AI), arXiv:2605.22391,
 weights CC BY 4.0 via HuggingFace (`Kaikaku/epicure-{cooc,core,chem}`).
