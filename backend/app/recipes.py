@@ -52,6 +52,10 @@ def cookable(
         """,
         (*staples, max_missing, min_matched_frac, limit),
     ).fetchall()
+    return _rows_to_dicts(rows)
+
+
+def _rows_to_dicts(rows):
     return [
         {
             "id": row["id"],

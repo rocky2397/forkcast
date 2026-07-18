@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
-from . import embeddings, recipes
+from . import embeddings, recipes, taste
 from .db import connect
 from .normalize import Normalizer
 
@@ -151,9 +151,31 @@ def cookable_recipes(
     assume_staples: bool = True,
     limit: int = Query(20, ge=1, le=100),
 ):
-    """Recipes you can cook now (max_missing=0) or almost (1-3 missing)."""
+    """Recipes you can cook now (max_missing=0) or almost (1-3 missing).
+
+    When cooks have been logged, results are re-ranked by taste similarity
+    within each missing-count group (fewest-missing always wins first).
+    """
     with connect() as con:
+        taste_vec, n_meals = taste.taste_vector(con)
+        pool = limit if taste_vec is None else min(limit * 8, 300)
         results = recipes.cookable(
-            con, max_missing=max_missing, assume_staples=assume_staples, limit=limit
+            con, max_missing=max_missing, assume_staples=assume_staples, limit=pool
         )
-    return {"count": len(results), "recipes": results}
+        if taste_vec is not None:
+            scores = taste.score_recipes(con, [r["id"] for r in results], taste_vec)
+            for r in results:
+                r["taste_sim"] = round(scores.get(r["id"], 0.0), 3)
+            results.sort(key=lambda r: (r["ingredients_missing"], -r["taste_sim"]))
+            results = results[:limit]
+    return {"count": len(results), "personalized": taste_vec is not None, "recipes": results}
+
+
+@app.get("/api/taste")
+def taste_profile():
+    """The learned taste profile: meal count + defining ingredients."""
+    with connect() as con:
+        vec, n_meals = taste.taste_vector(con)
+    if vec is None:
+        return {"meals_logged": 0, "profile": []}
+    return {"meals_logged": n_meals, "profile": taste.nearest_ingredients(vec)}
