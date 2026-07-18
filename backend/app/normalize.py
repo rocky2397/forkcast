@@ -56,6 +56,13 @@ ALIASES = {
     "oatmeal": "oats",
     "red chili": "chili_pepper",
     "ketjap manis": "sweet_soy_sauce",
+    # bare cheese names -> the vocab's *_cheese entries
+    "parmesan": "parmesan_cheese",
+    "cheddar": "cheddar_cheese",
+    "mozzarella": "mozzarella_cheese",
+    "gouda": "gouda_cheese",
+    "feta": "feta_cheese",
+    "gruyere": "gruyere_cheese",
 }
 
 DESCRIPTORS = {
