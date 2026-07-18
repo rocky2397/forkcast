@@ -14,6 +14,12 @@ export interface CookableRecipe {
   ingredients_needed: number;
   ingredients_missing: number;
   missing: string[];
+  taste_sim?: number;
+}
+
+export interface TasteProfile {
+  meals_logged: number;
+  profile: { ingredient: string; similarity: number }[];
 }
 
 export interface RecipeDetail {
@@ -51,9 +57,10 @@ export const api = {
   normalize: (q: string) =>
     req<{ query: string; canonical: string | null }>(`/api/normalize?q=${encodeURIComponent(q)}`),
   cookable: (maxMissing: number) =>
-    req<{ count: number; recipes: CookableRecipe[] }>(
+    req<{ count: number; personalized: boolean; recipes: CookableRecipe[] }>(
       `/api/recipes/cookable?max_missing=${maxMissing}&limit=30`,
     ),
+  taste: () => req<TasteProfile>("/api/taste"),
   recipe: (id: number) => req<RecipeDetail>(`/api/recipes/${id}`),
   logCooked: (id: number) =>
     req<{ logged: boolean; meal_log_id: number }>(`/api/recipes/${id}/cooked`, { method: "POST" }),
