@@ -1,0 +1,234 @@
+# Recipes App — Product & Architecture Decisions
+
+**Date:** 2026-07-18
+**Status:** Agreed (pre-implementation). Update this file whenever a decision changes.
+**Companion doc:** `EPICURE_PAPER_NOTES.md` (the embeddings this app builds on)
+
+---
+
+## 1. Vision
+
+A personal **food inventory app** that:
+
+1. Tracks what ingredients I have at home.
+2. Suggests **recipes I can cook right now** from that inventory.
+3. **Learns my taste** from what I log (dishes cooked, meals eaten) and ranks
+   suggestions accordingly.
+4. Tracks **calories and macros** of everything I eat, suggests daily targets
+   based on my fitness goals, and steers recipe suggestions toward hitting
+   those targets.
+5. Runs on my **phone**; a login-based **website first** is acceptable
+   → built as a **PWA** so the website is installable on the phone with no
+   rewrite later.
+
+---
+
+## 2. Honest assessment (Claude's opinion, agreed as framing)
+
+- The idea is solid and buildable, but it is **four products in one**:
+  inventory tracker, recipe recommender, taste learner, macro coach.
+  The main risk is scope, not feasibility → we phase it (Section 5).
+- The **Epicure embeddings are an unusually good fit** for the taste-learning
+  and substitution features — they were literally built for "what pairs with /
+  substitutes for X" queries.
+- Epicure **does not solve** recipes, quantities, or goal-setting. Those are
+  separate subsystems we build conventionally.
+
+### Where Epicure helps directly
+
+| Feature | Mechanism | Model |
+|---|---|---|
+| Taste profile | User taste vector = time-decayed mean of embeddings of ingredients in liked/cooked dishes; rank recipes by cosine similarity | Cooc (recipe-context is the right notion of "my kind of cooking") |
+| Substitutions | "Recipe needs basil, you have tarragon" → Chem nearest neighbours filtered to inventory | Chem |
+| Shopping suggestions | "Buy X to unlock N more recipes" → Cooc neighbours of current inventory | Cooc |
+| Cuisine exploration | SLERP steering ("more Mediterranean this week") | Any; Chem has sharpest directions |
+| Nutrition vocabulary | The 1,790 canonical ingredients are already anchored to USDA FoodData Central | All (shared vocab) |
+
+### Gaps Epicure does NOT cover (we build these)
+
+1. **No recipes** — it is ingredient-level only. We need a recipe corpus
+   normalized to the 1,790-ingredient vocabulary. *This normalization is the
+   single biggest data-engineering task in the project.*
+2. **No quantities** — macro tracking needs portion parsing
+   ("200g chicken breast") + USDA per-100g nutrient data.
+3. **No input normalization** — mapping free-text user input ("half a jar of
+   passata") to canonical ingredients needs an LLM call (Claude Haiku-class,
+   cheap) with fuzzy string matching as fallback/cache.
+4. **No goal logic** — daily calorie/macro targets come from standard formulas
+   (Mifflin-St Jeor BMR × activity factor, protein by g/kg bodyweight,
+   cut/bulk adjustment). Transparent formulas, no ML — a feature, not a gap.
+
+---
+
+## 3. Decisions (agreed 2026-07-18)
+
+| # | Decision | Choice | Rationale / alternatives rejected |
+|---|---|---|---|
+| D1 | Recipe source | **Curated dataset** — import a public corpus (RecipeNLG as primary candidate, 2.2M recipes; same corpus family Epicure trained on), normalize a usable subset to the 1,790 canonical ingredients once, store locally | Deterministic, free at runtime, offline-capable. Rejected: LLM-generated on demand (cost per query, unstable, unverified nutrition); hybrid (revisit in Phase 3 if dataset coverage disappoints) |
+| D2 | Stack | **FastAPI (Python) backend + React PWA frontend** | Backend uses `epicure.py` + numpy directly and pandas for USDA data — the whole data side stays in its native ecosystem. Rejected: full-TS Next.js (would need embedding export + operator reimplementation); Python+HTMX (weaker phone/app-like UX for logging and charts) |
+| D3 | MVP focus | **Inventory → recipe suggestions first** | The novel, Epicure-powered part; macros shown per recipe from day one; taste data starts accumulating as soon as cooks are logged. Rejected: macro-tracker-first (commodity feature, delays the differentiator) |
+| D4 | Platform path | **PWA website with login first**, installable on phone; native app only if PWA proves limiting | Matches "website first, phone later" with zero rewrite |
+| D5 | Embeddings | Use released **`Kaikaku/epicure-cooc` / `-core` / `-chem`** weights (CC BY 4.0, attribution required) — do not retrain | 1,790×300 matrices are tiny; load all three in memory |
+| D6 | Taste model | **Embedding-centroid ranking** (cosine to time-decayed user taste vector), not collaborative filtering / trained recommender | Single-user app = no collaborative data; centroid approach is explainable and works from the first logged meal |
+| D7 | Goal targets | **Formula-based** (Mifflin-St Jeor + activity + goal), user-overridable | Transparent; fitness users want to see the math |
+| D8 *(added 2026-07-18, amended same day)* | Inventory input | **Photo-based logging is a core input method** (not just text): snap a picture of groceries → Claude vision extracts a structured item list → user confirms/edits → items committed to inventory. **Vision model: `claude-haiku-4-5`** with structured outputs (`messages.parse()` + Pydantic schema) so extraction returns validated JSON, never free text; optional "rescan with better model" button falls back to `claude-opus-4-8` for garbled results | User requirement. Haiku chosen for cost (~$0.005/scan vs ~$0.02–0.06 on Opus — ~€0.50/month at daily use); the extraction is pure read-into-schema work with no reasoning, and the mandatory confirm screen makes occasional misreads cheap to catch. Always show the confirm screen before committing — counting/occlusion errors in photos are expected |
+| D9 *(added 2026-07-18, amended same day)* | Label nutrition | **Barcode-first, vision-fallback** for packaged food: (1) scan the barcode in-browser (free JS library, no API call) → look up **Open Food Facts** (free, open database, strong German coverage) → per-100g nutrition saved to `products`; (2) only if the product is missing or has no barcode, photograph the **Nährwerttabelle** → `claude-haiku-4-5` extracts per-100g values (kJ/kcal, Fett, davon gesättigte Fettsäuren, Kohlenhydrate, davon Zucker, Eiweiß, Salz) + portion size → confirm → cached in `products` so each product is handled once | EU regulation 1169/2011 standardizes the table format, so even a small vision model reads it reliably; barcode-first makes the majority of packaged-product lookups cost exactly zero. Complements USDA rather than replacing it: USDA covers whole ingredients (chicken, lentils), products cover branded/packaged foods (protein bars, sauces, quark) that USDA maps poorly. Rejected: self-hosted vision models / Tesseract OCR (pennies saved, real ops burden, worse accuracy) |
+| D10 *(added 2026-07-18)* | Storage policy | **Everything lives on the external SSD — no persistent storage on the internal PC drive, including caches.** All tool caches are redirected via env vars (see Section 8): HuggingFace model downloads (`HF_HOME`), pip (`PIP_CACHE_DIR`), npm (`npm_config_cache`), Python venv and `node_modules` inside the project, database file(s) and recipe corpus in a project `data/` dir | User requirement. Without redirection, the Epicure weights alone would land in `~/.cache/huggingface` on the internal disk. Honest caveat: small *ephemeral* OS temp files during process runtime (`/tmp`) can't be fully avoided at the OS level — the policy covers all persistent storage |
+| D11 *(added 2026-07-18)* | Dev volume | **APFS sparse-bundle disk image stored on the ExFAT SSD**, mounted as the working volume for development | The SSD is ExFAT (verified via `diskutil`), which lacks symlinks and Unix permissions — breaking Python venvs and npm's `node_modules/.bin`. A `.sparsebundle` file lives on the SSD (all bytes stay physically there), is non-destructive, keeps the SSD Windows-readable, and mounts as a real APFS volume where all tooling works. Rejected: reformatting to APFS (destructive, kills Windows compat); staying on ExFAT with workarounds (fragile). Trade-off accepted: the image must be mounted before working (scripted in `dev.sh`) |
+
+---
+
+## 4. Architecture sketch
+
+```
+┌────────────────────────────  React PWA (login)  ───────────────────────────┐
+│  Inventory UI · Recipe feed · Meal log · Macro dashboard · Goals           │
+└─────────────────────────────────┬──────────────────────────────────────────┘
+                                  │ REST/JSON
+┌─────────────────────────────────▼──────────────────────────────────────────┐
+│                          FastAPI backend (Python)                          │
+│                                                                            │
+│  Epicure service      Recipe matcher        Nutrition service              │
+│  - 3 embedding sets   - inventory ∩ recipe  - USDA per-100g lookups        │
+│    in memory (numpy)    ingredient sets     - portion parsing              │
+│  - neighbors/slerp/   - substitution-aware  - daily totals vs targets      │
+│    mode lookup          "almost cookable"                                  │
+│                                                                            │
+│  Taste service        Normalizer            Goal service                   │
+│  - user taste vector  - free text → 1,790   - Mifflin-St Jeor + activity   │
+│    (time-decayed        canonical (fuzzy      + goal → kcal/protein/       │
+│    centroid)            match, LLM fallback,   carb/fat targets            │
+│  - recipe ranking       cached)                                            │
+│                                                                            │
+│  Vision intake service (Claude API, claude-haiku-4-5; opus-4-8 rescan)     │
+│  - grocery photo → structured item list (messages.parse + Pydantic)        │
+│  - barcode → Open Food Facts lookup (free, no LLM call) → products cache   │
+│  - Nährwerttabelle photo (fallback) → per-100g record → products cache     │
+│  - extracted names run through the Normalizer → canonical ingredients      │
+│  - nothing committed without user confirmation in the UI                   │
+└─────────────────────────────────┬──────────────────────────────────────────┘
+                                  │
+                    Postgres (SQLite acceptable for MVP)
+     users · inventory_items · recipes (normalized) · meal_log · goals
+     · products (label-scanned packaged foods)
+```
+
+**Recipe ranking score (Phase 2+):** weighted blend of
+`cookability` (fraction of ingredients in inventory, substitutions counted at
+a discount) + `taste` (cosine to user vector) + `macro fit` (how well the
+recipe fills the remaining daily budget). Weights tunable; start 50/30/20.
+
+### Data model (first cut)
+
+- `users` — auth, bodyweight, height, age, sex, activity level, goal (cut/maintain/bulk)
+- `ingredients` — the 1,790 canonical entries + USDA nutrient anchors (per 100g)
+- `inventory_items` — user, ingredient_id, quantity (optional at first), added_at
+- `recipes` — title, source, servings, normalized ingredient list (ids + amounts), per-serving macros (computed), cuisine tags
+- `products` — label-scanned packaged foods: name, brand, optional barcode, per-100g macros (kcal, fat, saturates, carbs, sugars, protein, salt), portion size, link to nearest canonical ingredient, source photo reference
+- `meal_log` — user, timestamp, recipe_id OR ad-hoc ingredient list OR product_id + amount, servings, computed macros, liked (bool/rating)
+- `goals` — computed targets + user overrides, effective_from
+
+---
+
+## 5. Roadmap (phased)
+
+### Phase 1 — "What can I cook?" (MVP)
+- [ ] Login (single user is fine; simple email+password or magic link)
+- [ ] Data pipeline: import recipe corpus subset → normalize ingredients to
+      canonical vocab → compute per-serving macros via USDA (**biggest task**)
+- [ ] Inventory CRUD (text input with normalizer; no quantities required yet)
+- [ ] **Photo inventory intake (D8):** upload/camera capture → Claude vision
+      extraction → confirm/edit screen → commit to inventory
+- [ ] Recipe suggestions: exact-match cookability ranking, macros displayed
+- [ ] "Log that I cooked this" button (starts collecting taste data immediately)
+
+### Phase 2 — Taste + fitness
+- [ ] Meal logging (recipes + ad-hoc foods with portions)
+- [ ] **Packaged-product intake (D9):** in-browser barcode scan → Open Food
+      Facts lookup (free); fallback: photograph the Nährwerttabelle →
+      Haiku vision extraction → confirm → saved to `products`; logging a
+      product thereafter costs zero API calls (cache hit)
+- [ ] Goal onboarding → suggested kcal/macro targets (overridable)
+- [ ] Macro dashboard: today/week vs targets
+- [ ] Taste vector from logged cooks/likes → taste-aware ranking
+- [ ] Macro-fit term in ranking ("high-protein suggestions when protein is behind")
+
+### Phase 3 — The clever stuff
+- [ ] Substitution-aware "almost cookable" recipes (Chem neighbours ∩ inventory)
+- [ ] Shopping suggestions ("buy X to unlock N recipes") (Cooc neighbours)
+- [ ] Cuisine exploration dial (SLERP; explore ↔ refine slider)
+- [ ] Inventory depletion on logged cooks; expiry nudges
+- [ ] PWA polish: offline cache, install prompt, mobile-first layout pass
+- [ ] Revisit D1: LLM recipe-gap-filling if dataset coverage disappoints
+
+---
+
+## 6. Open questions (decide when they block work)
+
+1. Which recipe corpus subset and how large? (Quality/curation vs coverage —
+   decide during Phase 1 pipeline work after inspecting RecipeNLG.)
+2. Quantity tracking in inventory: full amounts, or just have/have-not with
+   staples flagged? (Start have-not + staples; amounts only if depletion
+   tracking proves wanted.)
+3. Barcode scanning / photo input for logging? (Phase 3+ at the earliest.)
+4. Multi-user from the start or hardcode single user? (Schema supports users;
+   UI can stay single-user.)
+5. LLM budget: vision intake (D8/D9 fallback) and normalizer fallback are the
+   only paid calls. On `claude-haiku-4-5` a scan is ~$0.005; expected total
+   vision cost well under €1/month, since barcode + Open Food Facts resolves
+   most packaged products for free and the `products` cache means each item
+   is handled only once. (Barcode-first was promoted from open question to
+   decided — see D9.)
+
+---
+
+## 7. Storage & environment setup (SSD-only, D10/D11)
+
+### One-time: create the APFS dev volume (sparse bundle on the ExFAT SSD)
+
+```bash
+# 100 GB is a *ceiling* — a sparse bundle only occupies what's actually written
+hdiutil create -size 100g -type SPARSEBUNDLE -fs APFS \
+  -volname "RecipesDev" "/Volumes/Extreme SSD/RecipesDev.sparsebundle"
+```
+
+### Every session: mount before working (goes in `dev.sh`)
+
+```bash
+hdiutil attach "/Volumes/Extreme SSD/RecipesDev.sparsebundle"
+# → mounts at /Volumes/RecipesDev  (code, venv, node_modules, data all live here)
+cd /Volumes/RecipesDev/recipes_app
+```
+
+Unmount with `hdiutil detach /Volumes/RecipesDev` (or Finder eject) before
+unplugging the SSD.
+
+### Cache redirection (exported by `dev.sh` / `.envrc`, never set globally)
+
+| Env var | Points to | Keeps off the internal disk |
+|---|---|---|
+| `HF_HOME` | `/Volumes/RecipesDev/caches/huggingface` | Epicure model weights + HF hub cache (default `~/.cache/huggingface`) |
+| `PIP_CACHE_DIR` | `/Volumes/RecipesDev/caches/pip` | pip wheel/download cache (default `~/Library/Caches/pip`) |
+| `npm_config_cache` | `/Volumes/RecipesDev/caches/npm` | npm package cache (default `~/.npm`) |
+
+Additionally, by construction inside the dev volume: the Python venv
+(`.venv/`), `node_modules/`, the SQLite database, the recipe corpus, and all
+build artifacts. If Postgres is ever adopted (Section 4), its data directory
+must be created on the dev volume (`initdb -D /Volumes/RecipesDev/pgdata`).
+
+**Placement note:** the paper and these planning docs currently sit in
+`/Volumes/Extreme SSD/stuff/recipes_app` (ExFAT side) — fine for documents.
+The *code* project gets created inside the mounted APFS volume, with the
+planning docs copied or moved in when scaffolding starts.
+
+**Known limitation (accepted):** truly ephemeral OS temp files written to
+`/tmp` during process runtime cannot be redirected wholesale; no *persistent*
+data lands on the internal drive.
+
+---
+
+## 8. Attribution
+
+Epicure embeddings: Radzikowski & Chen (KAIKAKU.AI), arXiv:2605.22391,
+weights CC BY 4.0 via HuggingFace (`Kaikaku/epicure-{cooc,core,chem}`).
+Attribution must appear in the app's about/credits page.

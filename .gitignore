@@ -1,0 +1,22 @@
+# macOS / ExFAT junk
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Paper PDF — copyrighted; linked from the notes instead
+paper/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Local data, caches, secrets
+data/
+caches/
+.env
+*.sparsebundle
