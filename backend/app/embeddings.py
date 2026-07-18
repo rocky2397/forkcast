@@ -46,3 +46,33 @@ def neighbors(ingredient: str, model: str = "cooc", k: int = 5):
         {"ingredient": name, "similarity": round(float(sim), 4)}
         for name, sim in get_model(model).neighbors(ingredient, k=k)
     ]
+
+
+@lru_cache(maxsize=3)
+def unit_matrix(model: str = "cooc"):
+    """Row-normalized embedding matrix (n_vocab, 300) as float32 numpy."""
+    import numpy as np
+
+    m = get_model(model)
+    E = m.E if hasattr(m, "E") else m.embeddings
+    E = np.asarray(E, dtype="float32")
+    return E / np.linalg.norm(E, axis=1, keepdims=True)
+
+
+def ingredient_vector(name: str, model: str = "cooc"):
+    """Unit vector for a canonical ingredient, or None if not in vocab."""
+    idx = get_model(model).vocab.get(name)
+    if idx is None:
+        return None
+    return unit_matrix(model)[idx]
+
+
+def nearest_to_vector(vec, model: str = "cooc", k: int = 10):
+    """Nearest canonical ingredients to an arbitrary unit vector."""
+    import numpy as np
+
+    m = get_model(model)
+    sims = unit_matrix(model) @ vec
+    names = sorted(m.vocab, key=m.vocab.get)
+    order = np.argsort(-sims)[:k]
+    return [(names[i], float(sims[i])) for i in order]
