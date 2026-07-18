@@ -25,6 +25,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Forkcast API", lifespan=lifespan)
 
+# Single-user app on a private LAN; permissive CORS is acceptable here and
+# lets the phone reach the API during development (revisit with auth).
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/health")
 def health():
@@ -90,6 +101,48 @@ def remove_inventory(name: str):
     if cur.rowcount == 0:
         raise HTTPException(404, f"not in inventory: {name!r}")
     return {"removed": canonical}
+
+
+@app.get("/api/recipes/{recipe_id:int}")
+def recipe_detail(recipe_id: int):
+    import json as _json
+
+    with connect() as con:
+        r = con.execute("SELECT * FROM recipes WHERE id = ?", (recipe_id,)).fetchone()
+        if r is None:
+            raise HTTPException(404, f"no recipe {recipe_id}")
+        ings = con.execute(
+            """SELECT ri.raw, ri.canonical, inv.canonical IS NOT NULL AS in_inventory
+               FROM recipe_ingredients ri
+               LEFT JOIN inventory inv ON inv.canonical = ri.canonical
+               WHERE ri.recipe_id = ?""",
+            (recipe_id,),
+        ).fetchall()
+    return {
+        "id": r["id"],
+        "name": r["name"],
+        "minutes": r["minutes"],
+        "description": r["description"],
+        "steps": _json.loads(r["steps"] or "[]"),
+        "calories": r["calories"],
+        "protein_g": r["protein_g"],
+        "carbs_g": r["carbs_g"],
+        "fat_g": r["fat_g"],
+        "ingredients": [
+            {"raw": i["raw"], "canonical": i["canonical"], "in_inventory": bool(i["in_inventory"])}
+            for i in ings
+        ],
+    }
+
+
+@app.post("/api/recipes/{recipe_id:int}/cooked")
+def log_cooked(recipe_id: int):
+    with connect() as con:
+        if con.execute("SELECT 1 FROM recipes WHERE id = ?", (recipe_id,)).fetchone() is None:
+            raise HTTPException(404, f"no recipe {recipe_id}")
+        cur = con.execute("INSERT INTO meal_log (recipe_id) VALUES (?)", (recipe_id,))
+        con.commit()
+    return {"logged": True, "meal_log_id": cur.lastrowid, "recipe_id": recipe_id}
 
 
 @app.get("/api/recipes/cookable")

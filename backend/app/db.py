@@ -36,6 +36,13 @@ CREATE TABLE IF NOT EXISTS inventory (
     canonical TEXT PRIMARY KEY,
     added_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS meal_log (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id INTEGER REFERENCES recipes(id),   -- NULL for future ad-hoc meals
+    logged_at TEXT NOT NULL DEFAULT (datetime('now')),
+    liked     INTEGER                            -- NULL unknown, 0/1 once rated
+);
 """
 
 
