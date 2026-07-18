@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
-import { api, pretty, type InventoryItem } from "../api";
+import { useEffect, useRef, useState } from "react";
+import { api, pretty, type InventoryItem, type ScanProposal } from "../api";
+import { ScanConfirm } from "./ScanConfirm";
 
 export function Inventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [proposals, setProposals] = useState<ScanProposal[] | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const refresh = () => api.inventory().then((r) => setItems(r.items));
   useEffect(() => {
@@ -38,8 +42,46 @@ export function Inventory() {
     await refresh();
   }
 
+  async function onPhoto(file: File | undefined) {
+    if (!file) return;
+    setScanning(true);
+    setFeedback(null);
+    try {
+      const res = await api.scanPhoto(file);
+      setProposals(res.proposals);
+    } catch (e) {
+      setFeedback(`scan failed: ${e}`);
+    } finally {
+      setScanning(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  if (proposals) {
+    return (
+      <ScanConfirm
+        proposals={proposals}
+        onDone={() => {
+          setProposals(null);
+          refresh();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="screen">
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={(e) => onPhoto(e.target.files?.[0])}
+      />
+      <button className="scan-btn" onClick={() => fileRef.current?.click()} disabled={scanning}>
+        {scanning ? "Scanning photo…" : "📷 Scan groceries"}
+      </button>
       <div className="add-row">
         <input
           value={input}

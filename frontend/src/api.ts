@@ -22,6 +22,13 @@ export interface TasteProfile {
   profile: { ingredient: string; similarity: number }[];
 }
 
+export interface ScanProposal {
+  seen: string;
+  quantity: string | null;
+  confidence: number;
+  canonical: string | null;
+}
+
 export interface RecipeDetail {
   id: number;
   name: string;
@@ -61,6 +68,11 @@ export const api = {
       `/api/recipes/cookable?max_missing=${maxMissing}&limit=30`,
     ),
   taste: () => req<TasteProfile>("/api/taste"),
+  scanPhoto: (file: File) => {
+    const form = new FormData();
+    form.append("photo", file);
+    return req<{ proposals: ScanProposal[] }>("/api/vision/scan", { method: "POST", body: form });
+  },
   recipe: (id: number) => req<RecipeDetail>(`/api/recipes/${id}`),
   logCooked: (id: number) =>
     req<{ logged: boolean; meal_log_id: number }>(`/api/recipes/${id}/cooked`, { method: "POST" }),

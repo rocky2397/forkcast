@@ -121,3 +121,22 @@ h2 { text-transform: capitalize; margin: 8px 0 4px; }
 
 .taste-note { font-size: 0.85rem; opacity: 0.7; margin: 0 0 8px; }
 .match { color: #e05d7b; font-size: 0.85rem; margin-right: 6px; }
+
+.scan-btn {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px dashed var(--border, #555);
+  background: transparent;
+  color: inherit;
+}
+.scan-list { list-style: none; padding: 0; }
+.scan-list li { padding: 8px 0; border-bottom: 1px solid var(--border, #2c2c2c); }
+.scan-list li.unknown { opacity: 0.55; }
+.scan-list label { display: flex; align-items: center; gap: 10px; }
+.scan-name { flex: 1; text-transform: capitalize; }
+.scan-qty { opacity: 0.6; font-size: 0.85rem; }
+.scan-conf { opacity: 0.5; font-size: 0.8rem; }
+button.secondary { background: transparent; border: 1px solid var(--border, #555); color: inherit; }
