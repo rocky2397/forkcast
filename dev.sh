@@ -10,6 +10,11 @@ if [ ! -d "$DEVVOL" ]; then
   hdiutil attach "$SPARSEBUNDLE" >/dev/null || { echo "Mount failed — is the SSD plugged in?"; return 1; }
 fi
 
+# Secrets (gitignored .env: ANTHROPIC_AUTH_TOKEN for vision intake)
+if [ -f "$DEVVOL/forkcast/.env" ]; then
+  set -a; source "$DEVVOL/forkcast/.env"; set +a
+fi
+
 # Keep every cache off the internal disk (D10)
 export HF_HOME="$DEVVOL/caches/huggingface"
 export PIP_CACHE_DIR="$DEVVOL/caches/pip"

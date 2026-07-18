@@ -6,7 +6,7 @@ Run from the repo root:
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 
 from . import embeddings, recipes, taste
@@ -169,6 +169,31 @@ def cookable_recipes(
             results.sort(key=lambda r: (r["ingredients_missing"], -r["taste_sim"]))
             results = results[:limit]
     return {"count": len(results), "personalized": taste_vec is not None, "recipes": results}
+
+
+@app.post("/api/vision/scan")
+async def vision_scan(photo: UploadFile = File(...)):
+    """Groceries photo -> proposed items (nothing committed; client confirms)."""
+    from . import vision
+
+    if photo.content_type not in ("image/jpeg", "image/png", "image/webp", "image/gif"):
+        raise HTTPException(415, f"unsupported image type: {photo.content_type}")
+    raw = await photo.read()
+    if len(raw) > 20_000_000:
+        raise HTTPException(413, "image too large")
+    try:
+        result = vision.extract_items(raw, photo.content_type)
+    except Exception as e:  # surface API failures as a clean 502
+        raise HTTPException(502, f"vision extraction failed: {e}")
+    proposals = []
+    for item in result.items:
+        proposals.append({
+            "seen": item.name,
+            "quantity": item.quantity,
+            "confidence": item.confidence,
+            "canonical": normalizer.match(item.name),
+        })
+    return {"proposals": proposals}
 
 
 @app.get("/api/taste")
