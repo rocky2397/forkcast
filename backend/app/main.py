@@ -6,8 +6,10 @@ Run from the repo root:
 
 from contextlib import asynccontextmanager
 from datetime import date as _date
+from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 
@@ -422,3 +424,10 @@ def taste_profile():
     if vec is None:
         return {"meals_logged": 0, "profile": []}
     return {"meals_logged": n_meals, "profile": taste.nearest_ingredients(vec)}
+
+
+# Serve the built frontend when it exists, so one port (and one tunnel)
+# carries the whole app. Mounted last: API routes above take precedence.
+_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+if _DIST.is_dir():
+    app.mount("/", StaticFiles(directory=_DIST, html=True), name="app")
