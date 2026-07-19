@@ -5,11 +5,13 @@ Run from the repo root:
 """
 
 from contextlib import asynccontextmanager
+from datetime import date as _date
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Literal
 
-from . import embeddings, recipes, taste
+from . import embeddings, goals, recipes, taste
 from .db import connect
 from .normalize import Normalizer
 
@@ -194,6 +196,102 @@ async def vision_scan(photo: UploadFile = File(...)):
             "canonical": normalizer.match(item.name),
         })
     return {"proposals": proposals}
+
+
+class ProfileIn(BaseModel):
+    sex: Literal["m", "f"]
+    age: int = Field(ge=14, le=100)
+    height_cm: float = Field(ge=120, le=230)
+    weight_kg: float = Field(ge=35, le=250)
+    activity: Literal["sedentary", "light", "moderate", "active", "very_active"]
+    goal: Literal["cut", "maintain", "bulk"]
+
+
+@app.get("/api/profile")
+def get_profile():
+    with connect() as con:
+        row = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+    if row is None:
+        return {"profile": None, "targets": None}
+    return {"profile": dict(row), "targets": goals.targets(row)}
+
+
+@app.put("/api/profile")
+def put_profile(body: ProfileIn):
+    with connect() as con:
+        con.execute(
+            """INSERT INTO profile (id, sex, age, height_cm, weight_kg, activity, goal, updated_at)
+               VALUES (1, ?, ?, ?, ?, ?, ?, datetime('now'))
+               ON CONFLICT(id) DO UPDATE SET
+                 sex = excluded.sex, age = excluded.age,
+                 height_cm = excluded.height_cm, weight_kg = excluded.weight_kg,
+                 activity = excluded.activity, goal = excluded.goal,
+                 updated_at = excluded.updated_at""",
+            (body.sex, body.age, body.height_cm, body.weight_kg, body.activity, body.goal),
+        )
+        con.commit()
+    return {"profile": body.model_dump(), "targets": goals.targets(body.model_dump())}
+
+
+class MealAdd(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    calories: float = Field(ge=0, le=5000)
+    protein_g: float = Field(ge=0, le=500)
+    carbs_g: float = Field(ge=0, le=1000)
+    fat_g: float = Field(ge=0, le=500)
+
+
+@app.post("/api/meals")
+def add_meal(body: MealAdd):
+    with connect() as con:
+        cur = con.execute(
+            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g) VALUES (?, ?, ?, ?, ?)",
+            (body.name, body.calories, body.protein_g, body.carbs_g, body.fat_g),
+        )
+        con.commit()
+    return {"logged": True, "meal_log_id": cur.lastrowid}
+
+
+@app.delete("/api/meals/{meal_id:int}")
+def delete_meal(meal_id: int):
+    with connect() as con:
+        cur = con.execute("DELETE FROM meal_log WHERE id = ?", (meal_id,))
+        con.commit()
+    if cur.rowcount == 0:
+        raise HTTPException(404, f"no logged meal {meal_id}")
+    return {"deleted": meal_id}
+
+
+@app.get("/api/day")
+def day_summary(date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$")):
+    """One day's meals and macro totals vs the profile targets."""
+    day = date or _date.today().isoformat()
+    with connect() as con:
+        rows = con.execute(
+            """SELECT ml.id, ml.recipe_id, ml.logged_at,
+                      COALESCE(ml.name, r.name)           AS name,
+                      COALESCE(ml.calories, r.calories)   AS calories,
+                      COALESCE(ml.protein_g, r.protein_g) AS protein_g,
+                      COALESCE(ml.carbs_g, r.carbs_g)     AS carbs_g,
+                      COALESCE(ml.fat_g, r.fat_g)         AS fat_g
+               FROM meal_log ml
+               LEFT JOIN recipes r ON r.id = ml.recipe_id
+               WHERE date(ml.logged_at, 'localtime') = ?
+               ORDER BY ml.logged_at""",
+            (day,),
+        ).fetchall()
+        profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+    meals = [dict(r) for r in rows]
+    totals = {
+        key: round(sum(m[key] or 0.0 for m in meals), 1)
+        for key in ("calories", "protein_g", "carbs_g", "fat_g")
+    }
+    return {
+        "date": day,
+        "meals": meals,
+        "totals": totals,
+        "targets": goals.targets(profile) if profile is not None else None,
+    }
 
 
 @app.get("/api/taste")
