@@ -63,6 +63,17 @@ export interface DaySummary {
   targets: Targets | null;
 }
 
+export interface Product {
+  barcode: string | null;
+  name: string | null;
+  brand: string | null;
+  calories_100g: number | null;
+  protein_g_100g: number | null;
+  carbs_g_100g: number | null;
+  fat_g_100g: number | null;
+  source: "openfoodfacts" | "label";
+}
+
 export interface RecipeDetail {
   id: number;
   name: string;
@@ -122,6 +133,13 @@ export const api = {
       body: JSON.stringify(meal),
     }),
   deleteMeal: (id: number) => req<{ deleted: number }>(`/api/meals/${id}`, { method: "DELETE" }),
+  barcodeLookup: (code: string) =>
+    req<{ product: Product }>(`/api/nutrition/barcode/${encodeURIComponent(code)}`),
+  scanProduct: (file: File) => {
+    const form = new FormData();
+    form.append("photo", file);
+    return req<{ product: Product }>("/api/nutrition/scan", { method: "POST", body: form });
+  },
   recipe: (id: number) => req<RecipeDetail>(`/api/recipes/${id}`),
   logCooked: (id: number) =>
     req<{ logged: boolean; meal_log_id: number }>(`/api/recipes/${id}/cooked`, { method: "POST" }),
