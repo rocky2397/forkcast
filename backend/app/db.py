@@ -39,11 +39,45 @@ CREATE TABLE IF NOT EXISTS inventory (
 
 CREATE TABLE IF NOT EXISTS meal_log (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    recipe_id INTEGER REFERENCES recipes(id),   -- NULL for future ad-hoc meals
+    recipe_id INTEGER REFERENCES recipes(id),   -- NULL for ad-hoc meals
     logged_at TEXT NOT NULL DEFAULT (datetime('now')),
-    liked     INTEGER                            -- NULL unknown, 0/1 once rated
+    liked     INTEGER,                           -- NULL unknown, 0/1 once rated
+    name      TEXT,                              -- ad-hoc meals only; cooks join recipes
+    calories  REAL,
+    protein_g REAL,
+    carbs_g   REAL,
+    fat_g     REAL
+);
+
+CREATE TABLE IF NOT EXISTS profile (
+    id         INTEGER PRIMARY KEY CHECK (id = 1),  -- single-user app: one row
+    sex        TEXT NOT NULL,
+    age        INTEGER NOT NULL,
+    height_cm  REAL NOT NULL,
+    weight_kg  REAL NOT NULL,
+    activity   TEXT NOT NULL,
+    goal       TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 """
+
+# Columns added after the table first shipped; CREATE TABLE IF NOT EXISTS
+# won't add them to an existing DB.
+_MEAL_LOG_ADDED = {
+    "name": "TEXT",
+    "calories": "REAL",
+    "protein_g": "REAL",
+    "carbs_g": "REAL",
+    "fat_g": "REAL",
+}
+
+
+def _migrate(con: sqlite3.Connection) -> None:
+    have = {row["name"] for row in con.execute("PRAGMA table_info(meal_log)")}
+    for col, typ in _MEAL_LOG_ADDED.items():
+        if col not in have:
+            con.execute(f"ALTER TABLE meal_log ADD COLUMN {col} {typ}")
+    con.commit()
 
 
 def connect(path: Path = DB_PATH) -> sqlite3.Connection:
@@ -51,4 +85,5 @@ def connect(path: Path = DB_PATH) -> sqlite3.Connection:
     con = sqlite3.connect(path)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
+    _migrate(con)
     return con
