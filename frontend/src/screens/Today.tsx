@@ -39,12 +39,17 @@ export function Today() {
   const [scanError, setScanError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const refresh = () =>
-    Promise.all([api.day(), api.profile()]).then(([d, p]) => {
-      setDay(d);
-      setProfile(p.profile);
-      setLoaded(true);
-    });
+    Promise.all([api.day(), api.profile()])
+      .then(([d, p]) => {
+        setDay(d);
+        setProfile(p.profile);
+        setLoadError(null);
+        setLoaded(true);
+      })
+      .catch((e) => setLoadError(String(e)));
   useEffect(() => {
     refresh();
   }, []);
@@ -121,6 +126,15 @@ export function Today() {
     setProduct(null);
   }
 
+  if (loadError && !loaded) {
+    return (
+      <div className="screen">
+        <p className="empty">Couldn't reach the Forkcast server.</p>
+        <p className="feedback">{loadError}</p>
+        <button className="cooked" onClick={refresh}>Try again</button>
+      </div>
+    );
+  }
   if (!loaded) return <div className="screen" />;
 
   if (!profile || editing) {
