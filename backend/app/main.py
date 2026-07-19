@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from . import embeddings, goals, nutrition, recipes, taste
+from . import embeddings, goals, nutrition, recipes, substitutions, taste
 from .db import connect
 from .normalize import Normalizer
 
@@ -120,6 +120,9 @@ def recipe_detail(recipe_id: int):
                WHERE ri.recipe_id = ?""",
             (recipe_id,),
         ).fetchall()
+        inv = [row["canonical"] for row in con.execute("SELECT canonical FROM inventory")]
+    in_recipe = {i["canonical"] for i in ings if i["canonical"]}
+    cands = [c for c in inv if c not in in_recipe]
     return {
         "id": r["id"],
         "name": r["name"],
@@ -131,7 +134,16 @@ def recipe_detail(recipe_id: int):
         "carbs_g": r["carbs_g"],
         "fat_g": r["fat_g"],
         "ingredients": [
-            {"raw": i["raw"], "canonical": i["canonical"], "in_inventory": bool(i["in_inventory"])}
+            {
+                "raw": i["raw"],
+                "canonical": i["canonical"],
+                "in_inventory": bool(i["in_inventory"]),
+                "sub": (
+                    substitutions.suggest(i["canonical"], cands)
+                    if i["canonical"] and not i["in_inventory"]
+                    else None
+                ),
+            }
             for i in ings
         ],
     }
@@ -170,7 +182,32 @@ def cookable_recipes(
                 r["taste_sim"] = round(scores.get(r["id"], 0.0), 3)
             results.sort(key=lambda r: (r["ingredients_missing"], -r["taste_sim"]))
             results = results[:limit]
+        _annotate_subs(con, results)
     return {"count": len(results), "personalized": taste_vec is not None, "recipes": results}
+
+
+def _annotate_subs(con, results: list[dict]) -> None:
+    """Attach {missing -> in-inventory stand-in} to each recipe (D13)."""
+    ids = [r["id"] for r in results if r["ingredients_missing"] > 0]
+    inv = [row["canonical"] for row in con.execute("SELECT canonical FROM inventory")]
+    have: dict[int, set[str]] = {}
+    if ids and inv:
+        placeholders = ",".join("?" * len(ids))
+        for row in con.execute(
+            f"SELECT recipe_id, canonical FROM recipe_ingredients "
+            f"WHERE recipe_id IN ({placeholders}) AND canonical IS NOT NULL",
+            ids,
+        ):
+            have.setdefault(row["recipe_id"], set()).add(row["canonical"])
+    for r in results:
+        subs = {}
+        if r["ingredients_missing"] > 0 and inv:
+            cands = [c for c in inv if c not in have.get(r["id"], set())]
+            for m in r["missing"]:
+                sub = substitutions.suggest(m, cands)
+                if sub:
+                    subs[m] = sub
+        r["subs"] = subs
 
 
 async def _read_photo(photo: UploadFile) -> bytes:

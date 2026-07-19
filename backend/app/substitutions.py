@@ -105,7 +105,9 @@ def suggest(missing: str, candidates: list[str]) -> str | None:
     candidates accordingly).
     """
     idx = _index()
-    if missing not in idx:
+    # Staples are hubs on both sides: as a missing ingredient they'd match
+    # half the pantry (salt->ginger), and they're assumed present anyway.
+    if missing not in idx or missing in STAPLES:
         return None
     best, best_score = None, None
     for cand in candidates:
