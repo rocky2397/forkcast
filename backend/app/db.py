@@ -49,6 +49,18 @@ CREATE TABLE IF NOT EXISTS meal_log (
     fat_g     REAL
 );
 
+CREATE TABLE IF NOT EXISTS products (
+    barcode        TEXT PRIMARY KEY,            -- EAN/UPC digits
+    name           TEXT,
+    brand          TEXT,
+    calories_100g  REAL,
+    protein_g_100g REAL,
+    carbs_g_100g   REAL,
+    fat_g_100g     REAL,
+    source         TEXT NOT NULL,               -- 'openfoodfacts' | 'label'
+    fetched_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS profile (
     id         INTEGER PRIMARY KEY CHECK (id = 1),  -- single-user app: one row
     sex        TEXT NOT NULL,
