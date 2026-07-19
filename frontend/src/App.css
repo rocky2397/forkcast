@@ -208,3 +208,23 @@ button.secondary { background: transparent; border: 1px solid var(--border, #555
 .profile-form .cooked { margin: 8px 0 24px; }
 
 .link { background: none; border: none; color: inherit; text-decoration: underline; padding: 0; font-size: inherit; opacity: 0.9; }
+
+/* --- Product scan card (D9) --- */
+.product-card {
+  border: 1px solid var(--border, #444);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.product-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.product-source { font-size: 0.75rem; opacity: 0.6; white-space: nowrap; }
+.product-macros { margin: 4px 0 8px; font-size: 0.85rem; opacity: 0.75; }
+.product-use { display: flex; align-items: center; gap: 8px; }
+.product-use input { width: 90px; }
+.product-use button {
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: none;
+  background: #3d8b40;
+  color: white;
+}

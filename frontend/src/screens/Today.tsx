@@ -1,6 +1,23 @@
-import { useEffect, useState } from "react";
-import { api, type DaySummary, type Profile, type Targets } from "../api";
+import { useEffect, useRef, useState } from "react";
+import { api, type DaySummary, type Product, type Profile, type Targets } from "../api";
 import { ProfileForm } from "./ProfileForm";
+
+/** On-device barcode read where the browser supports it (free, no API call). */
+async function detectBarcode(file: File): Promise<string | null> {
+  const BD = (window as unknown as { BarcodeDetector?: any }).BarcodeDetector;
+  if (!BD) return null;
+  try {
+    const wanted = ["ean_13", "ean_8", "upc_a", "upc_e"];
+    const supported: string[] = await BD.getSupportedFormats();
+    const formats = wanted.filter((f) => supported.includes(f));
+    if (formats.length === 0) return null;
+    const bitmap = await createImageBitmap(file);
+    const codes = await new BD({ formats }).detect(bitmap);
+    return codes[0]?.rawValue ?? null;
+  } catch {
+    return null;
+  }
+}
 
 function Meter({ label, value, target, unit }: { label: string; value: number; target: number; unit: string }) {
   const pct = target > 0 ? Math.min((value / target) * 100, 100) : 0;
@@ -32,6 +49,11 @@ export function Today() {
   const [adding, setAdding] = useState(false);
   const [meal, setMeal] = useState(EMPTY_MEAL);
   const [busy, setBusy] = useState(false);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [grams, setGrams] = useState("100");
+  const [scanBusy, setScanBusy] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const refresh = () =>
     Promise.all([api.day(), api.profile()]).then(([d, p]) => {
@@ -71,6 +93,41 @@ export function Today() {
   async function removeMeal(id: number) {
     await api.deleteMeal(id);
     await refresh();
+  }
+
+  async function onProductPhoto(file: File | undefined) {
+    if (!file) return;
+    setScanBusy(true);
+    setScanError(null);
+    setProduct(null);
+    try {
+      // barcode-first (D9): on-device detection costs nothing when supported
+      const code = await detectBarcode(file);
+      const res = code
+        ? await api.barcodeLookup(code).catch(() => api.scanProduct(file))
+        : await api.scanProduct(file);
+      setProduct(res.product);
+      setGrams("100");
+    } catch (e) {
+      setScanError(String(e));
+    } finally {
+      setScanBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  function useProduct() {
+    if (!product) return;
+    const factor = (Number(grams) || 0) / 100;
+    const scale = (v: number | null) => (v == null ? "" : String(Math.round(v * factor)));
+    setMeal({
+      name: [product.name, `${Number(grams) || 0} g`].filter(Boolean).join(", "),
+      calories: scale(product.calories_100g),
+      protein_g: scale(product.protein_g_100g),
+      carbs_g: scale(product.carbs_g_100g),
+      fat_g: scale(product.fat_g_100g),
+    });
+    setProduct(null);
   }
 
   if (!loaded) return <div className="screen" />;
@@ -128,6 +185,44 @@ export function Today() {
       {adding ? (
         <div className="meal-form">
           <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={(e) => onProductPhoto(e.target.files?.[0])}
+          />
+          <button className="scan-btn" onClick={() => fileRef.current?.click()} disabled={scanBusy}>
+            {scanBusy ? "Reading product…" : "📷 Scan barcode / Nährwerttabelle"}
+          </button>
+          {scanError && <p className="feedback">{scanError}</p>}
+          {product && (
+            <div className="product-card">
+              <div className="product-head">
+                <strong>{product.name ?? "Unnamed product"}</strong>
+                <span className="product-source">
+                  {product.source === "openfoodfacts" ? "Open Food Facts" : "read from label"}
+                </span>
+              </div>
+              <p className="product-macros">
+                per 100 g: {Math.round(product.calories_100g ?? 0)} kcal · P{" "}
+                {Math.round(product.protein_g_100g ?? 0)} · C {Math.round(product.carbs_g_100g ?? 0)} · F{" "}
+                {Math.round(product.fat_g_100g ?? 0)}
+              </p>
+              <div className="product-use">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={grams}
+                  onChange={(e) => setGrams(e.target.value)}
+                  aria-label="amount in grams"
+                />
+                <span>g</span>
+                <button onClick={useProduct}>Use</button>
+              </div>
+            </div>
+          )}
+          <input
             placeholder="Meal name (e.g. Skyr mit Beeren)"
             value={meal.name}
             onChange={(e) => setMeal({ ...meal, name: e.target.value })}
@@ -143,7 +238,16 @@ export function Today() {
             <button className="cooked" onClick={addMeal} disabled={busy || !meal.name.trim() || !meal.calories}>
               Log meal
             </button>
-            <button className="back" onClick={() => setAdding(false)}>Cancel</button>
+            <button
+              className="back"
+              onClick={() => {
+                setAdding(false);
+                setProduct(null);
+                setScanError(null);
+              }}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       ) : (
