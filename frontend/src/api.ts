@@ -29,6 +29,40 @@ export interface ScanProposal {
   canonical: string | null;
 }
 
+export interface Profile {
+  sex: "m" | "f";
+  age: number;
+  height_cm: number;
+  weight_kg: number;
+  activity: "sedentary" | "light" | "moderate" | "active" | "very_active";
+  goal: "cut" | "maintain" | "bulk";
+}
+
+export interface Targets {
+  calories: number;
+  protein_g: number;
+  fat_g: number;
+  carbs_g: number;
+}
+
+export interface DayMeal {
+  id: number;
+  recipe_id: number | null;
+  logged_at: string;
+  name: string | null;
+  calories: number | null;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
+}
+
+export interface DaySummary {
+  date: string;
+  meals: DayMeal[];
+  totals: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
+  targets: Targets | null;
+}
+
 export interface RecipeDetail {
   id: number;
   name: string;
@@ -73,6 +107,21 @@ export const api = {
     form.append("photo", file);
     return req<{ proposals: ScanProposal[] }>("/api/vision/scan", { method: "POST", body: form });
   },
+  profile: () => req<{ profile: Profile | null; targets: Targets | null }>("/api/profile"),
+  saveProfile: (p: Profile) =>
+    req<{ profile: Profile; targets: Targets }>("/api/profile", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(p),
+    }),
+  day: (date?: string) => req<DaySummary>(date ? `/api/day?date=${date}` : "/api/day"),
+  addMeal: (meal: { name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number }) =>
+    req<{ logged: boolean; meal_log_id: number }>("/api/meals", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(meal),
+    }),
+  deleteMeal: (id: number) => req<{ deleted: number }>(`/api/meals/${id}`, { method: "DELETE" }),
   recipe: (id: number) => req<RecipeDetail>(`/api/recipes/${id}`),
   logCooked: (id: number) =>
     req<{ logged: boolean; meal_log_id: number }>(`/api/recipes/${id}/cooked`, { method: "POST" }),
