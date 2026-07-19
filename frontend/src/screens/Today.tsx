@@ -95,6 +95,13 @@ export function Today() {
     await refresh();
   }
 
+  async function rate(m: { id: number; liked: 0 | 1 | null }, thumb: boolean) {
+    // tapping the active thumb clears the rating
+    const next = m.liked !== null && Boolean(m.liked) === thumb ? null : thumb;
+    await api.rateMeal(m.id, next);
+    await refresh();
+  }
+
   async function onProductPhoto(file: File | undefined) {
     if (!file) return;
     setScanBusy(true);
@@ -172,6 +179,24 @@ export function Today() {
                 {Math.round(m.carbs_g ?? 0)} · F {Math.round(m.fat_g ?? 0)}
               </span>
             </div>
+            {m.recipe_id !== null && (
+              <span className="rate">
+                <button
+                  className={m.liked === 1 ? "thumb active" : "thumb"}
+                  onClick={() => rate(m, true)}
+                  aria-label={`like ${m.name}`}
+                >
+                  👍
+                </button>
+                <button
+                  className={m.liked === 0 ? "thumb active" : "thumb"}
+                  onClick={() => rate(m, false)}
+                  aria-label={`dislike ${m.name}`}
+                >
+                  👎
+                </button>
+              </span>
+            )}
             <button className="remove" onClick={() => removeMeal(m.id)} aria-label={`remove ${m.name}`}>
               ×
             </button>

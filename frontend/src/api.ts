@@ -49,6 +49,7 @@ export interface DayMeal {
   id: number;
   recipe_id: number | null;
   logged_at: string;
+  liked: 0 | 1 | null;
   name: string | null;
   calories: number | null;
   protein_g: number | null;
@@ -133,6 +134,12 @@ export const api = {
       body: JSON.stringify(meal),
     }),
   deleteMeal: (id: number) => req<{ deleted: number }>(`/api/meals/${id}`, { method: "DELETE" }),
+  rateMeal: (id: number, liked: boolean | null) =>
+    req<{ id: number; liked: boolean | null }>(`/api/meals/${id}/rate`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ liked }),
+    }),
   barcodeLookup: (code: string) =>
     req<{ product: Product }>(`/api/nutrition/barcode/${encodeURIComponent(code)}`),
   scanProduct: (file: File) => {
