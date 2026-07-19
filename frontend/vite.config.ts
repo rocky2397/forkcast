@@ -7,6 +7,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      workbox: {
+        // include the zxing barcode decoder so scanning works offline (Safari path)
+        globPatterns: ["**/*.{js,css,html,svg,png,ico,wasm}"],
+        maximumFileSizeToCacheInBytes: 4_000_000,
+      },
       manifest: {
         name: "Forkcast",
         short_name: "Forkcast",

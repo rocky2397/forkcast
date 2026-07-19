@@ -1,23 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, type DaySummary, type Product, type Profile, type Targets } from "../api";
 import { ProfileForm } from "./ProfileForm";
-
-/** On-device barcode read where the browser supports it (free, no API call). */
-async function detectBarcode(file: File): Promise<string | null> {
-  const BD = (window as unknown as { BarcodeDetector?: any }).BarcodeDetector;
-  if (!BD) return null;
-  try {
-    const wanted = ["ean_13", "ean_8", "upc_a", "upc_e"];
-    const supported: string[] = await BD.getSupportedFormats();
-    const formats = wanted.filter((f) => supported.includes(f));
-    if (formats.length === 0) return null;
-    const bitmap = await createImageBitmap(file);
-    const codes = await new BD({ formats }).detect(bitmap);
-    return codes[0]?.rawValue ?? null;
-  } catch {
-    return null;
-  }
-}
+import { detectBarcode } from "../barcode";
 
 function Meter({ label, value, target, unit }: { label: string; value: number; target: number; unit: string }) {
   const pct = target > 0 ? Math.min((value / target) * 100, 100) : 0;
