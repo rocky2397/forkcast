@@ -14,6 +14,7 @@ export interface CookableRecipe {
   ingredients_needed: number;
   ingredients_missing: number;
   missing: string[];
+  subs?: Record<string, string>;
   taste_sim?: number;
 }
 
@@ -85,7 +86,7 @@ export interface RecipeDetail {
   protein_g: number | null;
   carbs_g: number | null;
   fat_g: number | null;
-  ingredients: { raw: string; canonical: string | null; in_inventory: boolean }[];
+  ingredients: { raw: string; canonical: string | null; in_inventory: boolean; sub: string | null }[];
 }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {

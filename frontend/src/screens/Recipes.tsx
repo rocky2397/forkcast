@@ -69,8 +69,10 @@ export function Recipes() {
             {r.missing.length > 0 && (
               <div className="missing-chips">
                 {r.missing.map((m) => (
-                  <span key={m} className="chip">
-                    needs {pretty(m)}
+                  <span key={m} className={r.subs?.[m] ? "chip sub" : "chip"}>
+                    {r.subs?.[m]
+                      ? `needs ${pretty(m)} — try ${pretty(r.subs[m])}`
+                      : `needs ${pretty(m)}`}
                   </span>
                 ))}
               </div>

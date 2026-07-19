@@ -43,6 +43,7 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
         {recipe.ingredients.map((ing, i) => (
           <li key={i} className={ing.in_inventory ? "have" : "missing"}>
             {ing.in_inventory ? "✓" : "○"} {ing.canonical ? pretty(ing.canonical) : ing.raw}
+            {ing.sub && <span className="sub-hint"> — you could use {pretty(ing.sub)}</span>}
           </li>
         ))}
       </ul>
