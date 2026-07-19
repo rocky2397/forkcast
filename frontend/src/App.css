@@ -140,3 +140,71 @@ h2 { text-transform: capitalize; margin: 8px 0 4px; }
 .scan-qty { opacity: 0.6; font-size: 0.85rem; }
 .scan-conf { opacity: 0.5; font-size: 0.8rem; }
 button.secondary { background: transparent; border: 1px solid var(--border, #555); color: inherit; }
+
+/* --- Today: macro meters --- */
+.meters { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.meter-head { display: flex; justify-content: space-between; font-size: 0.85rem; }
+.meter-label { font-weight: 600; }
+.meter-value { opacity: 0.75; }
+.meter-over { font-style: normal; font-weight: 700; color: #c77700; }
+.meter-track {
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 4px;
+  background: var(--border, #333);
+  overflow: hidden;
+}
+.meter-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: #3d8b40;
+  transition: width 0.3s ease;
+}
+.meter-fill.over { background: #c77700; }
+
+/* --- Today: meal list + quick-add --- */
+.section-title { font-size: 1rem; margin: 18px 0 6px; }
+.meal-list { list-style: none; padding: 0; margin: 0; }
+.meal-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border, #2c2c2c);
+}
+.meal-main { flex: 1; min-width: 0; }
+.meal-name { display: block; text-transform: capitalize; }
+.meal-macros { font-size: 0.8rem; opacity: 0.65; }
+.meal-list .remove { background: none; border: none; color: inherit; opacity: 0.5; font-size: 1.2rem; padding: 4px 8px; }
+
+.meal-form { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.meal-form input {
+  padding: 10px 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border, #444);
+  background: transparent;
+  color: inherit;
+  width: 100%;
+}
+.meal-form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.meal-form-actions { display: flex; gap: 8px; align-items: center; }
+.meal-form-actions .cooked { flex: 1; margin: 0; }
+
+/* --- Profile form --- */
+.profile-form { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.profile-intro { margin: 0; opacity: 0.8; line-height: 1.4; }
+.profile-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 600; }
+.profile-form input, .profile-form select {
+  padding: 10px 12px;
+  font-size: 1rem;
+  font-weight: 400;
+  border-radius: 8px;
+  border: 1px solid var(--border, #444);
+  background: transparent;
+  color: inherit;
+}
+.profile-form select option { color: initial; }
+.profile-form .cooked { margin: 8px 0 24px; }
+
+.link { background: none; border: none; color: inherit; text-decoration: underline; padding: 0; font-size: inherit; opacity: 0.9; }
