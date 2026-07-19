@@ -18,6 +18,36 @@ from .recipes import STAPLES
 
 COOC_MAX_RANK = 200
 CHEM_MAX_RANK = 400
+SAME_CLASS_COOC_MAX = 400  # class already vouches for "same kind"; chem waived
+
+# Coarse food classes: rank proximity can't tell a complement from a
+# substitute across kinds (duck<->ginger pass every rank gate both ways),
+# so substitutes must share a class — or both be unclassed. Names not in
+# the vocab are harmless (they never match).
+CLASSES: dict[str, set[str]] = {
+    "meat": {"chicken", "turkey", "duck", "beef", "ground_beef", "pork", "lamb",
+             "veal", "bacon", "ham", "sausage", "chorizo", "prosciutto", "steak",
+             "venison", "rabbit", "goat"},
+    "seafood": {"salmon", "tuna", "cod", "trout", "halibut", "tilapia", "shrimp",
+                "prawn", "crab", "lobster", "scallop", "mussel", "clam", "squid",
+                "octopus", "anchovy", "sardine", "mackerel", "haddock", "catfish"},
+    "herb": {"basil", "oregano", "thyme", "rosemary", "parsley", "coriander",
+             "dill", "sage", "tarragon", "mint", "marjoram", "bay_leaf"},
+    "allium": {"onion", "garlic", "shallot", "leek", "scallion", "chive",
+               "red_onion", "pearl_onion"},
+    "citrus": {"lemon", "lime", "orange", "grapefruit", "yuzu", "tangerine",
+               "mandarin", "clementine"},
+    "dairy": {"yogurt", "sour_cream", "cream", "creme_fraiche", "quark",
+              "buttermilk", "milk", "kefir", "mascarpone_cheese", "cream_cheese"},
+    "sweetener": {"honey", "maple_syrup", "sugar", "brown_sugar", "agave_nectar",
+                  "molasses", "corn_syrup"},
+    "grain": {"rice", "couscous", "quinoa", "bulgur", "barley", "farro",
+              "millet", "orzo", "polenta"},
+}
+
+_NAME_TO_CLASS: dict[str, str] = {
+    name: cls for cls, names in CLASSES.items() for name in names
+}
 
 
 @lru_cache(maxsize=1)
@@ -42,13 +72,23 @@ def _rank_arrays(name: str) -> tuple[np.ndarray, np.ndarray] | None:
 
 
 def _pair_score(a: str, b: str) -> int | None:
-    """Gate a->b: b must rank within both cutoffs among a's neighbors."""
+    """Gate a->b, returning a sort score (lower = better) or None.
+
+    Same known class: cooc rank alone within SAME_CLASS_COOC_MAX.
+    Both unclassed: within both COOC_MAX_RANK and CHEM_MAX_RANK.
+    Class mismatch: rejected outright (complement risk, e.g. duck->ginger).
+    """
+    cls_a, cls_b = _NAME_TO_CLASS.get(a), _NAME_TO_CLASS.get(b)
+    if cls_a != cls_b:
+        return None
     arrays = _rank_arrays(a)
     if arrays is None:
         return None
     cooc_rank, chem_rank = arrays
     i = _index()[b]
     rc, rh = int(cooc_rank[i]), int(chem_rank[i])
+    if cls_a is not None:
+        return rc if rc <= SAME_CLASS_COOC_MAX else None
     if rc > COOC_MAX_RANK or rh > CHEM_MAX_RANK:
         return None
     return rc + rh
