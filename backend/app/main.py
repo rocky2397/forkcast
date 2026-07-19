@@ -257,6 +257,24 @@ def add_meal(body: MealAdd):
     return {"logged": True, "meal_log_id": cur.lastrowid}
 
 
+class MealRating(BaseModel):
+    liked: bool | None  # None clears the rating
+
+
+@app.post("/api/meals/{meal_id:int}/rate")
+def rate_meal(meal_id: int, body: MealRating):
+    """Like/dislike a logged meal; feeds the taste vector (D6 weights)."""
+    with connect() as con:
+        cur = con.execute(
+            "UPDATE meal_log SET liked = ? WHERE id = ?",
+            (None if body.liked is None else int(body.liked), meal_id),
+        )
+        con.commit()
+    if cur.rowcount == 0:
+        raise HTTPException(404, f"no logged meal {meal_id}")
+    return {"id": meal_id, "liked": body.liked}
+
+
 @app.delete("/api/meals/{meal_id:int}")
 def delete_meal(meal_id: int):
     with connect() as con:
@@ -273,7 +291,7 @@ def day_summary(date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$")):
     day = date or _date.today().isoformat()
     with connect() as con:
         rows = con.execute(
-            """SELECT ml.id, ml.recipe_id, ml.logged_at,
+            """SELECT ml.id, ml.recipe_id, ml.logged_at, ml.liked,
                       COALESCE(ml.name, r.name)           AS name,
                       COALESCE(ml.calories, r.calories)   AS calories,
                       COALESCE(ml.protein_g, r.protein_g) AS protein_g,
