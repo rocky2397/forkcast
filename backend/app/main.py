@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from . import embeddings, goals, recipes, taste
+from . import embeddings, goals, nutrition, recipes, taste
 from .db import connect
 from .normalize import Normalizer
 
@@ -173,16 +173,21 @@ def cookable_recipes(
     return {"count": len(results), "personalized": taste_vec is not None, "recipes": results}
 
 
-@app.post("/api/vision/scan")
-async def vision_scan(photo: UploadFile = File(...)):
-    """Groceries photo -> proposed items (nothing committed; client confirms)."""
-    from . import vision
-
+async def _read_photo(photo: UploadFile) -> bytes:
     if photo.content_type not in ("image/jpeg", "image/png", "image/webp", "image/gif"):
         raise HTTPException(415, f"unsupported image type: {photo.content_type}")
     raw = await photo.read()
     if len(raw) > 20_000_000:
         raise HTTPException(413, "image too large")
+    return raw
+
+
+@app.post("/api/vision/scan")
+async def vision_scan(photo: UploadFile = File(...)):
+    """Groceries photo -> proposed items (nothing committed; client confirms)."""
+    from . import vision
+
+    raw = await _read_photo(photo)
     try:
         result = vision.extract_items(raw, photo.content_type)
     except Exception as e:  # surface API failures as a clean 502
@@ -291,6 +296,66 @@ def day_summary(date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$")):
         "meals": meals,
         "totals": totals,
         "targets": goals.targets(profile) if profile is not None else None,
+    }
+
+
+@app.get("/api/nutrition/barcode/{code}")
+def barcode_lookup(code: str):
+    """Barcode -> per-100g nutrition (products cache, then Open Food Facts)."""
+    if not code.isdigit() or not 6 <= len(code) <= 14:
+        raise HTTPException(422, f"not a barcode: {code!r}")
+    with connect() as con:
+        try:
+            product = nutrition.lookup(con, code)
+        except nutrition.OffUnavailable as e:
+            raise HTTPException(502, f"Open Food Facts unreachable: {e}")
+    if product is None:
+        raise HTTPException(404, f"barcode {code} not on Open Food Facts")
+    return {"product": product}
+
+
+@app.post("/api/nutrition/scan")
+async def nutrition_scan(photo: UploadFile = File(...)):
+    """Product photo -> per-100g nutrition.
+
+    Haiku reads the printed barcode digits and/or the Nährwerttabelle; a
+    resolvable barcode makes Open Food Facts authoritative (and caches the
+    product), otherwise the label values are returned as proposals.
+    """
+    from . import vision
+
+    raw = await _read_photo(photo)
+    try:
+        scan = vision.extract_product(raw, photo.content_type)
+    except Exception as e:
+        raise HTTPException(502, f"vision extraction failed: {e}")
+
+    product = None
+    if scan.barcode and scan.barcode.isdigit() and 6 <= len(scan.barcode) <= 14:
+        with connect() as con:
+            try:
+                product = nutrition.lookup(con, scan.barcode)
+            except nutrition.OffUnavailable:
+                product = None  # fall back to the label values
+    if product is not None and product["calories_100g"] is not None:
+        return {"product": product}
+
+    label = scan.per_100g
+    if label is None or label.calories is None:
+        raise HTTPException(
+            404, "could not read a barcode or nutrition table from the photo"
+        )
+    return {
+        "product": {
+            "barcode": scan.barcode,
+            "name": scan.product_name,
+            "brand": None,
+            "calories_100g": label.calories,
+            "protein_g_100g": label.protein_g,
+            "carbs_g_100g": label.carbs_g,
+            "fat_g_100g": label.fat_g,
+            "source": "label",
+        }
     }
 
 
