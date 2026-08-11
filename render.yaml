@@ -1,0 +1,32 @@
+# Render blueprint (D15). Create the service from this with Render's
+# "New > Blueprint" flow, then set the values marked sync:false in the
+# dashboard. See DEPLOY.md.
+services:
+  - type: web
+    name: forkcast
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    # A disk requires a paid instance, and the user data (inventory, meal log,
+    # profile) has to survive redeploys — so no free plan here. Free would also
+    # spin down after 15 min idle and cold-start in ~1 min.
+    plan: starter
+    region: frankfurt
+    healthCheckPath: /health
+    disk:
+      name: forkcast-data
+      mountPath: /var/data # matches FORKCAST_DATA_DIR in the Dockerfile
+      sizeGB: 1 # the user DB is a few KB; 1 GB is the minimum
+    envVars:
+      # The shared password (D15). Set in the dashboard — never commit it.
+      - key: FORKCAST_PASSWORD
+        sync: false
+      # Keeps sessions valid across the restarts a redeploy causes.
+      - key: FORKCAST_SECRET_KEY
+        generateValue: true
+      # Claude vision intake (D8/D9). Everyone past the password spends this.
+      - key: ANTHROPIC_AUTH_TOKEN
+        sync: false
+      # Public, unauthenticated URL of corpus.db — consumed as a Docker build
+      # arg. Published with ops/publish-corpus.sh.
+      - key: FORKCAST_CORPUS_URL
+        sync: false

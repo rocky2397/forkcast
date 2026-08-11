@@ -27,6 +27,7 @@ Planning phase. See:
 
 - [`APP_DECISIONS.md`](APP_DECISIONS.md) — product & architecture decision log
 - [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) — notes on the paper this builds on
+- [`DEPLOY.md`](DEPLOY.md) — putting it on a public URL behind a shared password (D15)
 
 Stack (decided): FastAPI + React PWA, Epicure embeddings
 ([`Kaikaku/epicure-*`](https://huggingface.co/Kaikaku/epicure-core), CC BY 4.0),

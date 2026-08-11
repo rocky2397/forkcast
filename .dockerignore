@@ -1,0 +1,16 @@
+# The corpus is fetched from a release asset in the build, not sent as context;
+# data/ also holds the user DB and backups, which must never enter the image.
+data/
+caches/
+.venv/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+paper/
+.git/
+.env
+*.sparsebundle
+__pycache__/
+*.pyc
+.DS_Store
+._*

@@ -1,8 +1,14 @@
-datasets==5.0.0
+# Runtime dependencies — what the API needs to serve requests.
+# The recipe-import pipeline's heavier deps live in requirements-import.txt so
+# the deployed image stays small (D15).
+#
+# anthropic and python-multipart were previously only present transitively /
+# by hand; the container build needs them named.
+anthropic==0.117.0
 fastapi==0.139.2
+huggingface-hub==1.24.0
 numpy==2.5.1
-pandas==3.0.3
-pyarrow==25.0.0
 pydantic==2.13.4
+python-multipart==0.0.32
 safetensors==0.8.0
 uvicorn==0.51.0
