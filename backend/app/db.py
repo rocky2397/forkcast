@@ -1,11 +1,30 @@
-"""SQLite access for Forkcast. The DB lives in data/ on the dev volume (D10)."""
+"""SQLite access for Forkcast.
 
+Two files, because they have opposite lifecycles (D15):
+
+  corpus.db    87k recipes + their ingredients — ~110 MB, read-only, identical
+               for every deployment. Baked into the container image.
+  forkcast.db  inventory, meal log, profile, products — a few KB that must
+               survive redeploys. Lives on the host's persistent disk.
+
+Locally the two can still be one file: when corpus.db is absent, connect()
+creates every table in the user DB and behaves exactly as it did before the
+split, so an existing dev database keeps working untouched.
+"""
+
+import os
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parents[2] / "data" / "forkcast.db"
+_REPO = Path(__file__).resolve().parents[2]
 
-SCHEMA = """
+# FORKCAST_DATA_DIR points at the persistent disk in a deployment (D10 keeps it
+# on the external volume locally).
+DATA_DIR = Path(os.environ.get("FORKCAST_DATA_DIR") or _REPO / "data")
+DB_PATH = DATA_DIR / "forkcast.db"
+CORPUS_PATH = Path(os.environ.get("FORKCAST_CORPUS_DB") or _REPO / "data" / "corpus.db")
+
+CORPUS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS recipes (
     id            INTEGER PRIMARY KEY,
     name          TEXT NOT NULL,
@@ -31,7 +50,9 @@ CREATE TABLE IF NOT EXISTS recipe_ingredients (
 );
 CREATE INDEX IF NOT EXISTS idx_ri_recipe    ON recipe_ingredients(recipe_id);
 CREATE INDEX IF NOT EXISTS idx_ri_canonical ON recipe_ingredients(canonical);
+"""
 
+USER_SCHEMA = """
 CREATE TABLE IF NOT EXISTS inventory (
     canonical TEXT PRIMARY KEY,
     added_at  TEXT NOT NULL DEFAULT (datetime('now'))
@@ -39,10 +60,10 @@ CREATE TABLE IF NOT EXISTS inventory (
 
 CREATE TABLE IF NOT EXISTS meal_log (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    recipe_id INTEGER REFERENCES recipes(id),   -- NULL for ad-hoc meals
+    recipe_id INTEGER,                            -- NULL for ad-hoc meals
     logged_at TEXT NOT NULL DEFAULT (datetime('now')),
-    liked     INTEGER,                           -- NULL unknown, 0/1 once rated
-    name      TEXT,                              -- ad-hoc meals only; cooks join recipes
+    liked     INTEGER,                            -- NULL unknown, 0/1 once rated
+    name      TEXT,                               -- ad-hoc meals only; cooks join recipes
     calories  REAL,
     protein_g REAL,
     carbs_g   REAL,
@@ -73,6 +94,9 @@ CREATE TABLE IF NOT EXISTS profile (
 );
 """
 
+# Kept for the split script and anything wanting the whole shape at once.
+SCHEMA = CORPUS_SCHEMA + USER_SCHEMA
+
 # Columns added after the table first shipped; CREATE TABLE IF NOT EXISTS
 # won't add them to an existing DB.
 _MEAL_LOG_ADDED = {
@@ -92,10 +116,26 @@ def _migrate(con: sqlite3.Connection) -> None:
     con.commit()
 
 
-def connect(path: Path = DB_PATH) -> sqlite3.Connection:
+def connect(path: Path = DB_PATH, attach_corpus: bool = True) -> sqlite3.Connection:
+    """A connection with both halves visible.
+
+    The corpus is attached read-only; SQLite resolves an unqualified `recipes`
+    against main first and then attached databases, so every existing query
+    works unchanged whether or not the split has happened.
+
+    attach_corpus=False forces the legacy single-file shape — that is what the
+    import pipeline needs, since it writes the recipe tables.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(path)
+    con = sqlite3.connect(path, uri=True)
     con.row_factory = sqlite3.Row
-    con.executescript(SCHEMA)
+
+    split = attach_corpus and CORPUS_PATH.is_file()
+    if split:
+        con.execute(f"ATTACH DATABASE 'file:{CORPUS_PATH}?mode=ro' AS corpus")
+    else:
+        con.executescript(CORPUS_SCHEMA)
+
+    con.executescript(USER_SCHEMA)
     _migrate(con)
     return con

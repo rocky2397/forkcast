@@ -40,7 +40,9 @@ def main():
     )
     print(f"{len(shards)} shards")
 
-    con = connect()
+    # The pipeline writes the recipe tables, so it needs them in main rather
+    # than in the read-only attached corpus (D15).
+    con = connect(attach_corpus=False)
     con.execute("DELETE FROM recipe_ingredients")
     con.execute("DELETE FROM recipes")
 
