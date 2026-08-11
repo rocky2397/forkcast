@@ -10,16 +10,16 @@ answer both *"what pairs with this?"* and *"what substitutes for this?"*.
 
 ## Planned features
 
-- 📦 **Inventory** — log groceries by taking a photo (Claude vision extraction),
+- **Inventory** — log groceries by taking a photo (Claude vision extraction),
   by scanning barcodes (Open Food Facts), or by typing
-- 🍳 **Recipe suggestions** — ranked by what you can cook *right now*,
+- **Recipe suggestions** — ranked by what you can cook *right now*,
   substitution-aware ("your tarragon can stand in for basil")
-- 👅 **Taste learning** — your taste profile is an embedding centroid of what
+- **Taste learning** — your taste profile is an embedding centroid of what
   you cook and like; suggestions get more *you* over time
-- 💪 **Macros & goals** — German Nährwerttabelle scanning, USDA nutrition data,
+- **Macros & goals** — German Nährwerttabelle scanning, USDA nutrition data,
   formula-based daily targets (Mifflin-St Jeor), and suggestions that help you
   hit them
-- 📱 **PWA** — web-first, installable on your phone
+- **PWA** — web-first, installable on your phone
 
 ## Status
 
