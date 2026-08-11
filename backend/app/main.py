@@ -8,12 +8,13 @@ from contextlib import asynccontextmanager
 from datetime import date as _date
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, Request, Response, UploadFile
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from . import embeddings, goals, nutrition, recipes, substitutions, taste
+from . import auth, embeddings, goals, nutrition, recipes, substitutions, taste
 from .db import connect
 from .normalize import Normalizer
 
@@ -29,21 +30,77 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Forkcast API", lifespan=lifespan)
 
-# Single-user app on a private LAN; permissive CORS is acceptable here and
-# lets the phone reach the API during development (revisit with auth).
+# Paths reachable without a session: the login exchange itself, the health
+# check, and the static frontend (the SPA shell has to load to *render* the
+# login screen — the data behind it is what's guarded).
+_OPEN_PATHS = {"/api/login", "/api/logout", "/api/session", "/health"}
+
+
+@app.middleware("http")
+async def require_session(request: Request, call_next):
+    """Gate /api/* behind the shared password (D15). No-op when unset."""
+    path = request.url.path
+    if auth.required() and path.startswith("/api/") and path not in _OPEN_PATHS:
+        if not auth.valid_token(request.cookies.get(auth.COOKIE)):
+            return JSONResponse({"detail": "not authenticated"}, status_code=401)
+    return await call_next(request)
+
+
+# Added after the gate so it wraps it: CORS headers must be present on the
+# 401 too, or a cross-origin caller sees an opaque network error instead.
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# In dev the Vite server proxies /api, so the browser is always same-origin and
+# no CORS is needed. Permissive CORS stays only for the unauthenticated local
+# case (phone hitting the API host directly); with a password set, cookies are
+# credentialed and "*" would be both invalid and wrong.
+if not auth.required():
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.get("/health")
 def health():
     return {"status": "ok", "vocab_size": len(embeddings.vocabulary())}
+
+
+class Login(BaseModel):
+    password: str
+
+
+@app.get("/api/session")
+def session(request: Request):
+    """Whether a password is configured, and whether this caller has passed it."""
+    return {
+        "required": auth.required(),
+        "authenticated": not auth.required()
+        or auth.valid_token(request.cookies.get(auth.COOKIE)),
+    }
+
+
+@app.post("/api/login")
+def login(body: Login, request: Request, response: Response):
+    if not auth.required():
+        return {"authenticated": True}
+    client = request.client.host if request.client else "unknown"
+    if auth.rate_limited(client):
+        raise HTTPException(429, "too many attempts — wait a few minutes")
+    if not auth.check_password(body.password):
+        auth.record_attempt(client)
+        raise HTTPException(401, "wrong password")
+    auth.clear_attempts(client)
+    response.set_cookie(auth.COOKIE, auth.issue_token(), **auth.cookie_kwargs())
+    return {"authenticated": True}
+
+
+@app.post("/api/logout")
+def logout(response: Response):
+    response.delete_cookie(auth.COOKIE, path="/")
+    return {"authenticated": False}
 
 
 @app.get("/api/normalize")

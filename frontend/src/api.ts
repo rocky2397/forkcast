@@ -89,8 +89,19 @@ export interface RecipeDetail {
   ingredients: { raw: string; canonical: string | null; in_inventory: boolean; sub: string | null }[];
 }
 
+// Set by App so an expired or missing session sends the whole UI back to the
+// login screen instead of surfacing "401" inside whichever tab made the call.
+let onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(fn: () => void) {
+  onUnauthorized = fn;
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, init);
+  if (res.status === 401) {
+    onUnauthorized?.();
+    throw new Error("session expired");
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.detail ?? `${res.status} ${res.statusText}`);
@@ -99,6 +110,22 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  session: () => req<{ required: boolean; authenticated: boolean }>("/api/session"),
+  // Deliberately not routed through req(): a wrong password is also a 401, and
+  // it must not trip the session-expired handler.
+  login: async (password: string) => {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail ?? `${res.status} ${res.statusText}`);
+    }
+    return res.json() as Promise<{ authenticated: boolean }>;
+  },
+  logout: () => req<{ authenticated: boolean }>("/api/logout", { method: "POST" }),
   inventory: () => req<{ items: InventoryItem[] }>("/api/inventory"),
   addInventory: (items: string[]) =>
     req<{ added: string[]; unknown: string[] }>("/api/inventory", {
