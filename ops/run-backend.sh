@@ -10,4 +10,7 @@ fi
 cd "$DEVVOL/forkcast"
 set -a; source .env; set +a
 export HF_HOME="$DEVVOL/caches/huggingface"
-exec /usr/bin/caffeinate -s .venv/bin/uvicorn app.main:app --app-dir backend --port 8000
+# --proxy-headers: cloudflared connects from 127.0.0.1, so without it every
+# login attempt shares one rate-limit bucket instead of one per real caller.
+exec /usr/bin/caffeinate -s .venv/bin/uvicorn app.main:app --app-dir backend \
+  --port 8000 --proxy-headers
