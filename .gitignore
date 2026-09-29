@@ -20,3 +20,6 @@ data/
 caches/
 .env
 *.sparsebundle
+
+# Claude Code local settings
+.claude/settings.local.json
