@@ -1,150 +1,150 @@
-{"id": "s001", "set": "A", "text": "dates", "gold": ["date"]}
-{"id": "s002", "set": "A", "text": "unsweetened applesauce", "gold": []}
-{"id": "s003", "set": "A", "text": "banana", "gold": ["banana"]}
-{"id": "s004", "set": "A", "text": "orange zest", "gold": ["orange"]}
-{"id": "s005", "set": "A", "text": "canned tomatoes", "gold": ["tomato"]}
-{"id": "s006", "set": "A", "text": "chopped tomatoes", "gold": ["tomato"]}
-{"id": "s007", "set": "A", "text": "cinnamon", "gold": ["cinnamon"]}
-{"id": "s008", "set": "A", "text": "snow peas", "gold": ["snow_pea"]}
-{"id": "s009", "set": "A", "text": "caraway seed", "gold": ["caraway_seed"]}
-{"id": "s010", "set": "A", "text": "lime peel", "gold": ["lime"]}
-{"id": "s011", "set": "A", "text": "conchiglie", "gold": ["pasta"]}
-{"id": "s012", "set": "A", "text": "figs", "gold": ["fig"]}
-{"id": "s013", "set": "A", "text": "cornmeal", "gold": ["cornmeal"]}
-{"id": "s014", "set": "A", "text": "cooked rice", "gold": ["rice"]}
-{"id": "s015", "set": "A", "text": "fresh gingerroot", "gold": ["ginger"]}
-{"id": "s016", "set": "A", "text": "part-skim mozzarella cheese", "gold": ["mozzarella_cheese"]}
-{"id": "s017", "set": "A", "text": "vanilla extract", "gold": ["vanilla"]}
-{"id": "s018", "set": "A", "text": "fresh parmesan cheese", "gold": ["parmesan_cheese"]}
-{"id": "s019", "set": "A", "text": "romaine lettuce", "gold": ["lettuce"]}
-{"id": "s020", "set": "A", "text": "blueberries", "gold": ["blueberry"]}
-{"id": "s021", "set": "A", "text": "light cream", "gold": ["cream"]}
-{"id": "s022", "set": "A", "text": "basil", "gold": ["basil"]}
-{"id": "s023", "set": "A", "text": "chicken breasts", "gold": ["chicken"]}
-{"id": "s024", "set": "A", "text": "plum jam", "gold": ["jam", "fruit_preserves"]}
-{"id": "s025", "set": "A", "text": "nutmeg", "gold": ["nutmeg"]}
-{"id": "s026", "set": "A", "text": "orange juice", "gold": ["orange", "fruit_juice"], "unsure": true, "note": "juice of a fresh fruit or a carton product: both entries"}
-{"id": "s027", "set": "A", "text": "cooked chicken breasts", "gold": ["chicken"]}
-{"id": "s028", "set": "A", "text": "dark brown sugar", "gold": ["brown_sugar"]}
-{"id": "s029", "set": "A", "text": "black pepper", "gold": ["black_pepper"]}
-{"id": "s030", "set": "A", "text": "plain yogurt", "gold": ["yogurt"]}
-{"id": "s031", "set": "A", "text": "bell pepper", "gold": ["bell_pepper"]}
-{"id": "s032", "set": "A", "text": "flour tortillas", "gold": ["flour_tortilla"]}
-{"id": "s033", "set": "A", "text": "fresh onion", "gold": ["onion"]}
-{"id": "s034", "set": "A", "text": "ground red pepper", "gold": ["cayenne_pepper", "red_pepper"]}
-{"id": "s035", "set": "A", "text": "soy sauce", "gold": ["soy_sauce"]}
-{"id": "s036", "set": "A", "text": "bay leaves", "gold": ["bay_leaf"]}
-{"id": "s037", "set": "A", "text": "dried currants", "gold": ["raisin", "black_currant"], "unsure": true, "note": "dried currants are usually Zante raisins"}
-{"id": "s038", "set": "A", "text": "coconut milk", "gold": ["coconut_milk"]}
-{"id": "s039", "set": "A", "text": "golden delicious apples", "gold": ["apple"]}
-{"id": "s040", "set": "A", "text": "fresh cilantro", "gold": ["coriander"]}
-{"id": "s041", "set": "A", "text": "duncan hines orange supreme cake mix", "gold": []}
-{"id": "s042", "set": "A", "text": "salted butter", "gold": ["butter"]}
-{"id": "s043", "set": "A", "text": "carrots", "gold": ["carrot"]}
-{"id": "s044", "set": "A", "text": "queso fresco", "gold": ["queso_fresco"]}
-{"id": "s045", "set": "A", "text": "vanilla extract", "gold": ["vanilla"]}
-{"id": "s046", "set": "A", "text": "black pepper", "gold": ["black_pepper"]}
-{"id": "s047", "set": "A", "text": "fresh mushrooms", "gold": ["mushroom"]}
-{"id": "s048", "set": "A", "text": "mexican cheese", "gold": ["cheese"]}
-{"id": "s049", "set": "A", "text": "semisweet mini chocolate chips", "gold": ["chocolate"]}
-{"id": "s050", "set": "A", "text": "capers", "gold": ["caper"]}
-{"id": "s051", "set": "B", "text": "papaya nectar", "gold": ["nectar", "fruit_juice"]}
-{"id": "s052", "set": "B", "text": "porcini mushrooms", "gold": ["porcini_mushroom"]}
-{"id": "s053", "set": "B", "text": "burrito-size whole wheat tortillas", "gold": ["flour_tortilla", "tortilla"]}
-{"id": "s054", "set": "B", "text": "wild rice mix", "gold": ["wild_rice"], "unsure": true, "note": "boxed wild rice mix, broad entry"}
-{"id": "s055", "set": "B", "text": "dark rye bread", "gold": ["rye_bread"]}
-{"id": "s056", "set": "B", "text": "yellow curry paste", "gold": ["yellow_curry_paste"]}
-{"id": "s057", "set": "B", "text": "frozen raspberries in light syrup", "gold": ["raspberry"]}
-{"id": "s058", "set": "B", "text": "\"emerils original essence\"", "gold": ["spice_mix"], "unsure": true, "note": "seasoning blend, broad entry"}
-{"id": "s059", "set": "B", "text": "potassium chloride", "gold": []}
-{"id": "s060", "set": "B", "text": "bartlett pears", "gold": ["pear"]}
-{"id": "s061", "set": "B", "text": "\"cracklin oat bran cereal\"", "gold": ["cereal"]}
-{"id": "s062", "set": "B", "text": "prego spaghetti sauce", "gold": ["pasta_sauce"]}
-{"id": "s063", "set": "B", "text": "canned jalapeno pepper", "gold": ["jalapeno"]}
-{"id": "s064", "set": "B", "text": "betty crocker double chocolate chunk cookie mix", "gold": []}
-{"id": "s065", "set": "B", "text": "live lobsters", "gold": ["lobster"]}
-{"id": "s066", "set": "B", "text": "martini mix", "gold": []}
-{"id": "s067", "set": "B", "text": "seeds", "gold": [], "unsure": true, "note": "too vague to be an ingredient"}
-{"id": "s068", "set": "B", "text": "chocolate bark", "gold": ["chocolate", "candy"]}
-{"id": "s069", "set": "B", "text": "matzo cake flour", "gold": ["matzo"], "unsure": true, "note": "matzo cake meal, the vocab has matzo only"}
-{"id": "s070", "set": "B", "text": "country sausage", "gold": ["sausage"]}
-{"id": "s071", "set": "B", "text": "low-fat coffee-flavored frozen yogurt", "gold": ["frozen_yogurt"]}
-{"id": "s072", "set": "B", "text": "basil and parmesan tapenade", "gold": ["tapenade"]}
-{"id": "s073", "set": "B", "text": "refrigerated breadstick dough", "gold": ["dough"], "unsure": true, "note": "refrigerated dough product"}
-{"id": "s074", "set": "B", "text": "oil-cured green olives", "gold": ["green_olive"]}
-{"id": "s075", "set": "B", "text": "reduced-fat crescent rolls", "gold": ["crescent_roll"]}
-{"id": "s076", "set": "B", "text": "canada dry ginger ale", "gold": ["ginger_ale"]}
-{"id": "s077", "set": "B", "text": "green lentils", "gold": ["lentil"]}
-{"id": "s078", "set": "B", "text": "cornichons", "gold": ["pickled_cucumber"]}
-{"id": "s079", "set": "B", "text": "butter pound cake", "gold": []}
-{"id": "s080", "set": "B", "text": "brown onions", "gold": ["onion"]}
-{"id": "s081", "set": "B", "text": "godiva milk chocolate liqueur", "gold": ["chocolate_liqueur"]}
-{"id": "s082", "set": "B", "text": "polyunsaturated margarine", "gold": ["margarine"]}
-{"id": "s083", "set": "B", "text": "instant dashi stock", "gold": ["dashi"]}
-{"id": "s084", "set": "B", "text": "soybean oil", "gold": ["soybean_oil", "vegetable_oil"]}
-{"id": "s085", "set": "B", "text": "dry onion flakes", "gold": ["onion"]}
-{"id": "s086", "set": "B", "text": "mutton stock", "gold": ["meat_stock"]}
-{"id": "s087", "set": "B", "text": "butterscotch sundae sauce", "gold": ["butterscotch"]}
-{"id": "s088", "set": "B", "text": "fine noodles", "gold": ["noodle"]}
-{"id": "s089", "set": "B", "text": "goji berry", "gold": ["goji_berry"]}
-{"id": "s090", "set": "B", "text": "buttercream frosting", "gold": ["buttercream"]}
-{"id": "s091", "set": "B", "text": "black vodka", "gold": ["vodka"]}
-{"id": "s092", "set": "B", "text": "\"m&ms peanut chocolate candies\"", "gold": ["candy", "chocolate"]}
-{"id": "s093", "set": "B", "text": "hock", "gold": ["ham"], "unsure": true, "note": "hock alone, usually ham hock"}
-{"id": "s094", "set": "B", "text": "light coconut milk", "gold": ["coconut_milk"]}
-{"id": "s095", "set": "B", "text": "dessert crepes", "gold": ["crepe"]}
-{"id": "s096", "set": "B", "text": "spicy mustard", "gold": ["mustard"]}
-{"id": "s097", "set": "B", "text": "borage", "gold": ["borage"]}
-{"id": "s098", "set": "B", "text": "bread", "gold": ["bread"]}
-{"id": "s099", "set": "B", "text": "sugar-free raspberry gelatin", "gold": ["gelatin"]}
-{"id": "s100", "set": "B", "text": "powdered ginger", "gold": ["ginger"]}
-{"id": "s101", "set": "C", "text": "Injera Flat Bread", "gold": ["flatbread"]}
-{"id": "s102", "set": "C", "text": "Mango Chunks", "gold": ["mango"]}
-{"id": "s103", "set": "C", "text": "Ice Bag", "gold": ["ice"]}
-{"id": "s104", "set": "C", "text": "Taco Seasoning", "gold": ["taco_seasoning"]}
-{"id": "s105", "set": "C", "text": "Total 2% Lowfat Greek Strained Yogurt With Blueberry", "gold": ["yogurt"]}
-{"id": "s106", "set": "C", "text": "Chicken Thighs", "gold": ["chicken"]}
-{"id": "s107", "set": "C", "text": "Organic Navel Orange", "gold": ["orange"]}
-{"id": "s108", "set": "C", "text": "Apple Honeycrisp Organic", "gold": ["apple"]}
-{"id": "s109", "set": "C", "text": "Baby Cucumbers", "gold": ["cucumber"]}
-{"id": "s110", "set": "C", "text": "Original Cooking Spray", "gold": ["cooking_spray"]}
-{"id": "s111", "set": "C", "text": "Organic Broccoli", "gold": ["broccoli"]}
-{"id": "s112", "set": "C", "text": "Rosemary & Sea Salt Fries", "gold": [], "unsure": true, "note": "seasoned frozen fries, no entry"}
-{"id": "s113", "set": "C", "text": "Non Dairy Chunky Monkey", "gold": ["ice_cream"], "unsure": true, "note": "non-dairy ice cream, broad entry"}
-{"id": "s114", "set": "C", "text": "Gluten Free Oatmeal Classic with Flax & Chia", "gold": ["oat"]}
-{"id": "s115", "set": "C", "text": "Mezzi Rigatoni", "gold": ["pasta"]}
-{"id": "s116", "set": "C", "text": "Organic Free Range Low Sodium Chicken Broth", "gold": ["chicken_broth"]}
-{"id": "s117", "set": "C", "text": "Roasted Turkey", "gold": ["turkey"]}
-{"id": "s118", "set": "C", "text": "Organic Broccoli Florets", "gold": ["broccoli"]}
-{"id": "s119", "set": "C", "text": "Roasted Red Pepper Hummus", "gold": ["hummus"]}
-{"id": "s120", "set": "C", "text": "Organic D'Anjou Pears", "gold": ["pear"]}
-{"id": "s121", "set": "C", "text": "Red Peppers", "gold": ["bell_pepper"]}
-{"id": "s122", "set": "C", "text": "Organic Whole Strawberries", "gold": ["strawberry"]}
-{"id": "s123", "set": "C", "text": "Organic Plain Greek Whole Milk Yogurt", "gold": ["yogurt"]}
-{"id": "s124", "set": "C", "text": "Salted Caramel & Chocolate Non Dairy Frozen Dessert", "gold": ["ice_cream"]}
-{"id": "s125", "set": "C", "text": "Organic Honey Nut O's Cereal", "gold": ["cereal"]}
-{"id": "s126", "set": "C", "text": "Frozen Broccoli Florets", "gold": ["broccoli"]}
-{"id": "s127", "set": "C", "text": "Michigan Organic Kale", "gold": ["kale"]}
-{"id": "s128", "set": "C", "text": "Dairy Free Unsweetened Coconut Milk", "gold": ["coconut_milk", "plant_based_milk"]}
-{"id": "s129", "set": "C", "text": "Potato Yukon Gold Organic", "gold": ["potato"]}
-{"id": "s130", "set": "C", "text": "Thick Medium Cheddar Slices", "gold": ["cheddar_cheese"]}
-{"id": "s131", "set": "C", "text": "Romaine Hearts", "gold": ["lettuce"]}
-{"id": "s132", "set": "C", "text": "Sinfully Sweet Campari Tomatoes", "gold": ["tomato"]}
-{"id": "s133", "set": "C", "text": "Spicy Brown Mustard", "gold": ["mustard"]}
-{"id": "s134", "set": "C", "text": "Organic Baby Kale", "gold": ["kale"]}
-{"id": "s135", "set": "C", "text": "Organic Mixed Vegetables", "gold": ["mixed_vegetable"]}
-{"id": "s136", "set": "C", "text": "Organic Mango", "gold": ["mango"]}
-{"id": "s137", "set": "C", "text": "Crushed Red Peppers", "gold": ["red_pepper"]}
-{"id": "s138", "set": "C", "text": "Organic Gala Apples", "gold": ["apple"]}
-{"id": "s139", "set": "C", "text": "Special Dark Cocoa", "gold": ["cocoa_powder"]}
-{"id": "s140", "set": "C", "text": "Organic Whole Wheat Fusilli", "gold": ["pasta"]}
-{"id": "s141", "set": "C", "text": "Berry Medley", "gold": ["berry"]}
-{"id": "s142", "set": "C", "text": "Organic Grape Tomatoes", "gold": ["tomato"]}
-{"id": "s143", "set": "C", "text": "Organic Baby Carrots", "gold": ["carrot"]}
-{"id": "s144", "set": "C", "text": "Raspberries", "gold": ["raspberry"]}
-{"id": "s145", "set": "C", "text": "Organic Ice Cream Vanilla Bean", "gold": ["ice_cream"]}
-{"id": "s146", "set": "C", "text": "Organic Long Grain Brown Rice", "gold": ["brown_rice", "rice"]}
-{"id": "s147", "set": "C", "text": "Sweet Rolls", "gold": ["sweet_roll"]}
-{"id": "s148", "set": "C", "text": "Organic Free Range Chicken Broth", "gold": ["chicken_broth"]}
-{"id": "s149", "set": "C", "text": "Channa Masala", "gold": [], "unsure": true, "note": "Instacart item, prepared meal or spice blend unclear"}
-{"id": "s150", "set": "C", "text": "Organic Pinto Beans", "gold": ["pinto_bean"]}
+{"id": "s001", "set": "A", "text": "dates", "gold": ["date"], "marker_b": ["date"], "review": "both markers agree"}
+{"id": "s002", "set": "A", "text": "unsweetened applesauce", "gold": ["fruit_puree"], "marker_b": ["fruit_puree"], "review": "markers chose different reasonable entries; both accepted (human review, rule 12)"}
+{"id": "s003", "set": "A", "text": "banana", "gold": ["banana"], "marker_b": ["banana"], "review": "both markers agree"}
+{"id": "s004", "set": "A", "text": "orange zest", "gold": ["orange"], "marker_b": ["orange"], "review": "both markers agree"}
+{"id": "s005", "set": "A", "text": "canned tomatoes", "gold": ["tomato"], "marker_b": ["tomato"], "review": "both markers agree"}
+{"id": "s006", "set": "A", "text": "chopped tomatoes", "gold": ["tomato"], "marker_b": ["tomato"], "review": "both markers agree"}
+{"id": "s007", "set": "A", "text": "cinnamon", "gold": ["cinnamon"], "marker_b": ["cinnamon"], "review": "both markers agree"}
+{"id": "s008", "set": "A", "text": "snow peas", "gold": ["snow_pea"], "marker_b": ["snow_pea"], "review": "both markers agree"}
+{"id": "s009", "set": "A", "text": "caraway seed", "gold": ["caraway_seed"], "marker_b": ["caraway_seed"], "review": "both markers agree"}
+{"id": "s010", "set": "A", "text": "lime peel", "gold": ["lime"], "marker_b": ["lime"], "review": "both markers agree"}
+{"id": "s011", "set": "A", "text": "conchiglie", "gold": ["pasta"], "marker_b": ["pasta"], "review": "both markers agree"}
+{"id": "s012", "set": "A", "text": "figs", "gold": ["fig"], "marker_b": ["fig"], "review": "both markers agree"}
+{"id": "s013", "set": "A", "text": "cornmeal", "gold": ["cornmeal"], "marker_b": ["cornmeal"], "review": "both markers agree"}
+{"id": "s014", "set": "A", "text": "cooked rice", "gold": ["rice"], "marker_b": ["rice"], "review": "both markers agree"}
+{"id": "s015", "set": "A", "text": "fresh gingerroot", "gold": ["ginger"], "marker_b": ["ginger"], "review": "both markers agree"}
+{"id": "s016", "set": "A", "text": "part-skim mozzarella cheese", "gold": ["mozzarella_cheese"], "marker_b": ["cheese", "mozzarella_cheese"], "review": "markers share a name; first marker's set kept"}
+{"id": "s017", "set": "A", "text": "vanilla extract", "gold": ["vanilla"], "marker_b": ["vanilla"], "review": "both markers agree"}
+{"id": "s018", "set": "A", "text": "fresh parmesan cheese", "gold": ["parmesan_cheese"], "marker_b": ["parmesan_cheese"], "review": "both markers agree"}
+{"id": "s019", "set": "A", "text": "romaine lettuce", "gold": ["lettuce"], "marker_b": ["lettuce"], "review": "both markers agree"}
+{"id": "s020", "set": "A", "text": "blueberries", "gold": ["blueberry"], "marker_b": ["blueberry"], "review": "both markers agree"}
+{"id": "s021", "set": "A", "text": "light cream", "gold": ["cream"], "marker_b": ["cream"], "review": "both markers agree"}
+{"id": "s022", "set": "A", "text": "basil", "gold": ["basil"], "marker_b": ["basil"], "review": "both markers agree"}
+{"id": "s023", "set": "A", "text": "chicken breasts", "gold": ["chicken"], "marker_b": ["chicken"], "review": "both markers agree"}
+{"id": "s024", "set": "A", "text": "plum jam", "gold": ["jam", "fruit_preserves"], "marker_b": ["fruit_preserves", "jam"], "review": "both markers agree"}
+{"id": "s025", "set": "A", "text": "nutmeg", "gold": ["nutmeg"], "marker_b": ["nutmeg"], "review": "both markers agree"}
+{"id": "s026", "set": "A", "text": "orange juice", "gold": ["orange", "fruit_juice"], "note": "juice of a fresh fruit or a carton product: both entries", "marker_b": ["fruit_juice", "orange"], "review": "both markers agree", "was_unsure": true}
+{"id": "s027", "set": "A", "text": "cooked chicken breasts", "gold": ["chicken"], "marker_b": ["chicken"], "review": "both markers agree"}
+{"id": "s028", "set": "A", "text": "dark brown sugar", "gold": ["brown_sugar"], "marker_b": ["brown_sugar"], "review": "both markers agree"}
+{"id": "s029", "set": "A", "text": "black pepper", "gold": ["black_pepper"], "marker_b": ["black_pepper"], "review": "both markers agree"}
+{"id": "s030", "set": "A", "text": "plain yogurt", "gold": ["yogurt"], "marker_b": ["yogurt"], "review": "both markers agree"}
+{"id": "s031", "set": "A", "text": "bell pepper", "gold": ["bell_pepper"], "marker_b": ["bell_pepper"], "review": "both markers agree"}
+{"id": "s032", "set": "A", "text": "flour tortillas", "gold": ["flour_tortilla"], "marker_b": ["flour_tortilla", "tortilla"], "review": "markers share a name; first marker's set kept"}
+{"id": "s033", "set": "A", "text": "fresh onion", "gold": ["onion"], "marker_b": ["onion"], "review": "both markers agree"}
+{"id": "s034", "set": "A", "text": "ground red pepper", "gold": ["cayenne_pepper", "red_pepper"], "marker_b": ["cayenne_pepper", "chili_pepper", "red_pepper"], "review": "markers share a name; first marker's set kept"}
+{"id": "s035", "set": "A", "text": "soy sauce", "gold": ["soy_sauce"], "marker_b": ["soy_sauce"], "review": "both markers agree"}
+{"id": "s036", "set": "A", "text": "bay leaves", "gold": ["bay_leaf"], "marker_b": ["bay_leaf"], "review": "both markers agree"}
+{"id": "s037", "set": "A", "text": "dried currants", "gold": ["raisin", "black_currant"], "note": "dried currants are usually Zante raisins", "marker_b": ["grape", "raisin"], "review": "markers share a name; first marker's set kept", "was_unsure": true}
+{"id": "s038", "set": "A", "text": "coconut milk", "gold": ["coconut_milk"], "marker_b": ["coconut_milk"], "review": "both markers agree"}
+{"id": "s039", "set": "A", "text": "golden delicious apples", "gold": ["apple"], "marker_b": ["apple"], "review": "both markers agree"}
+{"id": "s040", "set": "A", "text": "fresh cilantro", "gold": ["coriander"], "marker_b": ["coriander"], "review": "both markers agree"}
+{"id": "s041", "set": "A", "text": "duncan hines orange supreme cake mix", "gold": [], "marker_b": ["pastry", "sponge_cake"], "review": "second marker's broad cake entry rejected (human review)"}
+{"id": "s042", "set": "A", "text": "salted butter", "gold": ["butter"], "marker_b": ["butter"], "review": "both markers agree"}
+{"id": "s043", "set": "A", "text": "carrots", "gold": ["carrot"], "marker_b": ["carrot"], "review": "both markers agree"}
+{"id": "s044", "set": "A", "text": "queso fresco", "gold": ["queso_fresco"], "marker_b": ["queso_fresco"], "review": "both markers agree"}
+{"id": "s045", "set": "A", "text": "vanilla extract", "gold": ["vanilla"], "marker_b": ["vanilla"], "review": "both markers agree"}
+{"id": "s046", "set": "A", "text": "black pepper", "gold": ["black_pepper"], "marker_b": ["black_pepper"], "review": "both markers agree"}
+{"id": "s047", "set": "A", "text": "fresh mushrooms", "gold": ["mushroom"], "marker_b": ["mushroom"], "review": "both markers agree"}
+{"id": "s048", "set": "A", "text": "mexican cheese", "gold": ["cheese"], "marker_b": ["cheese"], "review": "both markers agree"}
+{"id": "s049", "set": "A", "text": "semisweet mini chocolate chips", "gold": ["chocolate"], "marker_b": ["chocolate"], "review": "both markers agree"}
+{"id": "s050", "set": "A", "text": "capers", "gold": ["caper"], "marker_b": ["caper"], "review": "both markers agree"}
+{"id": "s051", "set": "B", "text": "papaya nectar", "gold": ["nectar", "fruit_juice"], "marker_b": ["fruit_juice", "nectar"], "review": "both markers agree"}
+{"id": "s052", "set": "B", "text": "porcini mushrooms", "gold": ["porcini_mushroom"], "marker_b": ["mushroom", "porcini_mushroom"], "review": "markers share a name; first marker's set kept"}
+{"id": "s053", "set": "B", "text": "burrito-size whole wheat tortillas", "gold": ["flour_tortilla", "tortilla"], "marker_b": ["flour_tortilla", "tortilla"], "review": "both markers agree"}
+{"id": "s054", "set": "B", "text": "wild rice mix", "gold": ["wild_rice"], "note": "boxed wild rice mix, broad entry", "marker_b": ["mixed_grains", "rice", "wild_rice"], "review": "markers share a name; first marker's set kept", "was_unsure": true}
+{"id": "s055", "set": "B", "text": "dark rye bread", "gold": ["rye_bread"], "marker_b": ["bread", "rye_bread"], "review": "markers share a name; first marker's set kept"}
+{"id": "s056", "set": "B", "text": "yellow curry paste", "gold": ["yellow_curry_paste"], "marker_b": ["curry_paste", "yellow_curry_paste"], "review": "markers share a name; first marker's set kept"}
+{"id": "s057", "set": "B", "text": "frozen raspberries in light syrup", "gold": ["raspberry"], "marker_b": ["raspberry"], "review": "both markers agree"}
+{"id": "s058", "set": "B", "text": "\"emerils original essence\"", "gold": ["spice_mix"], "note": "seasoning blend, broad entry", "marker_b": ["cajun_seasoning", "creole_seasoning", "spice_mix"], "review": "markers share a name; first marker's set kept", "was_unsure": true}
+{"id": "s059", "set": "B", "text": "potassium chloride", "gold": [], "marker_b": [], "review": "both markers agree"}
+{"id": "s060", "set": "B", "text": "bartlett pears", "gold": ["pear"], "marker_b": ["pear"], "review": "both markers agree"}
+{"id": "s061", "set": "B", "text": "\"cracklin oat bran cereal\"", "gold": ["cereal"], "marker_b": ["cereal"], "review": "both markers agree"}
+{"id": "s062", "set": "B", "text": "prego spaghetti sauce", "gold": ["pasta_sauce"], "marker_b": ["pasta_sauce"], "review": "both markers agree"}
+{"id": "s063", "set": "B", "text": "canned jalapeno pepper", "gold": ["jalapeno"], "marker_b": ["jalapeno"], "review": "both markers agree"}
+{"id": "s064", "set": "B", "text": "betty crocker double chocolate chunk cookie mix", "gold": ["cookie"], "marker_b": ["cookie"], "review": "markers chose different reasonable entries; both accepted (human review, rule 12)"}
+{"id": "s065", "set": "B", "text": "live lobsters", "gold": ["lobster"], "marker_b": ["lobster"], "review": "both markers agree"}
+{"id": "s066", "set": "B", "text": "martini mix", "gold": [], "marker_b": [], "review": "both markers agree"}
+{"id": "s067", "set": "B", "text": "seeds", "gold": ["mixed_seeds"], "note": "too vague to be an ingredient", "marker_b": ["mixed_seeds"], "review": "markers chose different reasonable entries; both accepted (human review, rule 12)", "was_unsure": true}
+{"id": "s068", "set": "B", "text": "chocolate bark", "gold": ["chocolate", "candy"], "marker_b": ["candy", "candy_coating", "chocolate"], "review": "markers share a name; first marker's set kept"}
+{"id": "s069", "set": "B", "text": "matzo cake flour", "gold": ["matzo"], "note": "matzo cake meal, the vocab has matzo only", "marker_b": ["flour", "matzo"], "review": "markers share a name; first marker's set kept", "was_unsure": true}
+{"id": "s070", "set": "B", "text": "country sausage", "gold": ["sausage"], "marker_b": ["sausage"], "review": "both markers agree"}
+{"id": "s071", "set": "B", "text": "low-fat coffee-flavored frozen yogurt", "gold": ["frozen_yogurt"], "marker_b": ["frozen_yogurt"], "review": "both markers agree"}
+{"id": "s072", "set": "B", "text": "basil and parmesan tapenade", "gold": ["tapenade"], "marker_b": ["tapenade"], "review": "both markers agree"}
+{"id": "s073", "set": "B", "text": "refrigerated breadstick dough", "gold": ["dough"], "note": "refrigerated dough product", "marker_b": ["dough"], "review": "both markers agree", "was_unsure": true}
+{"id": "s074", "set": "B", "text": "oil-cured green olives", "gold": ["green_olive"], "marker_b": ["green_olive", "olive"], "review": "markers share a name; first marker's set kept"}
+{"id": "s075", "set": "B", "text": "reduced-fat crescent rolls", "gold": ["crescent_roll"], "marker_b": ["crescent_roll"], "review": "both markers agree"}
+{"id": "s076", "set": "B", "text": "canada dry ginger ale", "gold": ["ginger_ale"], "marker_b": ["ginger_ale"], "review": "both markers agree"}
+{"id": "s077", "set": "B", "text": "green lentils", "gold": ["lentil"], "marker_b": ["lentil"], "review": "both markers agree"}
+{"id": "s078", "set": "B", "text": "cornichons", "gold": ["pickled_cucumber"], "marker_b": ["pickled_cucumber"], "review": "both markers agree"}
+{"id": "s079", "set": "B", "text": "butter pound cake", "gold": [], "marker_b": ["pastry", "sponge_cake"], "review": "second marker's broad cake entry rejected (human review)"}
+{"id": "s080", "set": "B", "text": "brown onions", "gold": ["onion"], "marker_b": ["onion"], "review": "both markers agree"}
+{"id": "s081", "set": "B", "text": "godiva milk chocolate liqueur", "gold": ["chocolate_liqueur"], "marker_b": ["chocolate_liqueur"], "review": "both markers agree"}
+{"id": "s082", "set": "B", "text": "polyunsaturated margarine", "gold": ["margarine"], "marker_b": ["margarine"], "review": "both markers agree"}
+{"id": "s083", "set": "B", "text": "instant dashi stock", "gold": ["dashi"], "marker_b": ["broth", "dashi"], "review": "markers share a name; first marker's set kept"}
+{"id": "s084", "set": "B", "text": "soybean oil", "gold": ["soybean_oil", "vegetable_oil"], "marker_b": ["oil", "soybean_oil", "vegetable_oil"], "review": "markers share a name; first marker's set kept"}
+{"id": "s085", "set": "B", "text": "dry onion flakes", "gold": ["onion"], "marker_b": ["onion"], "review": "both markers agree"}
+{"id": "s086", "set": "B", "text": "mutton stock", "gold": ["meat_stock"], "marker_b": ["broth", "meat_stock"], "review": "markers share a name; first marker's set kept"}
+{"id": "s087", "set": "B", "text": "butterscotch sundae sauce", "gold": ["butterscotch"], "marker_b": ["butterscotch", "syrup"], "review": "markers share a name; first marker's set kept"}
+{"id": "s088", "set": "B", "text": "fine noodles", "gold": ["noodle"], "marker_b": ["noodle"], "review": "both markers agree"}
+{"id": "s089", "set": "B", "text": "goji berry", "gold": ["goji_berry"], "marker_b": ["goji_berry"], "review": "both markers agree"}
+{"id": "s090", "set": "B", "text": "buttercream frosting", "gold": ["buttercream"], "marker_b": ["buttercream", "frosting"], "review": "markers share a name; first marker's set kept"}
+{"id": "s091", "set": "B", "text": "black vodka", "gold": ["vodka"], "marker_b": ["vodka"], "review": "both markers agree"}
+{"id": "s092", "set": "B", "text": "\"m&ms peanut chocolate candies\"", "gold": ["candy", "chocolate"], "marker_b": ["candy", "chocolate"], "review": "both markers agree"}
+{"id": "s093", "set": "B", "text": "hock", "gold": ["ham", "pork", "white_wine"], "note": "hock alone, usually ham hock", "marker_b": ["pork", "white_wine"], "review": "markers chose different reasonable entries; both accepted (human review, rule 12)", "was_unsure": true}
+{"id": "s094", "set": "B", "text": "light coconut milk", "gold": ["coconut_milk"], "marker_b": ["coconut_milk"], "review": "both markers agree"}
+{"id": "s095", "set": "B", "text": "dessert crepes", "gold": ["crepe"], "marker_b": ["crepe"], "review": "both markers agree"}
+{"id": "s096", "set": "B", "text": "spicy mustard", "gold": ["mustard"], "marker_b": ["mustard"], "review": "both markers agree"}
+{"id": "s097", "set": "B", "text": "borage", "gold": ["borage"], "marker_b": ["borage"], "review": "both markers agree"}
+{"id": "s098", "set": "B", "text": "bread", "gold": ["bread"], "marker_b": ["bread"], "review": "both markers agree"}
+{"id": "s099", "set": "B", "text": "sugar-free raspberry gelatin", "gold": ["gelatin"], "marker_b": ["gelatin"], "review": "both markers agree"}
+{"id": "s100", "set": "B", "text": "powdered ginger", "gold": ["ginger"], "marker_b": ["ginger"], "review": "both markers agree"}
+{"id": "s101", "set": "C", "text": "Injera Flat Bread", "gold": ["flatbread"], "marker_b": ["bread", "flatbread"], "review": "markers share a name; first marker's set kept"}
+{"id": "s102", "set": "C", "text": "Mango Chunks", "gold": ["mango"], "marker_b": ["mango"], "review": "both markers agree"}
+{"id": "s103", "set": "C", "text": "Ice Bag", "gold": ["ice"], "marker_b": ["ice"], "review": "both markers agree"}
+{"id": "s104", "set": "C", "text": "Taco Seasoning", "gold": ["taco_seasoning"], "marker_b": ["taco_seasoning"], "review": "both markers agree"}
+{"id": "s105", "set": "C", "text": "Total 2% Lowfat Greek Strained Yogurt With Blueberry", "gold": ["yogurt"], "marker_b": ["yogurt"], "review": "both markers agree"}
+{"id": "s106", "set": "C", "text": "Chicken Thighs", "gold": ["chicken"], "marker_b": ["chicken"], "review": "both markers agree"}
+{"id": "s107", "set": "C", "text": "Organic Navel Orange", "gold": ["orange"], "marker_b": ["orange"], "review": "both markers agree"}
+{"id": "s108", "set": "C", "text": "Apple Honeycrisp Organic", "gold": ["apple"], "marker_b": ["apple"], "review": "both markers agree"}
+{"id": "s109", "set": "C", "text": "Baby Cucumbers", "gold": ["cucumber"], "marker_b": ["cucumber"], "review": "both markers agree"}
+{"id": "s110", "set": "C", "text": "Original Cooking Spray", "gold": ["cooking_spray"], "marker_b": ["cooking_spray"], "review": "both markers agree"}
+{"id": "s111", "set": "C", "text": "Organic Broccoli", "gold": ["broccoli"], "marker_b": ["broccoli"], "review": "both markers agree"}
+{"id": "s112", "set": "C", "text": "Rosemary & Sea Salt Fries", "gold": [], "note": "seasoned frozen fries, no entry", "marker_b": [], "review": "both markers agree", "was_unsure": true}
+{"id": "s113", "set": "C", "text": "Non Dairy Chunky Monkey", "gold": ["ice_cream"], "note": "non-dairy ice cream, broad entry", "marker_b": ["ice_cream"], "review": "both markers agree", "was_unsure": true}
+{"id": "s114", "set": "C", "text": "Gluten Free Oatmeal Classic with Flax & Chia", "gold": ["cereal", "oat"], "marker_b": ["cereal"], "review": "markers chose different reasonable entries; both accepted (human review, rule 12)"}
+{"id": "s115", "set": "C", "text": "Mezzi Rigatoni", "gold": ["pasta"], "marker_b": ["pasta"], "review": "both markers agree"}
+{"id": "s116", "set": "C", "text": "Organic Free Range Low Sodium Chicken Broth", "gold": ["chicken_broth"], "marker_b": ["broth", "chicken_broth"], "review": "markers share a name; first marker's set kept"}
+{"id": "s117", "set": "C", "text": "Roasted Turkey", "gold": ["turkey"], "marker_b": ["turkey"], "review": "both markers agree"}
+{"id": "s118", "set": "C", "text": "Organic Broccoli Florets", "gold": ["broccoli"], "marker_b": ["broccoli"], "review": "both markers agree"}
+{"id": "s119", "set": "C", "text": "Roasted Red Pepper Hummus", "gold": ["hummus"], "marker_b": ["hummus"], "review": "both markers agree"}
+{"id": "s120", "set": "C", "text": "Organic D'Anjou Pears", "gold": ["pear"], "marker_b": ["pear"], "review": "both markers agree"}
+{"id": "s121", "set": "C", "text": "Red Peppers", "gold": ["bell_pepper"], "marker_b": ["bell_pepper"], "review": "both markers agree"}
+{"id": "s122", "set": "C", "text": "Organic Whole Strawberries", "gold": ["strawberry"], "marker_b": ["strawberry"], "review": "both markers agree"}
+{"id": "s123", "set": "C", "text": "Organic Plain Greek Whole Milk Yogurt", "gold": ["yogurt"], "marker_b": ["yogurt"], "review": "both markers agree"}
+{"id": "s124", "set": "C", "text": "Salted Caramel & Chocolate Non Dairy Frozen Dessert", "gold": ["ice_cream"], "marker_b": ["ice_cream"], "review": "both markers agree"}
+{"id": "s125", "set": "C", "text": "Organic Honey Nut O's Cereal", "gold": ["cereal"], "marker_b": ["cereal"], "review": "both markers agree"}
+{"id": "s126", "set": "C", "text": "Frozen Broccoli Florets", "gold": ["broccoli"], "marker_b": ["broccoli"], "review": "both markers agree"}
+{"id": "s127", "set": "C", "text": "Michigan Organic Kale", "gold": ["kale"], "marker_b": ["kale"], "review": "both markers agree"}
+{"id": "s128", "set": "C", "text": "Dairy Free Unsweetened Coconut Milk", "gold": ["coconut_milk", "plant_based_milk"], "marker_b": ["coconut_milk"], "review": "markers share a name; first marker's set kept"}
+{"id": "s129", "set": "C", "text": "Potato Yukon Gold Organic", "gold": ["potato"], "marker_b": ["potato"], "review": "both markers agree"}
+{"id": "s130", "set": "C", "text": "Thick Medium Cheddar Slices", "gold": ["cheddar_cheese"], "marker_b": ["cheddar_cheese", "cheese"], "review": "markers share a name; first marker's set kept"}
+{"id": "s131", "set": "C", "text": "Romaine Hearts", "gold": ["lettuce"], "marker_b": ["lettuce"], "review": "both markers agree"}
+{"id": "s132", "set": "C", "text": "Sinfully Sweet Campari Tomatoes", "gold": ["tomato"], "marker_b": ["tomato"], "review": "both markers agree"}
+{"id": "s133", "set": "C", "text": "Spicy Brown Mustard", "gold": ["mustard"], "marker_b": ["mustard"], "review": "both markers agree"}
+{"id": "s134", "set": "C", "text": "Organic Baby Kale", "gold": ["kale"], "marker_b": ["kale"], "review": "both markers agree"}
+{"id": "s135", "set": "C", "text": "Organic Mixed Vegetables", "gold": ["mixed_vegetable"], "marker_b": ["mixed_vegetable"], "review": "both markers agree"}
+{"id": "s136", "set": "C", "text": "Organic Mango", "gold": ["mango"], "marker_b": ["mango"], "review": "both markers agree"}
+{"id": "s137", "set": "C", "text": "Crushed Red Peppers", "gold": ["red_pepper"], "marker_b": ["chili_pepper", "red_pepper"], "review": "markers share a name; first marker's set kept"}
+{"id": "s138", "set": "C", "text": "Organic Gala Apples", "gold": ["apple"], "marker_b": ["apple"], "review": "both markers agree"}
+{"id": "s139", "set": "C", "text": "Special Dark Cocoa", "gold": ["cocoa_powder"], "marker_b": ["cocoa_powder"], "review": "both markers agree"}
+{"id": "s140", "set": "C", "text": "Organic Whole Wheat Fusilli", "gold": ["pasta"], "marker_b": ["pasta"], "review": "both markers agree"}
+{"id": "s141", "set": "C", "text": "Berry Medley", "gold": ["berry"], "marker_b": ["berry"], "review": "both markers agree"}
+{"id": "s142", "set": "C", "text": "Organic Grape Tomatoes", "gold": ["tomato"], "marker_b": ["tomato"], "review": "both markers agree"}
+{"id": "s143", "set": "C", "text": "Organic Baby Carrots", "gold": ["carrot"], "marker_b": ["carrot"], "review": "both markers agree"}
+{"id": "s144", "set": "C", "text": "Raspberries", "gold": ["raspberry"], "marker_b": ["raspberry"], "review": "both markers agree"}
+{"id": "s145", "set": "C", "text": "Organic Ice Cream Vanilla Bean", "gold": ["ice_cream"], "marker_b": ["ice_cream"], "review": "both markers agree"}
+{"id": "s146", "set": "C", "text": "Organic Long Grain Brown Rice", "gold": ["brown_rice", "rice"], "marker_b": ["brown_rice", "rice"], "review": "both markers agree"}
+{"id": "s147", "set": "C", "text": "Sweet Rolls", "gold": ["sweet_roll"], "marker_b": ["sweet_roll"], "review": "both markers agree"}
+{"id": "s148", "set": "C", "text": "Organic Free Range Chicken Broth", "gold": ["chicken_broth"], "marker_b": ["broth", "chicken_broth"], "review": "markers share a name; first marker's set kept"}
+{"id": "s149", "set": "C", "text": "Channa Masala", "gold": ["curry"], "note": "Instacart item, prepared meal or spice blend unclear", "marker_b": ["curry"], "review": "markers chose different reasonable entries; both accepted (human review, rule 12)", "was_unsure": true}
+{"id": "s150", "set": "C", "text": "Organic Pinto Beans", "gold": ["pinto_bean"], "marker_b": ["bean", "pinto_bean"], "review": "markers share a name; first marker's set kept"}

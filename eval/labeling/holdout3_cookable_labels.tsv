@@ -2,18 +2,18 @@ comfort	3406	yes
 comfort	4644	yes	
 comfort	5739	yes	
 comfort	12420	yes	
-comfort	12542	yes	unsure: frozen hash browns counted as shredded potatoes
+comfort	12542	yes	frozen hash browns counted as shredded potatoes (checked by second marker)
 comfort	18465	yes	
 comfort	28528	yes	
 comfort	30271	yes	
 comfort	36962	yes	
 comfort	46854	yes	
-comfort	51053	yes	unsure: deli roast chicken counted as cooked chicken
+comfort	51053	yes	deli roast chicken counted as cooked chicken (checked by second marker)
 comfort	52026	no	dried beef
 comfort	53817	yes	
 comfort	53863	yes	
 comfort	54152	yes	
-comfort	78302	yes	unsure: frozen hash browns counted as shredded potatoes
+comfort	78302	yes	frozen hash browns counted as shredded potatoes (checked by second marker)
 comfort	81428	yes	
 comfort	81572	no	dried beef
 comfort	84675	yes	
@@ -26,15 +26,15 @@ middle_eastern	11857	yes
 middle_eastern	16972	yes	
 middle_eastern	18795	yes	
 middle_eastern	19338	yes	
-middle_eastern	19392	yes	unsure: cilantro, kitchen has ground coriander (counted by the form rule)
+middle_eastern	19392	no	cilantro (human review: ground coriander seed is not cilantro, rule 13)
 middle_eastern	19417	yes	
 middle_eastern	27631	yes	
 middle_eastern	38409	yes	
 middle_eastern	49624	yes	
 middle_eastern	49647	yes	
 middle_eastern	53229	yes	
-middle_eastern	53956	yes	unsure: cilantro, kitchen has ground coriander (counted by the form rule)
-middle_eastern	55969	yes	unsure: cilantro, kitchen has ground coriander (counted by the form rule)
+middle_eastern	53956	no	fresh cilantro (human review: ground coriander seed is not cilantro, rule 13)
+middle_eastern	55969	no	cilantro (human review: ground coriander seed is not cilantro, rule 13)
 middle_eastern	70833	yes	
 middle_eastern	75822	yes	
 middle_eastern	87554	yes	
@@ -50,7 +50,7 @@ seafood	19576	yes
 seafood	21560	yes	
 seafood	22521	yes	
 seafood	22924	yes	
-seafood	23501	yes	unsure: fresh tuna steaks, kitchen has canned tuna (counted by the form rule)
+seafood	23501	yes	fresh tuna steaks, kitchen has canned tuna (counted by the form rule) (checked by second marker)
 seafood	34889	yes	
 seafood	43115	yes	
 seafood	45977	yes	

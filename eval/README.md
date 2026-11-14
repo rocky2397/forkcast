@@ -26,7 +26,9 @@ the system under test.
 1. Ingredient matching and "cookable now" precision: **done**, then tightened
    with a blind second marker (GPT-6 Astra), a human review of every disagreement
    and three more held-out kitchens (see "Tightening" in
-   [`RESULTS.md`](RESULTS.md)).
+   [`RESULTS.md`](RESULTS.md)). A second matcher fix (D29) was judged on a
+   further fresh set: 150 strings and three kitchens (`data/holdout3*.jsonl`,
+   `data/kitchens_holdout3.json`), double-marked like the rest.
 2. Substitutions: **done**, fixed by D28 (see
    [`RESULTS-stage2.md`](RESULTS-stage2.md)).
 3. Taste ranking: **parked.** The plan is to replay real food.com users'

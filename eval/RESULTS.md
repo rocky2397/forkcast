@@ -131,6 +131,54 @@ product misses are D27's error class again, for words D27 doesn't list:
 `tomato juice` → tomato, `creamed corn` → corn, `chicken sausage` → chicken.
 That is the obvious next fix, to be judged on yet another fresh kitchen.
 
+## D29: more product words, judged on fresh data
+
+The tightening showed most remaining false "cookable" recipes were D27's
+error class again, for product words D27 doesn't list. Before writing a fix,
+**150 new ingredient strings** (seed 1115, excluding all 425 earlier ones) and
+**three new kitchens** (comfort, middle_eastern, seafood) were set aside,
+labelled blind and committed (`c62342c`). Every earlier string and kitchen had
+been read, so none could judge this fix. D29 was then designed on development
+data only (see APP_DECISIONS.md).
+
+| Fresh data, current matcher | before D29 | after D29 |
+|---|---|---|
+| **"Cookable now"**, three new kitchens | 53/60 = 88% | **55/60 = 92%** (95% CI 82–96%) |
+| **Wrong-match rate**, 150 new strings | 7.3% | **5.3%** |
+| Accuracy / recall, 150 new strings | 80.7% / 81.4% | 82.7% / 83.4% |
+
+The engine's before and after lists for the new kitchens were judged together,
+shuffled, without knowing which version listed a recipe. D29 removed two false
+recipes (salmon with sun-dried tomatoes in oil, a tartar sauce with dill
+pickles) and added two real ones.
+
+**On data seen while designing** the gain is larger, and flatters the fix:
+
+| | before D29 | after D29 |
+|---|---|---|
+| Four earlier held-out kitchens | 65/80 = 81% | 75/80 = 94% |
+| Three development kitchens | 56/60 = 93% | 59/60 = 98% |
+| Wrong-match rate, 150 earlier held-out strings | 14.0% | 4.7% |
+| Wrong-match rate, 275 development strings | 9.5% | 4.0% |
+
+Of the 19 known false "cookable" recipes in the earlier seven kitchens, 14 drop
+out; the 14 recipes D29 newly lists there were judged (13 cookable).
+
+**Second marker, round 3.** GPT-6 Astra labelled the fresh data blind as
+before: compatible on 142/150 strings (95%), identical verdicts on 58/62
+recipes (94%, Cohen's kappa 0.57; kappa is low only because "no" is rare
+here). A human settled the disagreements with three more rules (13–15 in
+[`data/LABELING.md`](data/LABELING.md)): fresh cilantro is not ground
+coriander, sun-dried tomatoes in oil are a product, and any lentil variety
+counts. Cilantro alone cost three recipes in both versions (the vocabulary has
+one `coriander` entry for leaf and seed), which is why the fresh level is 92%
+rather than the 97% a single marker had counted.
+
+**Still wrong after D29:** cilantro vs ground coriander (a vocabulary limit),
+"dried beef" → beef ("dried" is a descriptor), a bare "red pepper" → chili
+flakes when the recipe means a bell pepper, "peas and carrots" → carrot, and
+"oil-cured green olives" → oil.
+
 ## Caveats
 
 - **Two model markers and one human decision-maker, no human marker.** The

@@ -84,6 +84,14 @@ disagreed because the rules above didn't settle a case, a human decided:
     different defensible names (`vegetable bouillon`: `broth` or
     `vegetable_stock`), the gold set holds both.
 
+13. **Cilantro is not ground coriander** (2026-11-14, D29 review). The leaves
+    and the ground seeds share one vocabulary entry, `coriander`, but a recipe
+    asking for fresh cilantro is not cookable from ground coriander. The app
+    can't tell them apart, so such recipes count against it.
+14. **Preserved products are products.** Sun-dried tomatoes in oil are not
+    satisfied by fresh tomatoes, just as stock isn't by chicken.
+15. **Any lentil variety counts** for another, like any tomato variety.
+
 # Labelling guide: substitutions (stage 2)
 
 `data/subs_cases.jsonl` (development) and `data/subs_holdout.jsonl` (held-out)
