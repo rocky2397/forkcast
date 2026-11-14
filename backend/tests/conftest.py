@@ -77,7 +77,7 @@ def profile(db):
     """A profile row, so targets and macro steering have something to work with."""
     db.execute(
         """INSERT INTO profile (id, sex, age, height_cm, weight_kg, activity, goal)
-           VALUES (1, 'm', 31, 179, 92, 'light', 'cut')"""
+           VALUES (1, 'm', 30, 175, 80, 'light', 'cut')"""
     )
     db.commit()
     return db

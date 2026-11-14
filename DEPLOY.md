@@ -30,8 +30,8 @@ The corpus/user split is what makes this cheap: a 1 GB disk holds a few KB.
 The app repo is private, and Render warns that Docker build args can end up in
 image layers — so the build can't use a GitHub token. The corpus goes to a
 separate **public** data repo instead. It contains nothing private: recipes
-from the public RecipeNLG-family corpus, normalized against the public Epicure
-vocabulary.
+from the public food.com dataset (see the README for its terms), normalized
+against the public Epicure vocabulary.
 
 ```bash
 source dev.sh

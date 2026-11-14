@@ -109,7 +109,7 @@ def test_day_summary_totals_what_was_logged(client, profile):
                                     "protein_g": 18, "carbs_g": 2, "fat_g": 14})
     body = client.get("/api/day").json()
     assert body["totals"]["calories"] == 200
-    assert body["targets"]["protein_g"] == 166
+    assert body["targets"]["protein_g"] == 144  # 1.8 g/kg x 80 kg
 
 
 def test_password_gate_blocks_api_but_not_the_login_screen(client, monkeypatch):
