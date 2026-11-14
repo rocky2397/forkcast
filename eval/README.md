@@ -28,5 +28,12 @@ the system under test.
    held-out kitchen to narrow the interval around 80%.
 2. Substitutions: **done**, fixed by D28 (see
    [`RESULTS-stage2.md`](RESULTS-stage2.md)).
-3. Taste ranking.
+3. Taste ranking: **parked.** The plan is to replay real food.com users'
+   ratings: log part of a user's history as cooks, then check that the recipes
+   they rated highly rank above the rest. The ratings are public
+   (`peterpeeterspeter/recipe-interactions` on Hugging Face), but they are
+   keyed by food.com recipe ids, which the corpus doesn't store. Joining them
+   needs the original recipe table with ids (`RAW_recipes.csv` from Kaggle's
+   *Food.com Recipes and User Interactions*, sign-in required). The free
+   copies checked were broken or had the ids removed.
 4. Photo scanning.
