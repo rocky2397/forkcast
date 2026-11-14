@@ -4,8 +4,8 @@ When a recipe is missing one ingredient, Forkcast shows a hint like "needs
 lime, try lemon", with the stand-in taken from your inventory (D13). Stage 2
 asks: **would a cook actually use what it suggests?**
 
-Run on 2026-11-14 against `main` at `e69129b` (substitution engine unchanged
-since D13) and corpus `corpus-20261114-d27`.
+Run on 2026-11-14 with corpus `corpus-20261114-d27`. **Before:** `main` at
+`e69129b`, where the engine was unchanged since D13. **After:** the D28 fix.
 
 ## Method
 
@@ -38,7 +38,7 @@ Nothing was tuned, so both columns are a baseline. The held-out column checks
 that the result isn't an artefact of the first three kitchens.
 
 **In plain words:** the engine almost always says something, and more often
-than not what it says is wrong. The D13 docstring promises "precision over
+than not what it says is wrong. The D13 docstring promised "precision over
 recall"; on the cases the app actually shows, it is the other way round.
 
 ## What the eval found
@@ -75,33 +75,72 @@ it only covers 8 classes.
 D13 was validated on 17 hand-picked regression pairs, which still pass. They
 just aren't the pairs the app meets in practice.
 
-## What a fix would look like (not done)
+## The fix (D28) and its result
 
-1. **Cover more of the vocabulary with classes:** spices, nuts and seeds,
-   fresh and dried fruit, vegetables by role, broths and stocks, vinegars,
-   fats, leaveners, flours, sauces.
-2. **Make the unclassed path silent,** or far stricter. A missing hint costs a
-   suggestion; a bad one costs trust.
+D28 widens the class map from 8 to 47 classes (395 names), built from what the
+foods are used for and split where their role differs: cured vs fresh meat,
+melting vs grating cheese, fresh vs dried chili, solid fat vs oil, broth,
+vinegar, nuts, berries, warm spices, noodles, flatbreads and more. **Outside the
+map the engine now stays silent.** The gate inside a class is unchanged.
 
-As a rough guide, on the development set alone: if the unclassed path were
-silent, precision would be 19/22 = 86% and recall 19/40 = 48%.
+**Judged on a fresh held-out set.** The first held-out set was read while
+writing up the findings above, so it couldn't judge a fix designed afterwards.
+Two new kitchens (brunch, curry) gave 60 more cases. They were labelled and
+committed (`f37f414`) before the fix was written and before either engine ran
+on them.
 
-**A fix must be checked on a fresh held-out kitchen.** The held-out bad
-suggestions above were read for this write-up, so that set is no longer blind
-for a fix designed now.
+| Fresh held-out (60 cases) | before | after D28 |
+|---|---|---|
+| Cases where a suggestion is shown | 54 (90%) | 21 (35%) |
+| **Usable share of shown suggestions** | 18/54 = 33% | **20/21 = 95%** (95% CI 77–99%) |
+| Strict (good only) | 8/54 = 15% | 8/21 = 38% |
+| **Cases with a bad suggestion** | 36/60 = 60% | **1/60 = 2%** |
+| Recall, cases with a usable stand-in on hand | 18/34 = 53% | 20/34 = 59% |
+
+Recall goes *up* although the engine says less: the old engine often picked a
+wrong item when a right one was also on hand.
+
+The sets the fix was designed with, for completeness (these flatter it):
+
+| | before | after D28 |
+|---|---|---|
+| Development, usable share | 29/81 = 36% | 29/29 = 100% |
+| First held-out, usable share | 23/51 = 45% | 21/25 = 84% |
+
+**What it still misses** on the fresh set, 13 cases:
+- **No class for the missing ingredient:** mayonnaise → yogurt, condensed
+  soup → cream, pizza crust → bread, asafoetida → garlic.
+- **Classes kept apart on purpose:** cayenne or red pepper → fresh green chili
+  (4 cases; dried and fresh chili are split), canola oil → ghee (oil vs solid
+  fat), basil or "herbs" → chives (herb vs allium).
+- **A whole spice for a blend:** cloves → garam masala (2 cases).
+
+Outside this set, the tests record one more: `sour_cream → yogurt` shares a
+class but ranks 439 among sour cream's neighbours, just past the gate's 400.
+
+**The one bad suggestion:** `brunch-23`, a French toast casserole missing cream
+cheese, gets heavy cream. Both are dairy, but one is a spread and the other a
+liquid.
+
+**One label was corrected after scoring:** `curry-17` had coriander marked
+good, but ground coriander is already in that recipe, so it was never a
+candidate. Clearing the label affects both engines the same way.
 
 ## Caveats
 
 - **One labeller.** All labels are by Claude (Opus), following the written
-  rules. 9 cases are flagged unsure. "Ok" is a judgement call (is oregano ok
+  rules. 10 cases are flagged unsure. "Ok" is a judgement call (is oregano ok
   for parsley in chili?), and the strict row shows how much rides on it.
 - **Single swaps only.** A stand-in that only works combined with another
   item (milk plus lemon for buttermilk) counts as "ok" at best.
 - **The matcher's mistakes carry over.** `taqueria-16` needs red bell peppers,
   but the matcher named it `red_pepper` and the engine offered jalapeño.
   Stage 1 errors upstream make some stage 2 cases harder.
-- **Small samples.** n = 51 suggestions on the held-out set gives a 95%
-  interval of about 32–59% around 45%.
+- **Small samples.** After the fix only 21 suggestions are shown on the fresh
+  held-out set, so 95% has an interval of about 77–99%.
+- **The class map was written by the same person who labelled.** It was
+  built from culinary roles, not from the cases, but it was written after the
+  development cases had been read. The fresh held-out set guards against that.
 
 ## Reproduce
 
@@ -114,4 +153,7 @@ python scripts/run_subs.py <checkout> data/subs_cases.jsonl labeling/subs/engine
 python scripts/run_subs.py <checkout> data/subs_holdout.jsonl labeling/subs/engine_holdout.json
 python scripts/score_subs.py labeling/subs/labels_dev.tsv dev=labeling/subs/engine_cases.json --details
 python scripts/score_subs.py labeling/subs/labels_holdout.tsv holdout=labeling/subs/engine_holdout.json
+# the D28 fix: run each set again with the fixed checkout, then for example
+python scripts/score_subs.py labeling/subs/labels_holdout2.tsv \
+    before=labeling/subs/engine_holdout2.json after=labeling/subs/fixed_holdout2.json
 ```

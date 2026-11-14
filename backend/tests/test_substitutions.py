@@ -1,4 +1,4 @@
-"""Substitution gates (D13).
+"""Substitution gates (D13, D28).
 
 D13 claimed "validated on 17 regression pairs (all pass)", but the pairs were
 never committed — this file makes that claim reproducible. Needs the Epicure
@@ -26,8 +26,14 @@ ACCEPTED = [
     ("rice", "couscous"),      # within-class pair the chem gate alone missed
     ("scallion", "onion"),
     ("maple_syrup", "honey"),
-    ("celery", "carrot"),      # both unclassed: strict dual gate
-    ("lemongrass", "ginger"),
+    ("celery", "carrot"),      # aromatic root vegetables (D28)
+    # D28 classes, from the stage 2 eval's usable pairs
+    ("pecan", "walnut"),
+    ("kidney_bean", "black_bean"),
+    ("green_bean", "pea"),
+    ("corn_syrup", "honey"),
+    ("buttermilk", "yogurt"),
+    ("cheese", "cheddar_cheese"),
 ]
 
 # Pairs that must be refused — the precision half of "precision over recall".
@@ -36,6 +42,18 @@ REJECTED = [
     ("chicken", "oregano"),    # meat -> herb
     ("lemon", "salmon"),       # citrus -> seafood
     ("rice", "chicken"),       # grain -> meat
+    # D28: unclassed pairs the old dual rank gate let through (stage 2 eval)
+    ("coconut", "banana"),     # cooc rank 1, chem rank 2: a complement
+    ("coffee", "chocolate"),
+    ("white_wine", "paprika"),
+    ("baking_powder", "oat"),
+    ("nutmeg", "apple"),
+    # D28: classes split by role
+    ("chicken_broth", "bell_pepper"),  # broth -> vegetable
+    ("bacon", "beef"),                 # cured meat -> fresh meat
+    ("cheddar_cheese", "parmesan_cheese"),  # melting -> grating
+    ("lard", "canola_oil"),            # solid fat -> oil
+    ("cayenne_pepper", "jalapeno"),    # dried -> fresh chili
 ]
 
 
@@ -81,3 +99,14 @@ def test_same_class_relaxes_the_chem_gate():
 
 def test_class_mismatch_short_circuits_before_any_rank_lookup():
     assert substitutions._pair_score("duck", "ginger") is None
+
+
+def test_unclassed_missing_ingredients_get_no_suggestion():
+    """D28: without a class nothing vouches for a pair, so the engine is silent."""
+    assert "coconut" not in substitutions._NAME_TO_CLASS
+    assert substitutions.suggest("coconut", ["banana", "cocoa_powder", "walnut"]) is None
+
+
+def test_every_name_has_one_class():
+    names = [n for ns in substitutions.CLASSES.values() for n in ns]
+    assert len(names) == len(set(names))

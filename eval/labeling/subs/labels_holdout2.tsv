@@ -1,0 +1,61 @@
+# case	good	ok	flags	note
+brunch-01		chive		another allium
+brunch-02				
+brunch-03				green pepper already in it
+brunch-04				
+brunch-05				a seasoning blend, not a garnish
+brunch-06				
+brunch-07				butter is a staple
+brunch-08				
+brunch-09	bacon	sausage		
+brunch-10		chive		
+brunch-11	cheddar_cheese	parmesan_cheese		
+brunch-12	yogurt	cream		
+brunch-13				other meats already in it
+brunch-14				cinnamon already in it
+brunch-15				
+brunch-16		chive		
+brunch-17	bacon	sausage		
+brunch-18	bacon	sausage		
+brunch-19		yogurt		creamy binder
+brunch-20		chive		herb garnish, different flavour
+brunch-21		bacon,sausage		loses the paprika and spice
+brunch-22		cream	unsure	condensed soup as a sauce base
+brunch-23		yogurt		greek yogurt
+brunch-24		yogurt		
+brunch-25				
+brunch-26	cheddar_cheese			
+brunch-27				
+brunch-28		bread,english_muffin		
+brunch-29				
+brunch-30	chive			generic herbs
+curry-01		coconut_milk,yogurt		
+curry-02				green chilies already in it
+curry-03		green_chili		
+curry-04		green_chili		
+curry-05				green chili already in it
+curry-06				green chilies already in it
+curry-07	ghee			frying fat
+curry-08		green_chili		
+curry-09				
+curry-10		coconut_milk,yogurt		
+curry-11				green chilies already in it
+curry-12				
+curry-13				green chili already in it
+curry-14	onion			
+curry-15				
+curry-16		garam_masala		the blend contains cloves
+curry-17			corrected	coriander was labelled good, but ground coriander is in the recipe, so it is not a candidate (fixed after scoring; same effect on both engines)
+curry-18	coconut_milk	yogurt		
+curry-19		garlic		the usual asafoetida stand-in
+curry-20				dish named after eggs
+curry-21	onion			
+curry-22				
+curry-23		coriander		
+curry-24		garam_masala		
+curry-25				
+curry-26		garam_masala		
+curry-27				water is the fallback
+curry-28		green_chili		
+curry-29		garam_masala		
+curry-30	green_chili			
