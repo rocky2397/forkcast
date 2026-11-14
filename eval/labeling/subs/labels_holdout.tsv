@@ -1,0 +1,61 @@
+# case	good	ok	flags	note
+stirfry-01				no nut on hand
+stirfry-02	chicken	tofu		
+stirfry-03	lime	rice_vinegar		
+stirfry-04		bell_pepper,broccoli,cabbage		crunchy vegetable
+stirfry-05	broccoli			green vegetable in a stir-fry
+stirfry-06		honey,lime	unsure	pineapple juice is sweet and sour; each covers half
+stirfry-07				soy already in it
+stirfry-08		sesame_oil		flavour without the crunch
+stirfry-09		broccoli,cabbage,mushroom		vegetable in fried rice
+stirfry-10		chicken,tofu		dish named after beef
+stirfry-11		sesame_oil		
+stirfry-12		chicken		protein in fried rice
+stirfry-13		cabbage		dish named after sprouts
+stirfry-14	rice_vinegar	lime		
+stirfry-15				
+stirfry-16		lime		citrus note
+stirfry-17				water is the fallback
+stirfry-18				
+stirfry-19				
+stirfry-20	honey			
+stirfry-21		scallion		green garnish, not the same herb
+stirfry-22				
+stirfry-23		bell_pepper		
+stirfry-24		broccoli,cabbage,carrot,mushroom		vegetable in fried rice
+stirfry-25		sesame_oil		
+stirfry-26				soy already in it
+stirfry-27		broccoli,cabbage,mushroom		
+stirfry-28		mushroom,onion	unsure	other kabob chunks, but the sweet fruit is gone
+stirfry-29				no chili on hand
+stirfry-30		soy_sauce		salty and savoury
+taqueria-01				yellow onion already in it
+taqueria-02				dish named after sweet potato
+taqueria-03		chili_powder		
+taqueria-04				oregano already in it
+taqueria-05		coriander		garnish
+taqueria-06				chili powder already in it
+taqueria-07				
+taqueria-08	corn_tortilla	flour_tortilla		cut and bake into chips
+taqueria-09	chili_powder			ancho is the base of chili powder
+taqueria-10				
+taqueria-11		corn		vegetable filling
+taqueria-12				jalapeno already in it
+taqueria-13	onion			
+taqueria-14	onion			
+taqueria-15	lime			
+taqueria-16	bell_pepper			
+taqueria-17				lime already in it
+taqueria-18				tomatoes already in it
+taqueria-19		coriander		
+taqueria-20		coriander		
+taqueria-21		coriander		yellow onion already in it
+taqueria-22	flour_tortilla	corn_tortilla		
+taqueria-23		jalapeno		
+taqueria-24				lime already in it
+taqueria-25		bell_pepper,jalapeno		
+taqueria-26	black_bean			
+taqueria-27	black_bean			
+taqueria-28				jalapenos and green pepper already in it
+taqueria-29	onion			
+taqueria-30		tomato	unsure	tomato plus the chili powder already in it

@@ -67,3 +67,47 @@ missing ingredient.
 
 Reported: **precision@20** per kitchen and overall, the share of listed recipes
 that are really cookable.
+
+# Labelling guide: substitutions (stage 2)
+
+`data/subs_cases.jsonl` (development) and `data/subs_holdout.jsonl` (held-out)
+hold one case per recipe that a test kitchen can almost cook: the recipe, its
+raw ingredient wording, the **one missing ingredient**, and the **candidates**,
+which are the kitchen's items not already in the recipe (pantry staples left
+out). They are exactly what the app hands to its substitution engine.
+
+Each case gets two lists, chosen from the candidates only, **without seeing
+what the engine suggests**:
+
+- **good**: a swap a cook would make without hesitation, and the dish stays
+  recognisably the same (`lime` → `lemon`, `turkey` → `chicken`, `sour cream`
+  → `greek yogurt` in a dip).
+- **ok**: workable, but the dish noticeably changes (`parsley` for `cilantro`,
+  `honey` for `maple syrup` in a glaze).
+
+Everything else is a bad suggestion. In particular:
+
+1. **Judge in this recipe.** `yogurt` for `cream` can be good in a marinade
+   and wrong in whipped cream.
+2. **A complement is not a substitute.** Ginger goes with garlic but does not
+   replace it.
+3. **The role matters more than the family.** A herb for a herb is fine as a
+   garnish; a different main protein in a dish named after the missing one
+   (`Chicken Parmesan` without chicken) is at best ok.
+4. **Read the raw wording.** If the matcher named the missing ingredient wrong
+   (a stage 1 error), judge against what the recipe really needs, and flag the
+   case `"mismatch": true`.
+5. **Unsure** → `"unsure": true` and a short note.
+
+## Scoring (per case)
+
+| Engine output | Labels | Outcome |
+|---|---|---|
+| a candidate in good or ok | | **correct** (strict: only if in good) |
+| a candidate in neither | | **bad suggestion**: the costly error |
+| nothing | good or ok non-empty | **missed**: the cook loses a hint |
+| nothing | both empty | **correct silence** |
+
+Reported: **precision of shown suggestions** (lenient and strict), the
+bad-suggestion rate over all cases, recall over cases that have a usable
+candidate, and how often the engine suggests anything.
