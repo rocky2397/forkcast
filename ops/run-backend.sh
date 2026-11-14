@@ -1,6 +1,11 @@
 #!/bin/bash
 # Forkcast backend under launchd (D14): mounts the dev volume if needed,
 # loads env, keeps the Mac awake while running (caffeinate -s, AC power).
+#
+# NOTE: version-controlled here, but the com.forkcast.backend LaunchAgent runs
+# a COPY on the internal drive — launchd can't read a script off a volume this
+# script is responsible for mounting. ops/install-backend-agent.sh does the
+# copy; re-run it after editing this file.
 set -e
 DEVVOL="/Volumes/RecipesDev"
 if [ ! -d "$DEVVOL/forkcast" ]; then
