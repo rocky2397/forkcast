@@ -45,7 +45,7 @@ curry-13				green chili already in it
 curry-14	onion			
 curry-15				
 curry-16		garam_masala		the blend contains cloves
-curry-17	coriander			
+curry-17			corrected	coriander was labelled good, but ground coriander is in the recipe, so it is not a candidate (fixed after scoring; same effect on both engines)
 curry-18	coconut_milk	yogurt		
 curry-19		garlic		the usual asafoetida stand-in
 curry-20				dish named after eggs

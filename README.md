@@ -41,7 +41,7 @@ logic are built here.
 - **Corpus:** 87,861 recipes and ~794k ingredient rows after normalization, with
   per-serving nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 136 pytest tests in under a second, offline and without the corpus (24 of
+- **Tests:** 153 pytest tests in under a second, offline and without the corpus (41 of
   them need the Epicure weights and skip without them), plus frontend lint and
   build, all in CI.
 
@@ -90,27 +90,30 @@ for human review. Remaining errors and the full method are in
 ### Stage 2: substitutions
 
 When a recipe misses one ingredient, the app suggests a stand-in from your
-inventory ("needs lime, try lemon"). 150 such cases from five test kitchens
-were labelled before the engine ran:
+inventory ("needs lime, try lemon"). The eval found that most of those hints
+were wrong, so the engine was fixed (D28) and measured on a fresh held-out set
+of 60 cases from two new kitchens, labelled before either engine ran:
 
-| | held-out (60 cases) |
-|---|---|
-| Cases where a suggestion is shown | 51/60 = 85% |
-| **Precision of shown suggestions** | **23/51 = 45%** |
-| Bad suggestions, share of all cases | 28/60 = 47% |
+| | before | after D28 |
+|---|---|---|
+| **Usable share of shown suggestions** | 18/54 = 33% | **20/21 = 95%** |
+| Cases with a bad suggestion | 36/60 = 60% | 1/60 = 2% |
+| Recall, cases with a usable stand-in on hand | 18/34 = 53% | 20/34 = 59% |
 
-**What it found:** the hand-made food classes (herbs, citrus, meat and five
-more) work, at 28 of 34 acceptable across both sets. But most missing
-ingredients have no class, and then only the embedding ranks decide. Those
-can't tell a substitute from something that merely goes with it: the engine
-offers `bell pepper` for chicken broth and `oats` for baking powder. The fix,
-more classes and silence outside them, is the next step. Details in
+**What it found:** most missing ingredients had no food class, and then only
+the embedding ranks decided. Those can't tell a substitute from something
+that merely goes with it: `coconut` and `banana` are each other's nearest
+neighbours, so the engine offered `bell pepper` for chicken broth and `oats`
+for baking powder. D28 widens the hand-made class map from 8 to 47 classes
+and stays silent outside it. The engine now suggests something in a third of
+cases instead of nine in ten, and recall still rises, because the old engine
+often picked a wrong item when a right one was on hand. Details in
 [`eval/RESULTS-stage2.md`](eval/RESULTS-stage2.md).
 
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 27 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 28 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
