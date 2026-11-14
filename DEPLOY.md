@@ -105,6 +105,20 @@ Re-import of the recipe corpus is the exception: rerun
 `backend/scripts/import_recipes.py`, then `split_corpus.py`,
 then `ops/publish-corpus.sh` with a new tag, and update `FORKCAST_CORPUS_URL`.
 
+An **ingredient-matcher change** needs the same republish but no re-import. The
+stored canonicals are what ranking, substitutions and taste learning read, so a
+matcher fix stays invisible until the data is rewritten:
+
+```bash
+# stop the backend first — these rewrite databases the server holds open
+python backend/scripts/renormalize_corpus.py data/corpus.db --apply
+python backend/scripts/renormalize_corpus.py data/forkcast.db --apply   # dev copy
+ops/publish-corpus.sh corpus-$(date +%Y%m%d)
+```
+
+Then point `FORKCAST_CORPUS_URL` and the README's download URL at the new tag.
+Both scripts back the database up before writing, and dry-run without `--apply`.
+
 ---
 
 ## Rotating the password

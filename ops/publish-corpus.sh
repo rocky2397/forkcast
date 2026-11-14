@@ -2,10 +2,15 @@
 # Publish data/corpus.db as a GitHub Release asset so the Docker build can
 # fetch it without credentials (D15).
 #
-# The app repo is private, and Render warns against putting tokens in Docker
-# build args — so the corpus goes to a separate *public* data repo. It contains
-# nothing private: recipes derived from the public RecipeNLG-family corpus,
-# normalized against the public Epicure vocabulary.
+# The corpus lives in its own data repo rather than in git: ~127 MB per
+# version is more than Git LFS bandwidth can carry (D15). It contains nothing
+# private — recipes derived from the public food.com dataset, normalized
+# against the public Epicure vocabulary.
+#
+# Re-publish after any ingredient-matcher change. The stored canonicals are
+# what ranking, substitutions and taste learning read, so a matcher fix reaches
+# the corpus only via backend/scripts/renormalize_corpus.py plus a new tag —
+# then update the README's download URL and FORKCAST_CORPUS_URL.
 #
 # Usage:  ops/publish-corpus.sh [tag]        (default tag: corpus-YYYYMMDD)
 set -euo pipefail
