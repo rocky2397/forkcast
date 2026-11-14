@@ -1,0 +1,5 @@
+{
+  "vegetarian": ["eggs", "milk", "greek yogurt", "cheddar cheese", "red lentils", "black beans", "quinoa", "brown rice", "whole wheat pasta", "sweet potatoes", "broccoli", "spinach", "kale", "carrots", "onions", "garlic", "bell peppers", "tomatoes", "mushrooms", "avocado", "lemons", "peanut butter", "oats", "bananas", "cumin", "chili powder"],
+  "grill": ["steak", "chicken drumsticks", "pork chops", "ground beef", "hamburger buns", "corn on the cob", "potatoes", "zucchini", "bell peppers", "red onion", "tomatoes", "lettuce", "cucumbers", "lemons", "limes", "garlic", "ketchup", "mustard", "barbecue sauce", "honey", "brown sugar", "paprika", "cheddar cheese", "sour cream", "fresh parsley", "worcestershire sauce"],
+  "italian": ["spaghetti", "penne", "arborio rice", "canned tomatoes", "tomato paste", "mozzarella", "parmesan", "ricotta", "eggs", "garlic", "onions", "fresh basil", "dried oregano", "parsley", "zucchini", "eggplant", "mushrooms", "spinach", "italian sausage", "ground beef", "chicken breast", "pancetta", "lemons", "white wine", "heavy cream", "red pepper flakes", "bread"]
+}
