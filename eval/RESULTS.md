@@ -6,7 +6,7 @@ Run on 2026-11-14 against three versions:
 |---|---|---|
 | **old** | `96c1f04` | `corpus-20260811` |
 | **cur** | `fc3bec4` (D24–D26 matcher fixes) | `corpus-20261114` |
-| **fixed** | D27 product phrases | `corpus-20261114` re-normalized with D27 (local) |
+| **fixed** | D27 product phrases | `corpus-20261114` re-normalized with D27, published byte-identical as `corpus-20261114-d27` |
 
 The fix was designed after looking at the **development** set, so the
 **held-out** set is the number to trust. It was sampled with a different seed,

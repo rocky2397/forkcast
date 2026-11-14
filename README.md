@@ -115,7 +115,7 @@ cd frontend && npm ci && npm run build && cd ..
 
 # Recipe corpus (~130 MB, read-only), published separately:
 mkdir -p data && curl -L -o data/corpus.db \
-  https://github.com/rocky2397/forkcast-corpus/releases/download/corpus-20261114/corpus.db
+  https://github.com/rocky2397/forkcast-corpus/releases/download/corpus-20261114-d27/corpus.db
 
 export FORKCAST_DATA_DIR=$PWD/data FORKCAST_CORPUS_DB=$PWD/data/corpus.db
 export ANTHROPIC_API_KEY=...   # only needed for photo and label scanning
