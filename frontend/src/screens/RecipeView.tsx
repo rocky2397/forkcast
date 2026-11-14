@@ -32,7 +32,8 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
   function toggle(c: string) {
     setUsedUp((prev) => {
       const next = new Set(prev);
-      next.has(c) ? next.delete(c) : next.add(c);
+      if (next.has(c)) next.delete(c);
+      else next.add(c);
       return next;
     });
   }
