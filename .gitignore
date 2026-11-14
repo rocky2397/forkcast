@@ -17,6 +17,8 @@ node_modules/
 
 # Local data, caches, secrets
 data/
+# ...except the eval datasets, which are small and are the point of eval/
+!eval/data/
 caches/
 .env
 *.sparsebundle
