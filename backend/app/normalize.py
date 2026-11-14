@@ -116,7 +116,11 @@ class Normalizer:
         self._aliases = {
             k: v for k, v in ALIASES.items() if v in names
         }
-        self._by_len = sorted(self._canon, key=len, reverse=True)
+        # Longest first, then alphabetical. The second key is not cosmetic:
+        # keying on length alone left equal-length spans to be broken by set
+        # iteration order, so "bread flour" matched bread or flour depending
+        # on the process's hash seed. Arbitrary but stable beats arbitrary.
+        self._by_len = sorted(self._canon, key=lambda c: (-len(c), c))
 
     def _lookup(self, phrase: str) -> str | None:
         for v in _phrase_variants(phrase):
