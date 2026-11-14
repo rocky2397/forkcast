@@ -13,8 +13,8 @@ logic are built here.
 
 | Today | Recipe feed | Recipe detail | Worth buying |
 |---|---|---|---|
-| <img src="docs/screenshots/today.jpg" width="200" alt="Today: calorie and macro progress against targets, with today's logged meals and their ratings"> | <img src="docs/screenshots/recipes.jpg" width="200" alt="Recipe feed: cookable recipes with taste match, a fits-macros badge and a protein-to-go hint"> | <img src="docs/screenshots/recipe.jpg" width="200" alt="Recipe detail: ingredients ticked against the inventory, with lemon suggested for the missing lime"> | <img src="docs/screenshots/shopping.jpg" width="200" alt="Worth buying: yeast unlocks 267 recipes, then onion 150 more, then baking powder 161 more"> |
-| Macros against Mifflin-St Jeor targets | Ranked by taste and by what fits today's remaining macros | Ingredients you have are ticked; lemon stands in for lime | Three purchases that unlock 578 more recipes |
+| <img src="docs/screenshots/today.jpg" width="200" alt="Today: calorie and macro progress against targets, with today's logged meals and their ratings"> | <img src="docs/screenshots/recipes.jpg" width="200" alt="Recipe feed: cookable recipes with taste match, a fits-macros badge and a protein-to-go hint"> | <img src="docs/screenshots/recipe.jpg" width="200" alt="Recipe detail: the recipe's own ingredient wording, ticked against the inventory, lemon suggested for the missing lime, staples shown as pantry"> | <img src="docs/screenshots/shopping.jpg" width="200" alt="Worth buying: yeast unlocks 199 recipes, then onion 137 more, then bread 144 more"> |
+| Macros against Mifflin-St Jeor targets | Ranked by taste and by what fits today's remaining macros | Ingredients you have are ticked; lemon stands in for lime | Three purchases that unlock 480 more recipes |
 
 > **The UI is a working first version, not a finished design.** It shows the
 > engine behind it (ranking, substitutions, macro steering), and a visual polish
