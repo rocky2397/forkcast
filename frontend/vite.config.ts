@@ -11,13 +11,22 @@ export default defineConfig({
         // include the zxing barcode decoder so scanning works offline (Safari path)
         globPatterns: ["**/*.{js,css,html,svg,png,ico,wasm}"],
         maximumFileSizeToCacheInBytes: 4_000_000,
+        // Fonts ship one file per script subset; the browser fetches only the
+        // ones it needs, so cache those on first use instead of precaching all.
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === "font",
+            handler: "CacheFirst",
+            options: { cacheName: "fonts", expiration: { maxEntries: 30 } },
+          },
+        ],
       },
       manifest: {
         name: "Forkcast",
         short_name: "Forkcast",
         description: "What should I cook next?",
-        theme_color: "#1a1a1a",
-        background_color: "#1a1a1a",
+        theme_color: "#f6f1e8",
+        background_color: "#f6f1e8",
         display: "standalone",
         icons: [
           { src: "icon-192.png", sizes: "192x192", type: "image/png" },

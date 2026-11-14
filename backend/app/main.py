@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 
 from . import auth, embeddings, goals, nutrition, recipes, shopping, substitutions, taste
+from .food_classes import NAME_TO_CLASS
 from .db import connect
 from .normalize import Normalizer
 
@@ -238,6 +239,7 @@ def cookable_recipes(
     max_missing: int = Query(0, ge=0, le=3),
     assume_staples: bool = True,
     limit: int = Query(20, ge=1, le=100),
+    min_missing: int = Query(0, ge=0, le=3),
 ):
     """Recipes you can cook now (max_missing=0) or almost (1-3 missing).
 
@@ -250,7 +252,8 @@ def cookable_recipes(
         budget = _remaining_today(con)
         pool = min(limit * 8, 300) if taste_vec is not None or budget else limit
         results = recipes.cookable(
-            con, max_missing=max_missing, assume_staples=assume_staples, limit=pool
+            con, max_missing=max_missing, assume_staples=assume_staples, limit=pool,
+            min_missing=min_missing,
         )
         if taste_vec is not None:
             scores = taste.score_recipes(con, [r["id"] for r in results], taste_vec)
@@ -265,6 +268,7 @@ def cookable_recipes(
             results.sort(key=lambda r: (r["ingredients_missing"], -_rank_score(r)))
             results = results[:limit]
         _annotate_subs(con, results)
+        _annotate_signature(con, results)
     return {
         "count": len(results),
         "personalized": taste_vec is not None,
@@ -331,6 +335,39 @@ def _remaining_today(con) -> dict | None:
     if rem["calories"] < goals.MIN_REMAINING_KCAL:
         return None
     return {"remaining": rem, "focus": goals.focus(rem, target)}
+
+
+SIGNATURE_SIZE = 6
+
+
+def _annotate_signature(con, results: list[dict]) -> None:
+    """Attach each recipe's main ingredients for the feed's ingredient dots.
+
+    Up to SIGNATURE_SIZE non-staple ingredients in recipe order, each with its
+    food class (D28, which the UI turns into a colour) and whether it is in
+    the inventory. Staples are left out: they are assumed present and would
+    put the same salt-and-oil dots on every card.
+    """
+    ids = [r["id"] for r in results]
+    if not ids:
+        return
+    inv = {row["canonical"] for row in con.execute("SELECT canonical FROM inventory")}
+    placeholders = ",".join("?" * len(ids))
+    by_recipe: dict[int, list[str]] = {}
+    for row in con.execute(
+        f"SELECT recipe_id, canonical FROM recipe_ingredients "
+        f"WHERE recipe_id IN ({placeholders}) AND canonical IS NOT NULL ORDER BY rowid",
+        ids,
+    ):
+        seen = by_recipe.setdefault(row["recipe_id"], [])
+        c = row["canonical"]
+        if c not in recipes.STAPLES and c not in seen:
+            seen.append(c)
+    for r in results:
+        r["signature"] = [
+            {"canonical": c, "family": NAME_TO_CLASS.get(c), "have": c in inv}
+            for c in by_recipe.get(r["id"], [])[:SIGNATURE_SIZE]
+        ]
 
 
 def _annotate_subs(con, results: list[dict]) -> None:

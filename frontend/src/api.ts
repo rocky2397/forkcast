@@ -17,6 +17,8 @@ export interface CookableRecipe {
   subs?: Record<string, string>;
   taste_sim?: number;
   macro_fit?: number;
+  /** Main ingredients for the card's dots: staples left out, at most six. */
+  signature?: { canonical: string; family: string | null; have: boolean }[];
 }
 
 /** One pick from the shopping basket. `unlocks` counts recipes completed
@@ -158,13 +160,14 @@ export const api = {
     req<{ removed: string }>(`/api/inventory/${encodeURIComponent(name)}`, { method: "DELETE" }),
   normalize: (q: string) =>
     req<{ query: string; canonical: string | null }>(`/api/normalize?q=${encodeURIComponent(q)}`),
-  cookable: (maxMissing: number) =>
+  /** `exact`: only recipes missing exactly `maxMissing` (the feed's tabs). */
+  cookable: (maxMissing: number, exact = false) =>
     req<{
       count: number;
       personalized: boolean;
       macro_focus: MacroFocus | null;
       recipes: CookableRecipe[];
-    }>(`/api/recipes/cookable?max_missing=${maxMissing}&limit=30`),
+    }>(`/api/recipes/cookable?max_missing=${maxMissing}&min_missing=${exact ? maxMissing : 0}&limit=30`),
   taste: () => req<TasteProfile>("/api/taste"),
   shopping: () =>
     req<{

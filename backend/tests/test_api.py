@@ -37,6 +37,27 @@ def test_cookable_feed_lists_stocked_recipes(client):
     assert body["personalized"] is False  # nothing logged yet
 
 
+def test_cookable_feed_carries_an_ingredient_signature(client):
+    """The feed's ingredient dots: main ingredients, staples left out."""
+    body = client.get("/api/recipes/cookable?max_missing=0").json()
+    for r in body["recipes"]:
+        names = [i["canonical"] for i in r["signature"]]
+        assert "salt" not in names                     # a staple, assumed present
+        assert len(names) == len(set(names))           # each ingredient once
+        assert all(i["have"] for i in r["signature"])  # cookable now: all in stock
+    rice = next(r for r in body["recipes"] if r["id"] == 2)["signature"]
+    assert {"canonical": "rice", "family": "grain", "have": True} in rice
+
+
+def test_min_missing_leaves_out_closer_recipes(client):
+    """The feed's "one away" tab: exactly one missing, not cookable-now again."""
+    body = client.get("/api/recipes/cookable?max_missing=1&min_missing=1").json()
+    assert body["recipes"], "the fixture has recipes one ingredient away"
+    assert all(r["ingredients_missing"] == 1 for r in body["recipes"])
+    everything = client.get("/api/recipes/cookable?max_missing=1").json()["recipes"]
+    assert {r["ingredients_missing"] for r in everything} == {0, 1}
+
+
 def test_recipe_detail_flags_inventory_and_staples(client):
     ings = {i["canonical"]: i for i in client.get("/api/recipes/2").json()["ingredients"]}
     assert ings["rice"]["in_inventory"] is True and ings["rice"]["staple"] is False

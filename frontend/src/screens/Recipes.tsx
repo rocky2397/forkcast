@@ -7,6 +7,8 @@ import {
   type ShoppingItem,
   type TasteProfile,
 } from "../api";
+import { displayName, foodColor, mealOfDay } from "../format";
+import { useMediaQuery } from "../useMediaQuery";
 import { RecipeView } from "./RecipeView";
 
 const MACRO_LABELS: Record<MacroFocus["macro"], string> = {
@@ -14,6 +16,8 @@ const MACRO_LABELS: Record<MacroFocus["macro"], string> = {
   carbs_g: "carbs",
   fat_g: "fat",
 };
+
+const FILTERS = ["Cookable now", "One away", "Two away"];
 
 export function Recipes() {
   const [maxMissing, setMaxMissing] = useState(0);
@@ -23,6 +27,8 @@ export function Recipes() {
   const [basket, setBasket] = useState<ShoppingItem[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  // From 960px the list and the open recipe sit side by side.
+  const wide = useMediaQuery("(min-width: 960px)");
 
   useEffect(() => {
     api.taste().then(setTasteInfo).catch(() => {});
@@ -34,7 +40,7 @@ export function Recipes() {
   useEffect(() => {
     setLoading(true);
     api
-      .cookable(maxMissing)
+      .cookable(maxMissing, true)
       .then((r) => {
         setRecipes(r.recipes);
         setFocus(r.macro_focus);
@@ -42,98 +48,180 @@ export function Recipes() {
       .finally(() => setLoading(false));
   }, [maxMissing]);
 
-  if (openId !== null) {
+  // On a wide screen something is always open: the top recipe by default.
+  const selected = openId ?? (wide ? recipes[0]?.id ?? null : null);
+
+  if (!wide && openId !== null) {
     return <RecipeView id={openId} onBack={() => setOpenId(null)} />;
   }
 
-  return (
-    <div className="screen">
-      <div className="segmented">
-        {[0, 1, 2].map((n) => (
-          <button
-            key={n}
-            className={n === maxMissing ? "active" : ""}
-            onClick={() => setMaxMissing(n)}
-          >
-            {n === 0 ? "Cookable now" : `Missing ≤ ${n}`}
-          </button>
-        ))}
-      </div>
-      {tasteInfo && tasteInfo.meals_logged > 0 && (
-        <p className="taste-note">
-          Learning from {tasteInfo.meals_logged} logged {tasteInfo.meals_logged === 1 ? "cook" : "cooks"} — your
-          kitchen leans {tasteInfo.profile.slice(0, 3).map((p) => pretty(p.ingredient)).join(", ")}.
-        </p>
-      )}
-      {focus && focus.grams > 0 && (
-        <p className="taste-note">
-          {focus.grams}g {MACRO_LABELS[focus.macro]} to go today — these help you get there.
-        </p>
-      )}
-      {loading && <p className="empty">Searching 87,861 recipes…</p>}
-      {!loading && recipes.length === 0 && (
-        <p className="empty">Nothing cookable yet — add more ingredients to your inventory.</p>
-      )}
-      <ul className="recipe-list">
-        {recipes.map((r) => (
-          <li key={r.id} onClick={() => setOpenId(r.id)}>
-            <div className="recipe-head">
-              <strong>{r.name}</strong>
-              <span className="minutes">
-                {r.taste_sim != null && r.taste_sim > 0 && (
-                  <span className="match">♥ {Math.round(r.taste_sim * 100)}%</span>
-                )}{" "}
-                {r.macro_fit != null && r.macro_fit >= 0.8 && (
-                  <span className="match">◎ fits macros</span>
-                )}{" "}
-                {r.minutes} min
-              </span>
-            </div>
-            <div className="macros">
-              {r.calories != null && <span>{Math.round(r.calories)} kcal</span>}
-              {r.protein_g != null && <span>P {Math.round(r.protein_g)}g</span>}
-              {r.carbs_g != null && <span>C {Math.round(r.carbs_g)}g</span>}
-              {r.fat_g != null && <span>F {Math.round(r.fat_g)}g</span>}
-            </div>
-            {r.missing.length > 0 && (
-              <div className="missing-chips">
-                {r.missing.map((m) => (
-                  <span key={m} className={r.subs?.[m] ? "chip sub" : "chip"}>
-                    {r.subs?.[m]
-                      ? `needs ${pretty(m)} — try ${pretty(r.subs[m])}`
-                      : `needs ${pretty(m)}`}
-                  </span>
-                ))}
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+  const leans = tasteInfo && tasteInfo.meals_logged > 0
+    ? tasteInfo.profile.slice(0, 3).map((p) => pretty(p.ingredient)).join(", ")
+    : null;
+  const weekday = new Date().toLocaleDateString("en", { weekday: "long" });
+  const unlocksTotal = basket.reduce((n, i) => n + i.unlocks, 0);
 
-      {basket.length > 0 && (
-        <section className="shopping">
-          <h3>Worth buying</h3>
-          <p className="taste-note">
-            These {basket.length} unlock {basket.reduce((n, i) => n + i.unlocks, 0)} more recipes
-            together.
+  return (
+    <div className="recipes-layout">
+      <section className="screen" aria-label="Recipes">
+        <p className="kicker">{weekday} · {mealOfDay()}</p>
+        <h1 className="display">What's for {mealOfDay()}?</h1>
+        {(leans || (focus && focus.grams > 0)) && (
+          <p className="lead">
+            {leans && (
+              <>
+                Your kitchen leans <em>{leans}</em>.{" "}
+              </>
+            )}
+            {focus && focus.grams > 0 && (
+              <>
+                You have <strong>{focus.grams} g {MACRO_LABELS[focus.macro]}</strong> to go today.
+              </>
+            )}
           </p>
-          <ol className="shopping-list">
-            {basket.map((item, i) => (
-              <li key={item.canonical}>
-                <div className="recipe-head">
-                  <strong>{pretty(item.canonical)}</strong>
-                  <span className="minutes">
-                    {i === 0 ? `${item.unlocks} recipes` : `+${item.unlocks} more`}
-                  </span>
-                </div>
-                <div className="shopping-examples">
-                  {item.examples.join(" · ")}
-                </div>
+        )}
+
+        <div className="filter-tabs" role="group" aria-label="How many ingredients may be missing">
+          {FILTERS.map((label, n) => (
+            <button key={label} aria-pressed={n === maxMissing} onClick={() => setMaxMissing(n)}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {loading && (
+          <div aria-busy="true" aria-label="Searching 87,861 recipes">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="skeleton" aria-hidden="true">
+                <span style={{ width: 90 }} />
+                <span />
+                <span />
+              </div>
+            ))}
+          </div>
+        )}
+        {!loading && recipes.length === 0 && (
+          <p className="empty">
+            {maxMissing === 0
+              ? "Nothing is cookable yet. Add what's in your kitchen, or look one ingredient away."
+              : "Nothing this close yet. Add a few more ingredients to your kitchen."}
+          </p>
+        )}
+
+        {!loading && (
+          <ul className="recipe-list">
+            {recipes.map((r) => (
+              <li key={r.id}>
+                <RecipeCard
+                  recipe={r}
+                  focus={focus}
+                  current={wide && r.id === selected}
+                  onOpen={() => {
+                    setOpenId(r.id);
+                    // On a phone the recipe replaces the list: start at its top.
+                    if (!wide) window.scrollTo(0, 0);
+                  }}
+                />
               </li>
             ))}
-          </ol>
-        </section>
+          </ul>
+        )}
+
+        {basket.length > 0 && (
+          <section className="shopping" aria-labelledby="worth-buying">
+            <h2 id="worth-buying" className="section-title">Worth buying</h2>
+            <p className="taste-note">
+              These {basket.length} unlock {unlocksTotal} more recipes together.
+            </p>
+            <ol className="shopping-list">
+              {basket.map((item, i) => (
+                <li key={item.canonical} className="shopping-item">
+                  <div className="shopping-head">
+                    <span className="shopping-name">{pretty(item.canonical)}</span>
+                    <span className="shopping-count">
+                      {i === 0 ? `${item.unlocks} recipes` : `+${item.unlocks} more`}
+                    </span>
+                  </div>
+                  <div className="bar" aria-hidden="true">
+                    <span style={{ width: `${Math.max(4, (item.unlocks / basket[0].unlocks) * 100)}%` }} />
+                  </div>
+                  <div className="shopping-examples">
+                    {item.examples.map(displayName).join(" · ")}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+      </section>
+
+      {wide && selected !== null && (
+        <aside className="detail-pane" aria-label="Selected recipe">
+          <RecipeView key={selected} id={selected} onBack={() => setOpenId(null)} />
+        </aside>
       )}
     </div>
+  );
+}
+
+function RecipeCard({
+  recipe: r,
+  focus,
+  current,
+  onOpen,
+}: {
+  recipe: CookableRecipe;
+  focus: MacroFocus | null;
+  current: boolean;
+  onOpen: () => void;
+}) {
+  const sig = r.signature ?? [];
+  const have = r.ingredients_needed - r.ingredients_missing;
+  const focusGrams = focus ? r[focus.macro] : null;
+  const covers = focus && focus.grams > 0 && focusGrams != null && focusGrams >= focus.grams;
+  return (
+    <button className="recipe-card" aria-current={current ? "true" : undefined} onClick={onOpen}>
+      <span className="signature">
+        <span className="dots" aria-hidden="true">
+          {sig.map((s) =>
+            s.have ? (
+              <span key={s.canonical} className="dot" style={{ background: foodColor(s.canonical, s.family) }} />
+            ) : (
+              <span key={s.canonical} className="dot missing" />
+            ),
+          )}
+        </span>
+        {have} of {r.ingredients_needed} in your kitchen
+      </span>
+      <span className="recipe-title">{displayName(r.name)}</span>
+      <span className="recipe-meta">
+        <span>{r.minutes} min</span>
+        {r.calories != null && <span>{Math.round(r.calories)} kcal</span>}
+        {r.protein_g != null && <span>{Math.round(r.protein_g)} g protein</span>}
+      </span>
+      {r.missing.length > 0 ? (
+        r.missing.map((m) => (
+          <span key={m} className="swap-line">
+            Needs <s>{pretty(m)}</s>
+            {r.subs?.[m] ? (
+              <>
+                {" "}— <em>try your {pretty(r.subs[m])}</em>
+              </>
+            ) : null}
+          </span>
+        ))
+      ) : (
+        <span className="recipe-tags">
+          {r.taste_sim != null && r.taste_sim > 0 && (
+            <span className="tag-taste">{Math.round(r.taste_sim * 100)}% your taste</span>
+          )}
+          {covers ? (
+            <span className="tag-fit">Covers your {MACRO_LABELS[focus!.macro]}</span>
+          ) : (
+            r.macro_fit != null && r.macro_fit >= 0.8 && <span className="tag-fit">Fits today</span>
+          )}
+        </span>
+      )}
+    </button>
   );
 }
