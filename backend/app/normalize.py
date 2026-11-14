@@ -13,6 +13,8 @@ wrong guess ("chives" -> "chif") is harmless — it simply doesn't match.
 import re
 from collections.abc import Iterable
 
+from .food_classes import NAME_TO_CLASS
+
 # Synonyms -> canonical Epicure name. Targets are validated against the
 # vocabulary at build time; entries whose target is missing are dropped.
 ALIASES = {
@@ -77,6 +79,33 @@ ALIASES = {
     "sriracha sauce": "sriracha",
     "vinaigrette dressing": "vinaigrette",
     "preserves": "fruit_preserves",
+    # D29: names the product words below need to land on. A juice that comes
+    # in a bottle is its own ingredient; citrus juice stays the fruit.
+    "tomato juice": "vegetable_juice",
+    "carrot juice": "vegetable_juice",
+    "vegetable juice": "vegetable_juice",
+    "apple juice": "fruit_juice",
+    "pineapple juice": "fruit_juice",
+    "cranberry juice": "fruit_juice",
+    "grape juice": "fruit_juice",
+    "white grape juice": "fruit_juice",
+    "pomegranate juice": "fruit_juice",
+    "cherry juice": "fruit_juice",
+    "pickle": "pickled_cucumber",
+    "hommus": "hummus",
+    "jell o": "gelatin",
+    "jello": "gelatin",
+    "bologna": "sausage",
+    "pork and beans": "baked_beans",
+    "corn flake crumbs": "corn_flakes",
+    "cornflake crumbs": "corn_flakes",
+    "zucchini noodle": "zucchini",
+    "bread flour": "flour",
+    "half half": "cream",
+    # sweet peppers are bell peppers; a bare "red pepper" stays ambiguous
+    "sweet pepper": "bell_pepper",
+    "yellow pepper": "bell_pepper",
+    "orange pepper": "bell_pepper",
 }
 
 DESCRIPTORS = {
@@ -140,7 +169,12 @@ def _head_segment(t: str) -> str | None:
     words = t.split()
     for i, w in enumerate(words):
         if w in _CONNECTORS and i > 0:
-            return " ".join(words[:i])
+            head = words[:i]
+            # D29: "sun-dried tomatoes packed in oil" -> "sun dried tomatoes",
+            # so the plural is the last word again and singularizes.
+            while len(head) > 1 and head[-1] in DESCRIPTORS:
+                head.pop()
+            return " ".join(head)
     return None
 
 
@@ -164,6 +198,8 @@ def _phrase_variants(t: str) -> Iterable[str]:
 _COMPOUND_UPGRADES = {
     "cherry tomato", "grape tomato", "campari tomato", "plum tomato",
     "roma tomato", "green onion",
+    # D29: products whose name starts with a food word
+    "pork and beans", "corn flake crumbs", "cornflake crumbs",
 }
 
 
@@ -184,6 +220,20 @@ _PRODUCT_WORDS = frozenset({
     "paste", "puree", "sauce", "soup", "gravy", "pesto", "salsa", "dressing",
     "marinade", "extract", "mix", "spread", "jam", "jelly", "preserve",
     "cereal", "pudding", "yogurt", "yoghurt",
+    # D29, found by the stage 1 tightening: "tomato juice" is not tomatoes,
+    # "chicken sausage" is not chicken, "raisin bread" is not raisins.
+    "juice", "nectar", "syrup", "wafer", "cookie", "cracker", "bread", "bagel",
+    "roll", "tortilla", "sausage", "bologna", "pickle", "hummus", "hommus",
+    "tea", "noodle", "spaghetti", "gelatin", "jell", "jello", "candy",
+    # prepared foods named after their filling
+    "pizza", "nugget", "sandwich", "wrap", "snack",
+})
+
+# Juice squeezed from these is the fruit itself (rule 7 of the eval's
+# labelling guide): "lemon juice" is lemon, "tomato juice" is a product.
+_JUICED_FRUIT = frozenset({
+    "lemon", "lime", "orange", "grapefruit", "tangerine", "mandarin",
+    "clementine", "yuzu", "citrus", "blood orange", "key lime",
 })
 
 # Products the vocabulary has no name for, whose last word is nonetheless a
@@ -191,6 +241,11 @@ _PRODUCT_WORDS = frozenset({
 _ABSTAIN_PHRASES = (
     "powdered sugar", "confectioners sugar", "confectioner sugar", "icing sugar",
     "seasoning salt", "seasoned salt",
+    # D29: products named with the food word last or in front
+    "creamed corn", "cream style corn", "potato flake", "instant potato",
+    "instant mashed potato", "instant mashed potatoe", "potato chip", "fried onion",
+    "macaroni and cheese", "macaroni cheese", "mac and cheese", "mac cheese",
+    "rice a roni",
 )
 
 
@@ -243,6 +298,11 @@ class Normalizer:
         # chilies" is tomatoes. Only trusted when the head actually matches —
         # otherwise the whole phrase is tried, exactly as before.
         head = _head_segment(t)
+        # ...unless the whole phrase is a soup (D29): "condensed chicken with
+        # rice soup" is not chicken. Only soup: "tomatoes with juice" and
+        # "peaches in syrup" are still the fruit, packed in its liquid.
+        if head and t.split()[-1] in ("soup", "soups"):
+            head = None
         if head:
             hit = self._match_phrase(head)
             if hit is not None:
@@ -261,7 +321,8 @@ class Normalizer:
             if hit:
                 return hit
         base = stripped or t
-        if any(f" {p} " in f" {base} " or f" {p}s " in f" {base} " for p in _ABSTAIN_PHRASES):
+        if any(f" {p} " in f" {x} " or f" {p}s " in f" {x} "
+               for p in _ABSTAIN_PHRASES for x in (base, t)):
             return ""
         found = self._containment(base)
         # Descriptor stripping can break a longer name apart: "dried" is a
@@ -273,12 +334,12 @@ class Normalizer:
         if found is None:
             return None
         matched, target = found
-        product = self._product_guard(base, matched)
+        product = self._product_guard(base, matched, target)
         if product is not None:
             return product  # "" means abstain; match() turns it into None
         return self._compound_upgrade(base, matched) or target
 
-    def _product_guard(self, base: str, matched: str) -> str | None:
+    def _product_guard(self, base: str, matched: str, target: str | None = None) -> str | None:
         """The product a phrase names, "" to abstain, or None if no product word.
 
         Looks for a product word (stock, paste, pesto, ...) after the matched
@@ -290,6 +351,7 @@ class Normalizer:
         span = matched.split()
         if set(_word_variants(span[-1])) & (_PRODUCT_WORDS | {"seasoning"}):
             return None
+        juiced = matched in _JUICED_FRUIT
         start = next(
             (i for i in range(len(words) - len(span) + 1)
              if all(span[j] in words[i + j] for j in range(len(span)))),
@@ -298,34 +360,64 @@ class Normalizer:
         if start is None:
             return None
         after = range(start + len(span), len(words))
-        k = next((i for i in reversed(after) if words[i] & _PRODUCT_WORDS), None)
+        k = next((i for i in reversed(after)
+                  if words[i] & _PRODUCT_WORDS and not (juiced and "juice" in words[i])), None)
         if k is None:
             return None
         best = None
         names = list(self._canon.items()) + list(self._aliases.items())
-        for name, target in names:
+        for name, product in names:
             n = name.split()
             for i in range(max(0, k - len(n) + 1), min(k, len(words) - len(n)) + 1):
                 if all(n[j] in words[i + j] for j in range(len(n))):
                     if best is None or len(name) > len(best[0]):
-                        best = (name, target)
-        return best[1] if best else ""
+                        best = (name, product)
+        if best is None:
+            return ""
+        # D29: a food already of the product's kind stays itself. "chorizo
+        # sausage" is chorizo and "spaghetti noodles" is pasta: both share a
+        # food class (D28) with the product word's own entry.
+        cls = NAME_TO_CLASS.get(target) if target else None
+        if cls is not None and cls == NAME_TO_CLASS.get(best[1]):
+            return None
+        return best[1]
 
     def _containment(self, base: str) -> tuple[str, str] | None:
-        """First canonical span in the phrase, as (matched text, canonical).
+        """Canonical span in the phrase, as (matched text, canonical).
 
-        Scans every phrase variant, so plural tails like "red bell peppers"
-        still expose "bell pepper" as a span.
+        Within one spelling of the phrase, the longest canonical name wins,
+        and aliases are only tried when there is none: an alias overriding a
+        canonical word is opt-in (_COMPOUND_UPGRADES), or "salt and pepper"
+        becomes pepper. Phrase variants (last word singularized) expose plural
+        tails: "red bell peppers" still contains "bell pepper".
+
+        D29: a later variant replaces the earlier match only when its span
+        *extends* it. Returning the first variant's hit let "flour" beat
+        "flour tortilla" and "kidney" beat "kidney bean"; letting any longer
+        span win instead turned "spaghetti noodles" (pasta) into noodle and
+        "kiwi fruits" into fruit.
         """
+        best = None
         for pv in _phrase_variants(base):
-            hay = f" {pv} "
-            for c in self._by_len:
-                if len(c) >= 3 and f" {c} " in hay:
-                    return c, self._canon[c]
-            for a, target in self._aliases.items():
-                if f" {a} " in hay:
-                    return a, target
-        return None
+            hit = self._span_in(f" {pv} ")
+            if hit is None:
+                continue
+            if best is None:
+                best = hit
+            elif len(hit[0]) > len(best[0]) and f" {best[0]} " in f" {hit[0]} ":
+                best = hit
+        return best
+
+    def _span_in(self, hay: str) -> tuple[str, str] | None:
+        """Longest canonical name in one spelling, else the longest alias."""
+        for c in self._by_len:
+            if len(c) >= 3 and c in hay and f" {c} " in hay:
+                return c, self._canon[c]
+        best = None
+        for a, target in self._aliases.items():
+            if f" {a} " in hay and (best is None or len(a) > len(best[0])):
+                best = (a, target)
+        return best
 
     def _compound_upgrade(self, base: str, matched: str) -> str | None:
         """A compound name beats the narrower word it contains.

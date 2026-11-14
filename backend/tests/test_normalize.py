@@ -77,9 +77,10 @@ def test_green_onion_resolves_to_scallion(n):
 
 def test_equal_length_spans_resolve_the_same_way_every_time():
     """Ties were broken by set iteration order, so this varied per process:
-    "bread flour" matched bread or flour depending on the hash seed."""
-    results = {Normalizer(VOCAB).match("bread flour") for _ in range(5)}
-    assert results == {"bread"}  # alphabetically first among equal-length spans
+    "bread flour" matched bread or flour depending on the hash seed. (Bread
+    flour now has its own alias, D29, so the tie is shown with another pair.)"""
+    results = {Normalizer(VOCAB).match("onion basil") for _ in range(5)}
+    assert results == {"basil"}  # alphabetically first among equal-length spans
 
 
 def test_longer_spans_still_beat_shorter_ones(n):
