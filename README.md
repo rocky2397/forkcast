@@ -33,6 +33,18 @@ Stack (decided): FastAPI + React PWA, Epicure embeddings
 ([`Kaikaku/epicure-*`](https://huggingface.co/Kaikaku/epicure-core), CC BY 4.0),
 RecipeNLG-derived recipe corpus, Claude Haiku for vision intake.
 
+## Tests (D22)
+
+```bash
+pip install -r requirements-dev.txt
+pytest                      # ~3 s, no network and no corpus needed
+```
+
+Tests that need the Epicure weights skip themselves unless the weights are
+cached (`dev.sh` exports `HF_HOME`; a bare `pytest` finds the dev volume's
+cache on its own). CI runs the same suite offline, plus the frontend's
+`npm run lint` and `npm run build`.
+
 ## Attribution
 
 Epicure embeddings: Jakub Radzikowski & Josef Chen (KAIKAKU.AI),

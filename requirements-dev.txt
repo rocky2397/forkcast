@@ -1,0 +1,4 @@
+# Test dependencies (D22). Installed on top of requirements.txt.
+# httpx is what fastapi.testclient drives the app through.
+httpx==0.28.1
+pytest==9.0.1
