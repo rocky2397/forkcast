@@ -197,6 +197,7 @@ def recipe_detail(recipe_id: int):
                 "raw": i["raw"],
                 "canonical": i["canonical"],
                 "in_inventory": bool(i["in_inventory"]),
+                "staple": i["canonical"] in recipes.STAPLES,
                 "sub": (
                     substitutions.suggest(i["canonical"], cands)
                     if i["canonical"] and not i["in_inventory"]
@@ -208,14 +209,28 @@ def recipe_detail(recipe_id: int):
     }
 
 
+class CookedIn(BaseModel):
+    used_up: list[str] = Field(default_factory=list, max_length=50)
+
+
 @app.post("/api/recipes/{recipe_id:int}/cooked")
-def log_cooked(recipe_id: int):
+def log_cooked(recipe_id: int, body: CookedIn | None = None):
+    """Log a cook; optionally deplete inventory items the cook used up.
+
+    used_up entries not currently in the inventory are ignored, so a stale
+    checklist (item already removed on another device) can't fail the log.
+    """
+    used_up = body.used_up if body else []
     with connect() as con:
         if con.execute("SELECT 1 FROM recipes WHERE id = ?", (recipe_id,)).fetchone() is None:
             raise HTTPException(404, f"no recipe {recipe_id}")
         cur = con.execute("INSERT INTO meal_log (recipe_id) VALUES (?)", (recipe_id,))
+        removed = [
+            c for c in dict.fromkeys(used_up)
+            if con.execute("DELETE FROM inventory WHERE canonical = ?", (c,)).rowcount
+        ]
         con.commit()
-    return {"logged": True, "meal_log_id": cur.lastrowid, "recipe_id": recipe_id}
+    return {"logged": True, "meal_log_id": cur.lastrowid, "recipe_id": recipe_id, "removed": removed}
 
 
 @app.get("/api/recipes/cookable")

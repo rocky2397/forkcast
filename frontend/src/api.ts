@@ -86,7 +86,13 @@ export interface RecipeDetail {
   protein_g: number | null;
   carbs_g: number | null;
   fat_g: number | null;
-  ingredients: { raw: string; canonical: string | null; in_inventory: boolean; sub: string | null }[];
+  ingredients: {
+    raw: string;
+    canonical: string | null;
+    in_inventory: boolean;
+    staple: boolean;
+    sub: string | null;
+  }[];
 }
 
 // Set by App so an expired or missing session sends the whole UI back to the
@@ -176,8 +182,12 @@ export const api = {
     return req<{ product: Product }>("/api/nutrition/scan", { method: "POST", body: form });
   },
   recipe: (id: number) => req<RecipeDetail>(`/api/recipes/${id}`),
-  logCooked: (id: number) =>
-    req<{ logged: boolean; meal_log_id: number }>(`/api/recipes/${id}/cooked`, { method: "POST" }),
+  logCooked: (id: number, usedUp: string[] = []) =>
+    req<{ logged: boolean; meal_log_id: number; removed: string[] }>(`/api/recipes/${id}/cooked`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ used_up: usedUp }),
+    }),
 };
 
 /** "black_pepper" -> "black pepper" for display */
