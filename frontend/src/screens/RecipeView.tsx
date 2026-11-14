@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, pretty, type RecipeDetail } from "../api";
+import { displayName, sentence } from "../format";
+import { BackIcon, CloseIcon, NextIcon } from "../Icons";
+
+type Ingredient = RecipeDetail["ingredients"][number];
 
 export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
@@ -7,6 +11,7 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
   const [confirming, setConfirming] = useState(false);
   const [usedUp, setUsedUp] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
+  const [cooking, setCooking] = useState(false);
 
   useEffect(() => {
     api.recipe(id).then(setRecipe);
@@ -54,83 +59,203 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
     }
   }
 
-  if (!recipe) return <p className="empty">Loading…</p>;
+  if (!recipe) {
+    return (
+      <div className="recipe-detail" aria-busy="true">
+        <div className="skeleton" aria-hidden="true">
+          <span style={{ width: 140 }} />
+          <span />
+          <span />
+        </div>
+      </div>
+    );
+  }
+
+  // Staples are assumed present when recipes are ranked, so they are listed
+  // apart rather than as missing. Rows show the recipe's own wording: "lime
+  // zest" and "lime juice" both match lime and would otherwise read twice.
+  const have = recipe.ingredients.filter((i) => i.in_inventory);
+  const missing = recipe.ingredients.filter((i) => !i.in_inventory && !i.staple);
+  const pantry = recipe.ingredients.filter((i) => !i.in_inventory && i.staple);
+  const missingFoods = [...new Set(missing.map((i) => i.canonical ?? i.raw))];
+  const swaps = [...new Map(missing.filter((i) => i.sub).map((i) => [i.canonical, i.sub as string]))];
+  const status =
+    missingFoods.length === 0
+      ? "Ready to cook"
+      : `${missingFoods.length} ingredient${missingFoods.length > 1 ? "s" : ""} away`;
+  const steps = recipe.steps.map(sentence);
 
   return (
-    <div className="screen">
+    <article className="recipe-detail">
       <button className="back" onClick={onBack}>
-        ← back
+        <BackIcon size={20} /> Recipes
       </button>
-      <h2>{recipe.name}</h2>
-      <div className="macros">
-        <span>{recipe.minutes} min</span>
-        {recipe.calories != null && <span>{Math.round(recipe.calories)} kcal</span>}
-        {recipe.protein_g != null && <span>P {Math.round(recipe.protein_g)}g</span>}
-        {recipe.carbs_g != null && <span>C {Math.round(recipe.carbs_g)}g</span>}
-        {recipe.fat_g != null && <span>F {Math.round(recipe.fat_g)}g</span>}
-      </div>
-      {recipe.description && <p className="description">{recipe.description}</p>}
+      <p className="kicker">
+        {status} · {recipe.minutes} min
+      </p>
+      <h1>{displayName(recipe.name)}</h1>
+      {recipe.description && <p className="description">“{sentence(recipe.description)}”</p>}
 
-      <h3>Ingredients</h3>
-      <ul className="ingredient-list">
-        {recipe.ingredients.map((ing, i) => (
-          // Staples are assumed present when recipes are ranked, so the row
-          // must not read like a missing ingredient. The recipe's own wording
-          // is shown rather than the matched name: "lime zest" and "lime
-          // juice" both match lime and would otherwise appear as two "Lime"s.
-          <li
-            key={i}
-            className={ing.in_inventory ? "have" : ing.staple ? "pantry" : "missing"}
-          >
-            {ing.in_inventory ? "✓" : ing.staple ? "·" : "○"} {ing.raw}
-            {ing.staple && !ing.in_inventory && <span className="sub-hint"> — pantry</span>}
-            {ing.sub && <span className="sub-hint"> — you could use {pretty(ing.sub)}</span>}
-          </li>
+      <dl className="stats">
+        {recipe.calories != null && <Stat value={Math.round(recipe.calories)} label="kcal" />}
+        {recipe.protein_g != null && <Stat value={`${Math.round(recipe.protein_g)} g`} label="protein" />}
+        {recipe.carbs_g != null && <Stat value={`${Math.round(recipe.carbs_g)} g`} label="carbs" />}
+        {recipe.fat_g != null && <Stat value={`${Math.round(recipe.fat_g)} g`} label="fat" />}
+      </dl>
+
+      <div className="detail-columns">
+        <section aria-labelledby="ingredients">
+          <h2 id="ingredients" className="section-title">Ingredients</h2>
+          <IngredientGroup label="In your kitchen" kind="have" items={have} />
+          <IngredientGroup label="Missing" kind="missing" items={missing} />
+          {swaps.map(([food, sub]) => (
+            <p key={food} className="swap-note">
+              No {pretty(food ?? "")}? Your <strong>{pretty(sub)}</strong> works instead.
+            </p>
+          ))}
+          <IngredientGroup label="Pantry" kind="pantry" items={pantry} />
+        </section>
+
+        <section aria-labelledby="method">
+          <h2 id="method" className="section-title">Method</h2>
+          <ol className="steps">
+            {steps.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ol>
+
+          {confirming && !cooked ? (
+            <div>
+              <h3>Did anything run out?</h3>
+              <p className="feedback">Tick what's used up and it comes off your kitchen list.</p>
+              <ul className="scan-list">
+                {depletable.map((d) => (
+                  <li key={d.canonical}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={usedUp.has(d.canonical)}
+                        onChange={() => toggle(d.canonical)}
+                      />
+                      <span className="scan-name">
+                        {pretty(d.canonical)}
+                        {d.usedFor && <span className="sub-hint"> (used for {pretty(d.usedFor)})</span>}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              <div className="detail-actions">
+                <button className="btn" onClick={logCooked} disabled={busy}>
+                  {usedUp.size > 0 ? `Log cook, remove ${usedUp.size}` : "Log cook, nothing ran out"}
+                </button>
+                <button className="btn secondary" onClick={() => setConfirming(false)} disabled={busy}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="detail-actions">
+              {steps.length > 0 && (
+                <button className="btn" onClick={() => setCooking(true)}>
+                  Start cook mode
+                </button>
+              )}
+              <button className="btn secondary" onClick={logCooked} disabled={busy || cooked}>
+                {cooked ? "Logged. Enjoy!" : "I cooked this"}
+              </button>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {cooking && (
+        <CookMode title={displayName(recipe.name)} steps={steps} onClose={() => setCooking(false)} />
+      )}
+    </article>
+  );
+}
+
+function Stat({ value, label }: { value: string | number; label: string }) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
+const GROUP_HINTS: Record<string, string> = {
+  pantry: "Basics Forkcast assumes every kitchen has.",
+};
+
+function IngredientGroup({ label, kind, items }: { label: string; kind: string; items: Ingredient[] }) {
+  if (items.length === 0) return null;
+  return (
+    <>
+      <p className={`group-label ${kind}`}>{label}</p>
+      {GROUP_HINTS[kind] && <p className="group-hint">{GROUP_HINTS[kind]}</p>}
+      <ul className={`ingredient-list ${kind}`}>
+        {items.map((ing, i) => (
+          <li key={i}>{ing.raw}</li>
         ))}
       </ul>
+    </>
+  );
+}
 
-      <h3>Steps</h3>
-      <ol className="steps">
-        {recipe.steps.map((s, i) => (
-          <li key={i}>{s}</li>
-        ))}
-      </ol>
+/** One step at a time, large enough to read from across the counter, with
+ *  the screen kept awake where the browser allows it (Screen Wake Lock). */
+function CookMode({ title, steps, onClose }: { title: string; steps: string[]; onClose: () => void }) {
+  const [i, setI] = useState(0);
+  const [awake, setAwake] = useState(false);
 
-      {confirming && !cooked ? (
-        <>
-          <h3>Did anything run out?</h3>
-          <p className="feedback">Check what's used up — it comes off your inventory.</p>
-          <ul className="scan-list">
-            {depletable.map((d) => (
-              <li key={d.canonical}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={usedUp.has(d.canonical)}
-                    onChange={() => toggle(d.canonical)}
-                  />
-                  <span className="scan-name">
-                    {pretty(d.canonical)}
-                    {d.usedFor && <span className="sub-hint"> (used for {pretty(d.usedFor)})</span>}
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-          <div className="add-row">
-            <button onClick={logCooked} disabled={busy}>
-              {usedUp.size > 0 ? `Log cook — remove ${usedUp.size}` : "Log cook — nothing ran out"}
-            </button>
-            <button className="secondary" onClick={() => setConfirming(false)} disabled={busy}>
-              Cancel
-            </button>
-          </div>
-        </>
-      ) : (
-        <button className="cooked" onClick={logCooked} disabled={busy || cooked}>
-          {cooked ? "Logged ✓ — enjoy!" : "I cooked this"}
+  useEffect(() => {
+    let lock: WakeLockSentinel | null = null;
+    let cancelled = false;
+    navigator.wakeLock
+      ?.request("screen")
+      .then((l) => {
+        if (cancelled) return void l.release();
+        lock = l;
+        setAwake(true);
+      })
+      .catch(() => setAwake(false));
+    return () => {
+      cancelled = true;
+      lock?.release().catch(() => {});
+    };
+  }, []);
+
+  const last = i === steps.length - 1;
+  return (
+    <div className="cook-mode" role="dialog" aria-modal="true" aria-label={`Cook mode: ${title}`}>
+      <div className="cook-head">
+        <p className="kicker">{title}</p>
+        <button className="icon-btn" aria-label="Close cook mode" onClick={onClose}>
+          <CloseIcon />
         </button>
-      )}
+      </div>
+      <div className="cook-progress" aria-hidden="true">
+        {steps.map((_, n) => (
+          <span key={n} className={n <= i ? "done" : ""} />
+        ))}
+      </div>
+      <div className="cook-step" aria-live="polite">
+        <span className="step-number">
+          Step {i + 1} of {steps.length}
+        </span>
+        <p>{steps[i]}</p>
+      </div>
+      <div className="cook-nav">
+        <button className="btn secondary" onClick={() => setI(i - 1)} disabled={i === 0}>
+          <BackIcon size={18} /> Back
+        </button>
+        <button className="btn" onClick={() => (last ? onClose() : setI(i + 1))}>
+          {last ? "Done" : "Next"} {!last && <NextIcon size={18} />}
+        </button>
+      </div>
+      {awake && <p className="cook-awake">Screen stays on while you cook.</p>}
     </div>
   );
 }

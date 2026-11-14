@@ -18,8 +18,12 @@ def cookable(
     assume_staples: bool = True,
     min_matched_frac: float = 1.0,
     limit: int = 20,
+    min_missing: int = 0,
 ):
     """Recipes ordered by fewest missing ingredients, then fewest total.
+
+    min_missing > 0 leaves out recipes closer than that: the feed's "one away"
+    tab asks for exactly one missing, not "cookable now" again on top.
 
     Only recipes whose ingredient list fully normalized (matched_frac >=
     min_matched_frac) are considered: an unmatched ingredient can never be
@@ -46,11 +50,12 @@ def cookable(
         FROM need
         JOIN recipes r ON r.id = need.recipe_id
         WHERE need.missing <= ?
+          AND need.missing >= ?
           AND r.matched_frac >= ?
         ORDER BY need.missing ASC, need.needed DESC
         LIMIT ?
         """,
-        (*staples, max_missing, min_matched_frac, limit),
+        (*staples, max_missing, min_missing, min_matched_frac, limit),
     ).fetchall()
     return _rows_to_dicts(rows)
 

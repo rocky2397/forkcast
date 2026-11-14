@@ -5,9 +5,16 @@ import { Recipes } from "./screens/Recipes";
 import { Login } from "./screens/Login";
 import { Intro } from "./screens/Intro";
 import { api, setUnauthorizedHandler } from "./api";
+import { KitchenIcon, RecipesIcon, TodayIcon } from "./Icons";
 import "./App.css";
 
 type Tab = "today" | "inventory" | "recipes";
+
+const TABS: { id: Tab; label: string; Icon: typeof TodayIcon }[] = [
+  { id: "today", label: "Today", Icon: TodayIcon },
+  { id: "inventory", label: "Kitchen", Icon: KitchenIcon },
+  { id: "recipes", label: "Recipes", Icon: RecipesIcon },
+];
 type Gate = "checking" | "locked" | "open";
 
 // Bump the suffix to show the walkthrough again after the loop changes.
@@ -72,22 +79,29 @@ export default function App() {
 
   return (
     <div className="app" key={sessionKey}>
-      <header>
-        <h1>Forkcast 🍴</h1>
+      <header className="topbar">
+        <div className="topbar-inner">
+          <p className="brand">Forkcast</p>
+          {/* Desktop navigation; phones get the tab bar at the bottom. */}
+          <nav className="topnav" aria-label="Main">
+            {TABS.map(({ id, label }) => (
+              <button key={id} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}>
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
       </header>
-      <main>
+      <main className="main">
         {tab === "today" ? <Today /> : tab === "inventory" ? <Inventory /> : <Recipes />}
       </main>
-      <nav className="tabs">
-        <button className={tab === "today" ? "active" : ""} onClick={() => setTab("today")}>
-          Today
-        </button>
-        <button className={tab === "inventory" ? "active" : ""} onClick={() => setTab("inventory")}>
-          Inventory
-        </button>
-        <button className={tab === "recipes" ? "active" : ""} onClick={() => setTab("recipes")}>
-          Recipes
-        </button>
+      <nav className="tabbar" aria-label="Main">
+        {TABS.map(({ id, label, Icon }) => (
+          <button key={id} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}>
+            <Icon />
+            {label}
+          </button>
+        ))}
       </nav>
     </div>
   );
