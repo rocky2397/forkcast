@@ -122,6 +122,23 @@ h2 { text-transform: capitalize; margin: 8px 0 4px; }
 .taste-note { font-size: 0.85rem; opacity: 0.7; margin: 0 0 8px; }
 .match { color: #e05d7b; font-size: 0.85rem; margin-right: 6px; }
 
+.shopping { margin: 24px 0 8px; border-top: 1px solid var(--border, #2c2c2c); padding-top: 12px; }
+.shopping h3 { margin: 0 0 4px; }
+.shopping-list { list-style: none; padding: 0; }
+.shopping-list li {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border, #2c2c2c);
+  border-radius: 10px;
+}
+.shopping-list strong { text-transform: capitalize; }
+.shopping-examples {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  margin-top: 4px;
+  text-transform: capitalize;
+}
+
 .scan-btn {
   width: 100%;
   padding: 12px;

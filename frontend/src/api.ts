@@ -19,6 +19,14 @@ export interface CookableRecipe {
   macro_fit?: number;
 }
 
+/** One pick from the shopping basket. `unlocks` counts recipes completed
+ *  *given the items listed before it*, so the order is a basket, not a ranking. */
+export interface ShoppingItem {
+  canonical: string;
+  unlocks: number;
+  examples: string[];
+}
+
 /** The macro furthest behind today, when a profile exists and the day isn't done. */
 export interface MacroFocus {
   macro: "protein_g" | "carbs_g" | "fat_g";
@@ -158,6 +166,13 @@ export const api = {
       recipes: CookableRecipe[];
     }>(`/api/recipes/cookable?max_missing=${maxMissing}&limit=30`),
   taste: () => req<TasteProfile>("/api/taste"),
+  shopping: () =>
+    req<{
+      personalized: boolean;
+      unlocks_total: number;
+      partial_scan: boolean;
+      items: ShoppingItem[];
+    }>("/api/shopping"),
   scanPhoto: (file: File) => {
     const form = new FormData();
     form.append("photo", file);

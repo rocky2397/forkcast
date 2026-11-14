@@ -55,6 +55,53 @@ def cookable(
     return _rows_to_dicts(rows)
 
 
+def missing_sets(
+    con: sqlite3.Connection,
+    max_missing: int = 3,
+    assume_staples: bool = True,
+    min_matched_frac: float = 1.0,
+    limit: int = 4000,
+):
+    """(recipe id, name, its missing ingredient set) for recipes 1-N away (D21).
+
+    The raw material for shopping suggestions: which purchases would complete
+    which recipes. Already-cookable recipes are excluded — they need nothing.
+    """
+    staples = tuple(STAPLES) if assume_staples else ()
+    placeholders = ",".join("?" * len(staples)) or "''"
+    rows = con.execute(
+        f"""
+        WITH need AS (
+            SELECT ri.recipe_id,
+                   SUM(CASE WHEN inv.canonical IS NULL THEN 1 ELSE 0 END) AS missing,
+                   GROUP_CONCAT(CASE WHEN inv.canonical IS NULL THEN ri.canonical END) AS missing_names
+            FROM recipe_ingredients ri
+            LEFT JOIN inventory inv ON inv.canonical = ri.canonical
+            WHERE ri.canonical IS NOT NULL
+              AND ri.canonical NOT IN ({placeholders})
+            GROUP BY ri.recipe_id
+        )
+        SELECT r.id, r.name, need.missing, need.missing_names
+        FROM need
+        JOIN recipes r ON r.id = need.recipe_id
+        WHERE need.missing BETWEEN 1 AND ?
+          AND r.matched_frac >= ?
+        ORDER BY need.missing ASC
+        LIMIT ?
+        """,
+        (*staples, max_missing, min_matched_frac, limit),
+    ).fetchall()
+    return [
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "missing": frozenset(row["missing_names"].split(",")),
+        }
+        for row in rows
+        if row["missing_names"]
+    ]
+
+
 def _rows_to_dicts(rows):
     return [
         {

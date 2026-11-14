@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from . import auth, embeddings, goals, nutrition, recipes, substitutions, taste
+from . import auth, embeddings, goals, nutrition, recipes, shopping, substitutions, taste
 from .db import connect
 from .normalize import Normalizer
 
@@ -270,6 +270,31 @@ def cookable_recipes(
         "personalized": taste_vec is not None,
         "macro_focus": budget["focus"] if budget else None,
         "recipes": results,
+    }
+
+
+@app.get("/api/shopping")
+def shopping_suggestions(
+    basket: int = Query(3, ge=1, le=5),
+    max_missing: int = Query(3, ge=1, le=3),
+):
+    """What to buy to unlock the most recipes you'd like (D21).
+
+    Deliberately ignores today's macro budget: you shop for the days ahead,
+    not for tonight's remaining protein.
+    """
+    with connect() as con:
+        taste_vec, _ = taste.taste_vector(con)
+        items, truncated = shopping.suggest(
+            con, taste_vec=taste_vec, basket_size=basket, max_missing=max_missing
+        )
+    return {
+        "personalized": taste_vec is not None,
+        "unlocks_total": sum(i["unlocks"] for i in items),
+        # True means the candidate pool hit its ceiling, so the basket is the
+        # best over a subset — not over every near-miss recipe.
+        "partial_scan": truncated,
+        "items": items,
     }
 
 

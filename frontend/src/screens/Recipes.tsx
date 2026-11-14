@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { api, pretty, type CookableRecipe, type MacroFocus, type TasteProfile } from "../api";
+import {
+  api,
+  pretty,
+  type CookableRecipe,
+  type MacroFocus,
+  type ShoppingItem,
+  type TasteProfile,
+} from "../api";
 import { RecipeView } from "./RecipeView";
 
 const MACRO_LABELS: Record<MacroFocus["macro"], string> = {
@@ -13,11 +20,15 @@ export function Recipes() {
   const [recipes, setRecipes] = useState<CookableRecipe[]>([]);
   const [tasteInfo, setTasteInfo] = useState<TasteProfile | null>(null);
   const [focus, setFocus] = useState<MacroFocus | null>(null);
+  const [basket, setBasket] = useState<ShoppingItem[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.taste().then(setTasteInfo).catch(() => {});
+    // Slower than the feed (it scans the near-miss corpus), so it loads
+    // independently instead of holding the recipe list back.
+    api.shopping().then((s) => setBasket(s.items)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -98,6 +109,31 @@ export function Recipes() {
           </li>
         ))}
       </ul>
+
+      {basket.length > 0 && (
+        <section className="shopping">
+          <h3>Worth buying</h3>
+          <p className="taste-note">
+            These {basket.length} unlock {basket.reduce((n, i) => n + i.unlocks, 0)} more recipes
+            together.
+          </p>
+          <ol className="shopping-list">
+            {basket.map((item, i) => (
+              <li key={item.canonical}>
+                <div className="recipe-head">
+                  <strong>{pretty(item.canonical)}</strong>
+                  <span className="minutes">
+                    {i === 0 ? `${item.unlocks} recipes` : `+${item.unlocks} more`}
+                  </span>
+                </div>
+                <div className="shopping-examples">
+                  {item.examples.join(" · ")}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
     </div>
   );
 }
