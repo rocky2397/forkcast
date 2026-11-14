@@ -1,0 +1,91 @@
+# case	good	ok	flags	note
+mediterranean-01	basil			Italian herb mix; basil is one of them
+mediterranean-02	yogurt	milk		yogurt thinned is the standard buttermilk swap
+mediterranean-03		lemon		brine and acid; lemon covers half of it
+mediterranean-04		lemon		acid only, loses the sweetness
+mediterranean-05		spinach,zucchini		dish named after broccoli
+mediterranean-06	basil			herb in a lemony salad
+mediterranean-07		basil		cilantro is distinctive with ginger and cumin
+mediterranean-08	basil			herb in an orzo salad
+mediterranean-09		basil	unsure	poultry seasoning is sage and thyme
+mediterranean-10				no warm spice on hand
+mediterranean-11	red_onion			
+mediterranean-12				nothing replaces wine here
+mediterranean-13				
+mediterranean-14	red_onion			
+mediterranean-15				no nut or seed on hand
+mediterranean-16				olives are a body ingredient here
+mediterranean-17				needs a leavener
+mediterranean-18		red_onion,zucchini	unsure	other kabob chunks, but the sweet fruit is gone
+mediterranean-19	red_onion			
+mediterranean-20				no hot sauce or chili on hand
+mediterranean-21				water is the fallback, not a candidate
+mediterranean-22		paprika		milder
+mediterranean-23				honey and soy already in it
+mediterranean-24		chicken		dish named after lamb
+mediterranean-25				dish named after beets
+mediterranean-26		cumin	unsure	chili powder is mostly chili plus cumin; paprika already in
+mediterranean-27				any oil; olive oil is a pantry staple
+mediterranean-28				no nut on hand
+mediterranean-29				
+mediterranean-30				
+student-01				no creamy soup or base
+student-02				peas already in it
+student-03	honey			glaze
+student-04				needs a solid fat; butter is a staple
+student-05	honey			glaze
+student-06				
+student-07				
+student-08				
+student-09				
+student-10				butter is a staple
+student-11				
+student-12		carrot		aromatic vegetable
+student-13				
+student-14				
+student-15		carrot		
+student-16				needs a leavener
+student-17		carrot,pea		vegetable filler
+student-18				
+student-19	cheddar_cheese			
+student-20		beef,chicken		dish named after ham
+student-21				
+student-22				Japanese curry roux block
+student-23				
+student-24				
+student-25				
+student-26	pea	carrot		
+student-27	pea	carrot		
+student-28				
+student-29				no herbs on hand
+student-30			unsure	ground beef could stand in, at a stretch
+baking-01				all-purpose flour is a staple
+baking-02	yogurt	cream_cheese		
+baking-03		chocolate,raisin		mix-in
+baking-04		banana		dish named after apples
+baking-05				
+baking-06	raisin			dried fruit for dried fruit
+baking-07		cocoa_powder		changes the flavour the cake is named for
+baking-08				cinnamon already in it
+baking-09	yogurt	milk		
+baking-10				whole egg already in it
+baking-11	walnut			
+baking-12	honey			
+baking-13	yogurt	milk		
+baking-14				all-purpose flour is a staple
+baking-15	yogurt	cream_cheese		
+baking-16			unsure	coconut is probably in a broiled topping
+baking-17				oats already in it
+baking-18				butter is a staple
+baking-19				cinnamon already in it
+baking-20				
+baking-21	yogurt	milk		
+baking-22		raisin	unsure	chewy mix-in, loses the ginger
+baking-23				
+baking-24				no berries on hand
+baking-25	honey			
+baking-26		oat		oat crust
+baking-27				
+baking-28				dish named after berries
+baking-29				
+baking-30		milk		
