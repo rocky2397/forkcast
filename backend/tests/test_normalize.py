@@ -1,4 +1,4 @@
-"""Ingredient matching (D24 determinism, D25 compound names, D26 connectors).
+"""Ingredient matching (D24 determinism, D25 compound names, D26 connectors and negations).
 
 A hand-written vocabulary rather than the real 1,790 names: these assert the
 *rules*, and a fixture vocab keeps them offline and readable. Corpus-wide
@@ -15,7 +15,8 @@ VOCAB = [
     "salt", "black_pepper", "flour", "corn", "cornstarch", "bread",
     "basil", "oregano", "coriander", "spinach", "potato", "sweet_potato",
     "tuna", "water", "oil", "olive_oil", "anchovy", "peach", "syrup",
-    "green_chili", "juice", "artichoke", "chicken",
+    "green_chili", "juice", "gluten_free_flour", "artichoke", "sugar",
+    "cream_of_chicken_soup", "chicken", "bean",
 ]
 
 
@@ -125,3 +126,18 @@ def test_an_unmatchable_head_falls_back_to_the_whole_phrase(n):
 def test_and_is_not_a_connector(n):
     """Cutting at "and" rewrote "salt and black pepper" across 327 corpus rows."""
     assert n.match("salt and black pepper") == "black_pepper"
+
+
+@pytest.mark.parametrize("raw,expected", [
+    ("no-salt-added diced tomatoes", "tomato"),   # matched the absent salt
+    ("no-salt-added whole tomatoes", "tomato"),
+    ("fat-free cream of chicken soup", "cream_of_chicken_soup"),
+    ("sugar-free syrup", "syrup"),
+])
+def test_a_negated_ingredient_is_not_the_ingredient(n, raw, expected):
+    assert n.match(raw) == expected
+
+
+def test_a_name_that_is_itself_negated_survives(n):
+    """"gluten free flour" is its own ingredient; stripping leaves plain flour."""
+    assert n.match("gluten-free flour") == "gluten_free_flour"

@@ -110,6 +110,20 @@ def _word_variants(w: str) -> list[str]:
 # the "tomatoes packed in oil" order.
 _CONNECTORS = frozenset({"with", "in"})
 
+# "no salt added", "salt free": the negated word is the one thing the product
+# does *not* contain, yet it was being matched ("no-salt-added tomatoes" ->
+# salt). Hyphens are already spaces by the time this runs.
+_NEGATIONS = (
+    re.compile(r"\bno [a-z]+ added\b"),
+    re.compile(r"\b[a-z]+ free\b"),
+)
+
+
+def _strip_negations(t: str) -> str:
+    for pattern in _NEGATIONS:
+        t = pattern.sub(" ", t)
+    return re.sub(r"\s+", " ", t).strip()
+
 
 def _head_segment(t: str) -> str | None:
     """The phrase up to its first connector word, if there is one."""
@@ -170,6 +184,16 @@ class Normalizer:
 
     def match(self, raw: str) -> str | None:
         t = _clean(raw)
+        if not t:
+            return None
+        # Before any rewriting: a name that *is* the whole phrase wins outright.
+        # "gluten free flour" is its own ingredient, and stripping the negation
+        # out of it would leave plain flour.
+        hit = self._lookup(t)
+        if hit:
+            return hit
+
+        t = _strip_negations(t)
         if not t:
             return None
         # "X with Y" names an ingredient plus whatever it comes packed with, so
