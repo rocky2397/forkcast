@@ -1,6 +1,8 @@
 export interface InventoryItem {
   canonical: string;
   added_at: string;
+  /** Food class (D28), for grouping and colouring; null when unclassed. */
+  family?: string | null;
 }
 
 export interface CookableRecipe {

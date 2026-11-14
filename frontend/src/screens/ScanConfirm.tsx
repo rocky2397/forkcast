@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { api, pretty, type ScanProposal } from "../api";
 
+/** The checklist after a grocery photo (D8): a cheap vision model plus a
+ *  mandatory human check, so nothing misread lands in the kitchen. */
 export function ScanConfirm({
   proposals,
   onDone,
@@ -12,12 +14,12 @@ export function ScanConfirm({
   const [checked, setChecked] = useState<boolean[]>(proposals.map((p) => p.canonical !== null));
   const [busy, setBusy] = useState(false);
 
+  const count = checked.filter((c, i) => c && proposals[i].canonical).length;
+
   async function confirm() {
     setBusy(true);
     try {
-      const names = proposals
-        .filter((p, i) => checked[i] && p.canonical)
-        .map((p) => p.canonical!) ;
+      const names = proposals.filter((p, i) => checked[i] && p.canonical).map((p) => p.canonical!);
       if (names.length) await api.addInventory(names);
       onDone();
     } finally {
@@ -26,9 +28,12 @@ export function ScanConfirm({
   }
 
   return (
-    <div className="screen">
-      <h3>Found in your photo</h3>
-      <p className="feedback">Uncheck anything that's wrong, then confirm.</p>
+    <div className="screen narrow">
+      <p className="kicker">Scan</p>
+      <h1 className="display">Found in your photo</h1>
+      <p className="lead">
+        Untick anything that's wrong. Nothing is added to your kitchen until you confirm.
+      </p>
       <ul className="scan-list">
         {proposals.map((p, i) => (
           <li key={i} className={p.canonical ? "" : "unknown"}>
@@ -40,19 +45,24 @@ export function ScanConfirm({
                 onChange={() => setChecked(checked.map((c, j) => (j === i ? !c : c)))}
               />
               <span className="scan-name">
-                {p.canonical ? pretty(p.canonical) : `${p.seen} (not recognized)`}
+                {p.canonical ? pretty(p.canonical) : p.seen}
+                {!p.canonical && <span className="scan-why">Not in the ingredient list, so it can't be added.</span>}
               </span>
               {p.quantity && <span className="scan-qty">{p.quantity}</span>}
-              <span className="scan-conf">{Math.round(p.confidence * 100)}%</span>
+              {p.canonical && (
+                <span className="scan-conf" title="How sure the photo reader is">
+                  {Math.round(p.confidence * 100)}% sure
+                </span>
+              )}
             </label>
           </li>
         ))}
       </ul>
-      <div className="add-row">
-        <button onClick={confirm} disabled={busy || !checked.some((c, i) => c && proposals[i].canonical)}>
-          Add {checked.filter((c, i) => c && proposals[i].canonical).length} items
+      <div className="form-actions">
+        <button className="btn" onClick={confirm} disabled={busy || count === 0}>
+          Add {count} {count === 1 ? "item" : "items"}
         </button>
-        <button className="secondary" onClick={onDone} disabled={busy}>
+        <button className="btn secondary" onClick={onDone} disabled={busy}>
           Cancel
         </button>
       </div>

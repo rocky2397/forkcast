@@ -67,3 +67,43 @@ const FOOD: Record<string, string> = {
 export function foodColor(canonical: string, family: string | null): string {
   return FOOD[canonical] ?? (family ? FAMILY[family] : undefined) ?? "#CFC4B4";
 }
+
+// Kitchen screen groups, from the food classes. Order is the order shown.
+export const KITCHEN_GROUPS = [
+  "Vegetables",
+  "Fruit",
+  "Herbs & spices",
+  "Meat, fish & eggs",
+  "Dairy & cheese",
+  "Grains, pasta & bread",
+  "Pantry",
+  "Other",
+] as const;
+type KitchenGroup = (typeof KITCHEN_GROUPS)[number];
+
+const GROUP_OF_FAMILY: Record<string, KitchenGroup> = {
+  green_veg: "Vegetables", aromatic_root: "Vegetables", starchy_root: "Vegetables",
+  cooking_green: "Vegetables", salad_green: "Vegetables", cabbage: "Vegetables",
+  mushroom: "Vegetables", allium: "Vegetables", fresh_chili: "Vegetables", olive_caper: "Vegetables",
+  citrus: "Fruit", berry: "Fruit", stone_fruit: "Fruit", pome_fruit: "Fruit",
+  tropical_fruit: "Fruit", dried_fruit: "Fruit",
+  herb: "Herbs & spices", warm_spice: "Herbs & spices", spice_blend: "Herbs & spices",
+  ginger: "Herbs & spices", dried_chili: "Herbs & spices",
+  meat: "Meat, fish & eggs", cured_meat: "Meat, fish & eggs", seafood: "Meat, fish & eggs", egg: "Meat, fish & eggs",
+  dairy: "Dairy & cheese", melting_cheese: "Dairy & cheese", hard_cheese: "Dairy & cheese",
+  crumbly_cheese: "Dairy & cheese", soft_cheese: "Dairy & cheese",
+  grain: "Grains, pasta & bread", noodle: "Grains, pasta & bread", flatbread: "Grains, pasta & bread",
+  bread: "Grains, pasta & bread", flour: "Grains, pasta & bread",
+  bean: "Pantry", nut: "Pantry", seed: "Pantry", sweetener: "Pantry", chocolate: "Pantry",
+  vinegar: "Pantry", broth: "Pantry", cooking_wine: "Pantry", umami_sauce: "Pantry",
+  thick_sauce: "Pantry", solid_fat: "Pantry", oil: "Pantry",
+};
+const GROUP_OF_FOOD: Record<string, KitchenGroup> = {
+  tomato: "Vegetables", sun_dried_tomato: "Pantry", bell_pepper: "Vegetables", cucumber: "Vegetables",
+  avocado: "Vegetables", corn: "Vegetables", eggplant: "Vegetables", pumpkin: "Vegetables",
+  pea: "Vegetables", banana: "Fruit",
+};
+
+export function kitchenGroup(canonical: string, family: string | null | undefined): KitchenGroup {
+  return GROUP_OF_FOOD[canonical] ?? (family ? GROUP_OF_FAMILY[family] : undefined) ?? "Other";
+}

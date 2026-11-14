@@ -9,6 +9,8 @@ import {
 } from "../api";
 import { displayName, foodColor, mealOfDay } from "../format";
 import { useMediaQuery } from "../useMediaQuery";
+import { Guide, HelpButton } from "../Guide";
+import { useGuide } from "../useGuide";
 import { RecipeView } from "./RecipeView";
 
 const MACRO_LABELS: Record<MacroFocus["macro"], string> = {
@@ -19,18 +21,6 @@ const MACRO_LABELS: Record<MacroFocus["macro"], string> = {
 
 const FILTERS = ["Cookable now", "One away", "Two away"];
 
-// Bump the suffix when the guide's content changes, so it shows once more.
-const GUIDE_SEEN = "forkcast.feedguide.v1";
-
-function guideSeen(): boolean {
-  // Private-mode Safari throws on localStorage; then the guide just shows.
-  try {
-    return localStorage.getItem(GUIDE_SEEN) === "1";
-  } catch {
-    return false;
-  }
-}
-
 export function Recipes() {
   const [maxMissing, setMaxMissing] = useState(0);
   const [recipes, setRecipes] = useState<CookableRecipe[]>([]);
@@ -39,7 +29,7 @@ export function Recipes() {
   const [basket, setBasket] = useState<ShoppingItem[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [guideOpen, setGuideOpen] = useState(() => !guideSeen());
+  const guide = useGuide("forkcast.feedguide.v1");
   // From 960px the list and the open recipe sit side by side.
   const wide = useMediaQuery("(min-width: 960px)");
 
@@ -73,14 +63,6 @@ export function Recipes() {
     : null;
   const weekday = new Date().toLocaleDateString("en", { weekday: "long" });
 
-  function closeGuide() {
-    setGuideOpen(false);
-    try {
-      localStorage.setItem(GUIDE_SEEN, "1");
-    } catch {
-      // Unwritable storage: it shows again next time, which is harmless.
-    }
-  }
   const unlocksTotal = basket.reduce((n, i) => n + i.unlocks, 0);
 
   return (
@@ -111,18 +93,10 @@ export function Recipes() {
               </button>
             ))}
           </div>
-          <button
-            className="help-btn"
-            aria-label="How to read this list"
-            aria-expanded={guideOpen}
-            aria-controls="feed-guide"
-            onClick={() => (guideOpen ? closeGuide() : setGuideOpen(true))}
-          >
-            ?
-          </button>
+          <HelpButton open={guide.open} onToggle={guide.toggle} label="How to read this list" controls="feed-guide" />
         </div>
 
-        {guideOpen && <FeedGuide onClose={closeGuide} />}
+        {guide.open && <FeedGuide onClose={guide.close} />}
 
         {loading && (
           <div aria-busy="true" aria-label="Searching 87,861 recipes">
@@ -264,41 +238,44 @@ function RecipeCard({
 /** "How to read this list": shown until dismissed, back any time via "?". */
 function FeedGuide({ onClose }: { onClose: () => void }) {
   return (
-    <section id="feed-guide" className="guide" aria-labelledby="feed-guide-title">
-      <h2 id="feed-guide-title" className="guide-title">How to read this list</h2>
-      <dl className="guide-list">
-        <div>
-          <dt>
-            <span className="dots" aria-hidden="true">
-              <span className="dot" style={{ background: "#D2553B" }} />
-              <span className="dot" style={{ background: "#5B7F3F" }} />
-              <span className="dot" style={{ background: "#E3B55B" }} />
-              <span className="dot missing" />
-            </span>
-            <span className="visually-hidden">Coloured dots</span>
-          </dt>
-          <dd>Each dot is one of the recipe's main ingredients, coloured by kind of food. A dashed dot is one you don't have.</dd>
-        </div>
-        <div>
-          <dt>5 of 5 in your kitchen</dt>
-          <dd>How many of those you have. Salt, pepper, oil, butter, flour and sugar are assumed, so they never count as missing.</dd>
-        </div>
-        <div>
-          <dt className="tag-taste">92% like what you cook</dt>
-          <dd>How close the recipe is to the meals you've logged, with the ones you liked counting most. It appears once you've logged a cook.</dd>
-        </div>
-        <div>
-          <dt className="tag-fit">Fits what's left today</dt>
-          <dd>The dish's mix of protein, carbs and fat suits the calories and macros you still have open today.</dd>
-        </div>
-        <div>
-          <dt>One away · Two away</dt>
-          <dd>Recipes you could cook after buying one or two things. If something in your kitchen works instead, the card says so.</dd>
-        </div>
-      </dl>
-      <button className="btn guide-close" onClick={onClose}>
-        Got it
-      </button>
-    </section>
+    <Guide
+      id="feed-guide"
+      title="How to read this list"
+      onClose={onClose}
+      items={[
+        {
+          term: (
+            <>
+              <span className="dots" aria-hidden="true">
+                <span className="dot" style={{ background: "#D2553B" }} />
+                <span className="dot" style={{ background: "#5B7F3F" }} />
+                <span className="dot" style={{ background: "#E3B55B" }} />
+                <span className="dot missing" />
+              </span>
+              <span className="visually-hidden">Coloured dots</span>
+            </>
+          ),
+          text: "Each dot is one of the recipe's main ingredients, coloured by kind of food. A dashed dot is one you don't have.",
+        },
+        {
+          term: "5 of 5 in your kitchen",
+          text: "How many of those you have. Salt, pepper, oil, butter, flour and sugar are assumed, so they never count as missing.",
+        },
+        {
+          term: "92% like what you cook",
+          termClass: "tag-taste",
+          text: "How close the recipe is to the meals you've logged, with the ones you liked counting most. It appears once you've logged a cook.",
+        },
+        {
+          term: "Fits what's left today",
+          termClass: "tag-fit",
+          text: "The dish's mix of protein, carbs and fat suits the calories and macros you still have open today.",
+        },
+        {
+          term: "One away · Two away",
+          text: "Recipes you could cook after buying one or two things. If something in your kitchen works instead, the card says so.",
+        },
+      ]}
+    />
   );
 }

@@ -136,7 +136,8 @@ class InventoryAdd(BaseModel):
 def get_inventory():
     with connect() as con:
         rows = con.execute("SELECT canonical, added_at FROM inventory ORDER BY canonical").fetchall()
-    return {"items": [dict(r) for r in rows]}
+    # family: the food class (D28), so the kitchen screen can group and colour items
+    return {"items": [{**dict(r), "family": NAME_TO_CLASS.get(r["canonical"])} for r in rows]}
 
 
 @app.post("/api/inventory")
