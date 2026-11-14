@@ -1,4 +1,4 @@
-"""Ingredient matching.
+"""Ingredient matching (D24 determinism, D25 compound names).
 
 A hand-written vocabulary rather than the real 1,790 names: these assert the
 *rules*, and a fixture vocab keeps them offline and readable. Corpus-wide
@@ -20,6 +20,56 @@ VOCAB = [
 @pytest.fixture
 def n():
     return Normalizer(VOCAB)
+
+
+@pytest.mark.parametrize("raw", [
+    "cherry tomatoes",          # the reported bug: read as the fruit
+    "cherry tomato",
+    "yellow cherry tomatoes",   # descriptor the stripper doesn't know
+    "yellow cherry tomato",
+    "grape tomatoes",
+    "italian plum tomatoes",
+    "crushed plum tomatoes",
+])
+def test_compound_tomatoes_are_tomatoes(n, raw):
+    assert n.match(raw) == "tomato"
+
+
+@pytest.mark.parametrize("raw,expected", [
+    ("cherry", "cherry"),        # the fruit on its own must survive
+    ("cherries", "cherry"),
+    ("grape", "grape"),
+    ("tomatoes", "tomato"),
+])
+def test_the_narrow_words_still_match_themselves(n, raw, expected):
+    assert n.match(raw) == expected
+
+
+@pytest.mark.parametrize("raw,expected", [
+    # "clove" is a canonical spice, but garlic is the longer span and wins.
+    ("garlic clove", "garlic"),
+    ("garlic cloves", "garlic"),
+    # Two ingredients in one string: whichever is picked, the rule must not
+    # start preferring the trailing word.
+    ("salt and pepper", "salt"),
+    ("salt & pepper", "salt"),
+])
+def test_compound_rule_leaves_these_alone(n, raw, expected):
+    """The cases that "last word wins" and "longest match wins" both broke."""
+    assert n.match(raw) == expected
+
+
+def test_corn_flour_is_excluded_from_upgrades(n):
+    """"corn flour" -> cornstarch is right alone, wrong as an override."""
+    assert n.match("masa corn flour") == "flour"
+    assert n.match("yellow corn flour") == "flour"
+    assert n.match("corn flour") == "cornstarch"  # the plain alias still applies
+
+
+def test_green_onion_resolves_to_scallion(n):
+    assert n.match("green onion tops") == "scallion"
+    assert n.match("green onion") == "scallion"
+    assert n.match("onion") == "onion"
 
 
 def test_equal_length_spans_resolve_the_same_way_every_time():

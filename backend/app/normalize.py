@@ -39,6 +39,9 @@ ALIASES = {
     "pimento": "bell_pepper",
     "roma tomato": "tomato",
     "plum tomato": "tomato",
+    "cherry tomato": "tomato",
+    "grape tomato": "tomato",
+    "campari tomato": "tomato",
     "baking potato": "potato",
     "confectioners sugar": "powdered_sugar",
     "icing sugar": "powdered_sugar",
@@ -109,6 +112,19 @@ def _phrase_variants(t: str) -> Iterable[str]:
         yield " ".join(words[:-1] + [v])
 
 
+# Aliases allowed to override a narrower word they contain (see
+# Normalizer._compound_upgrade). Opt-in, not opt-out: letting every multi-word
+# alias upgrade moves 177 strings and 2610 recipe rows, turning "wheat flour"
+# into wheat and "tuna fish" into fish. Each entry here is one measured with
+# backend/scripts/normalizer_diff.py. "corn flour" is deliberately absent —
+# right on its own, but as an upgrade it rewrites "masa corn flour" to
+# cornstarch.
+_COMPOUND_UPGRADES = {
+    "cherry tomato", "grape tomato", "campari tomato", "plum tomato",
+    "roma tomato", "green onion",
+}
+
+
 class Normalizer:
     def __init__(self, vocab_names: Iterable[str]):
         names = set(vocab_names)
@@ -121,6 +137,10 @@ class Normalizer:
         # iteration order, so "bread flour" matched bread or flour depending
         # on the process's hash seed. Arbitrary but stable beats arbitrary.
         self._by_len = sorted(self._canon, key=lambda c: (-len(c), c))
+        # Compound names that may override a narrower word they contain.
+        self._compounds = {
+            k: v for k, v in self._aliases.items() if k in _COMPOUND_UPGRADES
+        }
 
     def _lookup(self, phrase: str) -> str | None:
         for v in _phrase_variants(phrase):
@@ -142,15 +162,45 @@ class Normalizer:
             hit = self._lookup(stripped)
             if hit:
                 return hit
-        # containment pass: scan every phrase variant (so plural tails like
-        # "red bell peppers" still expose "bell pepper" as a span)
         base = stripped or t
+        found = self._containment(base)
+        if found is None:
+            return None
+        matched, target = found
+        return self._compound_upgrade(base, matched) or target
+
+    def _containment(self, base: str) -> tuple[str, str] | None:
+        """First canonical span in the phrase, as (matched text, canonical).
+
+        Scans every phrase variant, so plural tails like "red bell peppers"
+        still expose "bell pepper" as a span.
+        """
         for pv in _phrase_variants(base):
             hay = f" {pv} "
             for c in self._by_len:
                 if len(c) >= 3 and f" {c} " in hay:
-                    return self._canon[c]
+                    return c, self._canon[c]
             for a, target in self._aliases.items():
                 if f" {a} " in hay:
+                    return a, target
+        return None
+
+    def _compound_upgrade(self, base: str, matched: str) -> str | None:
+        """A compound name beats the narrower word it contains.
+
+        "cherry tomatoes" hits "cherry" first, because "tomatoes" is not
+        itself a canonical name — but the phrase also contains the compound
+        "cherry tomato", which names the actual ingredient and contains the
+        word already matched. Narrow by design: a compound only wins over a
+        word it fully contains, so "garlic clove" and "salt and pepper" are
+        untouched. Phrase variants are checked too, so the singular spelling
+        is seen in "yellow cherry tomatoes".
+        """
+        for pv in _phrase_variants(base):
+            hay = f" {pv} "
+            for compound, target in self._compounds.items():
+                if compound == matched:
+                    continue
+                if f" {compound} " in hay and f" {matched} " in f" {compound} ":
                     return target
         return None
