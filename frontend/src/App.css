@@ -766,3 +766,11 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
   vertical-align: middle;
 }
 .login .field-hint { text-align: center; }
+
+.description.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.more-link { margin-top: 6px; min-height: 32px; font-size: 14px; }

@@ -5,6 +5,9 @@ import { BackIcon, CloseIcon, NextIcon } from "../Icons";
 
 type Ingredient = RecipeDetail["ingredients"][number];
 
+/** Notes longer than this get clamped to three lines with "Read more". */
+const LONG_NOTE = 140;
+
 export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [cooked, setCooked] = useState(false);
@@ -12,6 +15,7 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
   const [usedUp, setUsedUp] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [cooking, setCooking] = useState(false);
+  const [moreText, setMoreText] = useState(false);
 
   useEffect(() => {
     api.recipe(id).then(setRecipe);
@@ -94,7 +98,27 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
         {status} · {recipe.minutes} min
       </p>
       <h1>{displayName(recipe.name)}</h1>
-      {recipe.description && <p className="description">“{sentence(recipe.description)}”</p>}
+      {recipe.description && (
+        // Authors' notes run long; three lines keep the ingredients in view.
+        <>
+          <p
+            id="recipe-description"
+            className={recipe.description.length > LONG_NOTE && !moreText ? "description clamped" : "description"}
+          >
+            “{sentence(recipe.description)}”
+          </p>
+          {recipe.description.length > LONG_NOTE && (
+            <button
+              className="link more-link"
+              aria-expanded={moreText}
+              aria-controls="recipe-description"
+              onClick={() => setMoreText(!moreText)}
+            >
+              {moreText ? "Show less" : "Read more"}
+            </button>
+          )}
+        </>
+      )}
 
       <dl className="stats">
         {recipe.calories != null && <Stat value={Math.round(recipe.calories)} label="kcal" />}

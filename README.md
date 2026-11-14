@@ -5,14 +5,14 @@ have, finds which of 87,861 recipes you can cook with it right now, puts the
 ones that suit your taste and today's calorie and protein budget first, and
 tells you what to buy to unlock more.
 
-| Today | Recipe feed | Recipe detail | Worth buying |
-|---|---|---|---|
-| <img src="docs/screenshots/today.jpg" width="200" alt="Today: calorie and macro progress against targets, with today's logged meals and their ratings"> | <img src="docs/screenshots/recipes.jpg" width="200" alt="Recipe feed: cookable recipes with taste match, a fits-macros badge and a protein-to-go hint"> | <img src="docs/screenshots/recipe.jpg" width="200" alt="Recipe detail: the recipe's own ingredient wording, ticked against the inventory, lemon suggested for the missing lime, staples shown as pantry"> | <img src="docs/screenshots/shopping.jpg" width="200" alt="Worth buying: yeast unlocks 196 recipes, then bread 131 more, then onion 107 more"> |
-| Calories and macros against your daily targets | Ranked by taste and by what fits today's remaining budget | Ingredients you have are ticked; lemon stands in for lime | Three purchases that unlock 434 more recipes |
+<img src="docs/screenshots/desktop.jpg" alt="Forkcast on a laptop: the recipe feed on the left with coloured ingredient dots and taste match, the open recipe on the right with its ingredients ticked against the kitchen">
 
-> **The UI is a working first version, not a finished design.** It shows the
-> engine behind it (ranking, swaps, macro steering), and a visual polish pass
-> is next. Screenshots come from a demo kitchen with a sample profile.
+| Recipes | Recipe | Worth buying | Today | Kitchen |
+|---|---|---|---|---|
+| <img src="docs/screenshots/recipes.jpg" width="160" alt="Recipe feed on a phone: tabs for cookable now, one away and two away; each recipe shows coloured dots for its main ingredients, how many you have, its taste match and whether it fits what's left today"> | <img src="docs/screenshots/recipe.jpg" width="160" alt="Recipe page: title, a three-line author's note with Read more, calories and macros, and the ingredients you already have"> | <img src="docs/screenshots/shopping.jpg" width="160" alt="Worth buying: yeast unlocks 255 recipes, then baking powder 140 more, then onion 99 more, each with example dishes"> | <img src="docs/screenshots/today.jpg" width="160" alt="Today: a ring with calories left, protein, carbs and fat bars with grams to go, and today's meals"> | <img src="docs/screenshots/kitchen.jpg" width="160" alt="Kitchen: a scan button, an add-by-name field and the ingredients grouped by kind"> |
+| What you can cook, best first | What you have is ticked | Three buys that unlock the most | Calories and macros left | What Forkcast matches against |
+
+Screenshots come from a demo kitchen with a sample profile, not real data.
 
 ## How it works
 
@@ -204,9 +204,29 @@ one was on hand.
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 204 pytest tests in under a second, offline and without the corpus (41 of
+- **Tests:** 207 pytest tests in under a second, offline and without the corpus (41 of
   them need the Epicure weights and skip without them), plus frontend lint and
   build, all in CI.
+
+## Design
+
+The look is warm and editorial: a serif for headings, a cream background and
+food colours used sparingly, so recipes read like a cookbook page rather than a
+dashboard. It is built phone-first and switches to a two-column layout on a
+laptop, with the open recipe beside the list.
+
+The app should explain itself. A short three-step walkthrough runs on first
+open, and each main screen has a **?** button that explains what you are looking at
+in plain words (for example what the coloured dots and "% like what you cook"
+mean). Labels say what they mean instead of using internal terms.
+
+It follows the system's light or dark mode, every text colour passes the WCAG
+AA contrast check, and there is a keyboard-friendly focus style and reduced
+motion support. `ops/screenshots.sh` rebuilds the app, starts it on a throwaway
+demo kitchen, takes the screenshots above in a real browser, and runs the
+[axe-core](https://github.com/dequelabs/axe-core) accessibility check on every
+screen. It fails if axe finds a serious or critical WCAG 2.1 AA problem; the
+current screens have none.
 
 ## Design decisions
 
