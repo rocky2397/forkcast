@@ -25,20 +25,24 @@ export function Login({ onAuthenticated }: { onAuthenticated: () => void }) {
 
   return (
     <form className="login" onSubmit={submit}>
-      <h1>Forkcast 🍴</h1>
+      <h1>Forkcast</h1>
       <p className="login-intro">What should I cook next?</p>
+      <label className="field" htmlFor="password">
+        Password
+      </label>
       <input
+        id="password"
         type="password"
         value={password}
         autoFocus
         autoComplete="current-password"
-        placeholder="Password"
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button type="submit" disabled={busy || password.length === 0}>
+      <button type="submit" className="btn" disabled={busy || password.length === 0}>
         {busy ? "Checking…" : "Enter"}
       </button>
       {error && <p className="feedback login-error">{error}</p>}
+      <p className="field-hint">This is a shared demo: everyone with the password sees the same kitchen.</p>
     </form>
   );
 }

@@ -2,60 +2,53 @@
  *
  *  Someone opening a shared link lands on an empty Today tab with no idea that
  *  the app runs on an inventory they have to stock first. Each step says what
- *  to do and what comes back, because the payoff (a ranked feed, a learned
- *  taste profile) is invisible until the kitchen has something in it.
+ *  to do and what comes back, in the same words the screens use (D30), because
+ *  the payoff (a ranked feed, a learned taste) is invisible until the kitchen
+ *  has something in it.
  */
+const STEPS = [
+  {
+    title: "Stock your kitchen",
+    text: "Scan your shopping or type it in. You tick a checklist first, so nothing misread is saved.",
+  },
+  {
+    title: "See what you can cook now",
+    text: "87,861 recipes, ranked by what's in your kitchen. Coloured dots show each recipe's main ingredients, and “One away” suggests swaps from what you have.",
+  },
+  {
+    title: "It learns your taste and your day",
+    text: "Rate what you cook and “% like what you cook” follows you. Add a profile and dishes that fit the calories and macros you have left come first.",
+  },
+];
+
 export function Intro({ onStart, onSkip }: { onStart: () => void; onSkip: () => void }) {
   return (
     <div className="intro">
-      <h1>Forkcast 🍴</h1>
-      <p className="intro-tagline">What should I cook next?</p>
+      <p className="kicker">Welcome to</p>
+      <h1>Forkcast</h1>
+      <p className="intro-tagline">What should I cook next? It works in three steps.</p>
 
       <ol className="intro-steps">
-        <li>
-          <span className="intro-icon" aria-hidden="true">
-            📦
-          </span>
-          <div>
-            <strong>Stock your kitchen</strong>
-            <p>
-              Photograph your shopping or type it in. You get a checklist to untick
-              misreads — nothing is saved until you confirm.
-            </p>
-          </div>
-        </li>
-        <li>
-          <span className="intro-icon" aria-hidden="true">
-            🍳
-          </span>
-          <div>
-            <strong>Get told what to cook</strong>
-            <p>
-              87,861 recipes, ranked by what you can make right now — plus stand-ins
-              when you're one ingredient short.
-            </p>
-          </div>
-        </li>
-        <li>
-          <span className="intro-icon" aria-hidden="true">
-            👅
-          </span>
-          <div>
-            <strong>It learns you</strong>
-            <p>
-              Rate what you cook and the ranking follows your taste. Log meals by
-              scanning a barcode or a Nährwerttabelle to track calories and macros.
-            </p>
-          </div>
-        </li>
+        {STEPS.map((s, i) => (
+          <li key={s.title}>
+            <span className="intro-num" aria-hidden="true">
+              {i + 1}
+            </span>
+            <div>
+              <strong>{s.title}</strong>
+              <p>{s.text}</p>
+            </div>
+          </li>
+        ))}
       </ol>
 
-      <button className="intro-start" onClick={onStart}>
-        Start cooking
+      <button className="btn" onClick={onStart}>
+        Get started
       </button>
       <button className="intro-skip" onClick={onSkip}>
-        skip for now
+        Skip for now
       </button>
+      <p className="intro-note">Every screen has a <span className="help-chip" aria-hidden="true">?</span> that explains it again.</p>
     </div>
   );
 }

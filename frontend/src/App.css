@@ -610,3 +610,159 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 
 .swap-line strong { font-weight: 600; }
 .group-hint { margin: -2px 0 6px; font-size: 13px; color: var(--ink-3); }
+
+/* ==========================================================================
+   Slice 2: shared screen parts
+   ========================================================================== */
+
+.screen.narrow { max-width: 640px; }
+.title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.title-row .help-btn { margin-bottom: 0; }
+.empty-note { margin: 4px 0 16px; font-size: 15px; color: var(--ink-2); }
+
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.field input, .field select { font-weight: 400; width: 100%; }
+.field-hint { margin: 6px 0 0; font-size: 13px; color: var(--ink-3); }
+.inline-label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.form-title { margin: 0; font-size: 20px; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.form-actions .btn { flex: 1 1 140px; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+.notice {
+  margin: 4px 0 16px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--herb-soft);
+  font-size: 14px;
+}
+.notice p { margin: 0; }
+.notice p + p { margin-top: 6px; }
+.error { color: var(--accent); }
+.notice .error { color: var(--ink); }
+.notice:has(.error) { background: var(--accent-soft); }
+
+.pill {
+  min-height: 34px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 550;
+}
+.pill[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+
+/* --- Today ---------------------------------------------------------------- */
+
+.today-layout { display: grid; gap: 8px; margin-top: 18px; }
+@media (min-width: 960px) {
+  .today-layout { grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 56px; align-items: start; }
+}
+.today-summary { display: flex; flex-direction: column; align-items: center; }
+@media (min-width: 960px) { .today-summary { position: sticky; top: 96px; align-items: stretch; } }
+
+.ring { position: relative; margin: 0 auto; width: 168px; height: 168px; }
+.ring-track { fill: none; stroke: var(--surface-2); stroke-width: 12; }
+.ring-fill { fill: none; stroke: var(--herb); stroke-width: 12; stroke-linecap: round; transition: stroke-dasharray 0.5s ease; }
+.ring-fill.over { stroke: var(--warn); }
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.ring-value { font-family: var(--font-display); font-size: 36px; line-height: 1; font-variant-numeric: tabular-nums; }
+.ring-label { margin-top: 4px; font-size: 13px; color: var(--ink-3); }
+.ring-caption { margin: 10px 0 18px; text-align: center; font-size: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+.macros { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+.macro-head { display: flex; justify-content: space-between; font-size: 14px; }
+.macro-label { font-weight: 600; }
+.macro-value { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.macro .meter-track { margin-top: 6px; }
+.macro-note { display: block; margin-top: 4px; font-size: 13px; color: var(--herb); font-weight: 550; }
+.macro-note.over { color: var(--warn); }
+
+.meal-list { list-style: none; margin: 0 0 16px; padding: 0; }
+.meal-list li.meal {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.meal-time { padding-top: 3px; font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.meal-main { padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.meal-name { text-transform: none; font-size: 19px; line-height: 1.2; }
+.meal-list .rate { margin-top: 4px; display: flex; gap: 6px; }
+.log-btn { width: 100%; }
+
+.meal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.meal-form .scan-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 0; }
+.meal-form .field-hint { margin-top: -4px; }
+.meal-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 560px) { .meal-form-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* --- Kitchen -------------------------------------------------------------- */
+
+.kitchen-actions { display: grid; gap: 16px; margin: 20px 0 16px; }
+@media (min-width: 960px) {
+  .kitchen-actions { grid-template-columns: minmax(220px, 280px) minmax(0, 520px); align-items: start; }
+  .kitchen-actions .scan-primary { margin-top: 22px; }
+}
+.scan-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+.add-form .add-row { margin: 6px 0 0; }
+
+.kitchen-groups { display: grid; gap: 4px 40px; }
+@media (min-width: 720px) { .kitchen-groups { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } }
+.kitchen-group .group-label { color: var(--ink-3); margin-top: 20px; }
+.item-name { display: inline-flex; align-items: center; gap: 10px; }
+
+.scan-why { display: block; font-size: 13px; color: var(--ink-3); text-transform: none; }
+
+/* --- Walkthrough ---------------------------------------------------------- */
+
+.intro .kicker { margin-top: 12px; }
+.intro-num {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.intro .btn { margin-top: 4px; }
+.intro-note { margin: 4px 0 0; text-align: center; font-size: 13px; color: var(--ink-3); }
+.help-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--ink-3);
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--ink-2);
+  vertical-align: middle;
+}
+.login .field-hint { text-align: center; }

@@ -58,6 +58,12 @@ def test_min_missing_leaves_out_closer_recipes(client):
     assert {r["ingredients_missing"] for r in everything} == {0, 1}
 
 
+def test_inventory_items_carry_their_food_class(client):
+    items = {i["canonical"]: i for i in client.get("/api/inventory").json()["items"]}
+    assert items["chicken"]["family"] == "meat"
+    assert items["onion"]["family"] == "allium"
+
+
 def test_recipe_detail_flags_inventory_and_staples(client):
     ings = {i["canonical"]: i for i in client.get("/api/recipes/2").json()["ingredients"]}
     assert ings["rice"]["in_inventory"] is True and ings["rice"]["staple"] is False

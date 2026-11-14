@@ -10,9 +10,9 @@ const ACTIVITIES: { value: Profile["activity"]; label: string }[] = [
 ];
 
 const GOALS: { value: Profile["goal"]; label: string }[] = [
-  { value: "cut", label: "Cut (lose fat)" },
-  { value: "maintain", label: "Maintain" },
-  { value: "bulk", label: "Bulk (build muscle)" },
+  { value: "cut", label: "Lose fat (eat a little less)" },
+  { value: "maintain", label: "Keep my weight" },
+  { value: "bulk", label: "Build muscle (eat a little more)" },
 ];
 
 export function ProfileForm({
@@ -45,10 +45,21 @@ export function ProfileForm({
   }
 
   return (
-    <div className="profile-form">
-      <p className="profile-intro">
-        {initial ? "Update your profile — targets recompute on save." : "Tell Forkcast about yourself and it will suggest your daily calorie and macro targets."}
+    <form
+      className="profile-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        save();
+      }}
+    >
+      <p className="kicker">{initial ? "Your profile" : "One-time setup"}</p>
+      <h1 className="display">Your daily targets</h1>
+      <p className="lead">
+        Forkcast uses this only to work out how many calories and how much protein, carbs and fat suit you each
+        day: a standard formula (Mifflin-St Jeor) for your body, adjusted for your activity and goal.
+        {initial && " Targets update when you save."}
       </p>
+      <div className="form-grid">
       <label>
         Sex
         <select value={form.sex} onChange={(e) => set("sex", e.target.value as Profile["sex"])}>
@@ -68,6 +79,7 @@ export function ProfileForm({
         Weight (kg)
         <input type="number" min={35} max={250} value={form.weight_kg} onChange={(e) => set("weight_kg", Number(e.target.value))} />
       </label>
+      </div>
       <label>
         Activity
         <select value={form.activity} onChange={(e) => set("activity", e.target.value as Profile["activity"])}>
@@ -84,10 +96,10 @@ export function ProfileForm({
           ))}
         </select>
       </label>
-      {error && <p className="feedback">{error}</p>}
-      <button className="cooked" onClick={save} disabled={busy}>
-        {busy ? "Saving…" : "Save & compute my targets"}
+      {error && <p className="feedback error">{error}</p>}
+      <button type="submit" className="btn" disabled={busy}>
+        {busy ? "Saving…" : "Save and work out my targets"}
       </button>
-    </div>
+    </form>
   );
 }
