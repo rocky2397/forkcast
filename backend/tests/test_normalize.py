@@ -1,4 +1,4 @@
-"""Ingredient matching (D24 determinism, D25 compound names).
+"""Ingredient matching (D24 determinism, D25 compound names, D26 connectors).
 
 A hand-written vocabulary rather than the real 1,790 names: these assert the
 *rules*, and a fixture vocab keeps them offline and readable. Corpus-wide
@@ -14,6 +14,8 @@ VOCAB = [
     "onion", "scallion", "garlic", "clove", "bell_pepper",
     "salt", "black_pepper", "flour", "corn", "cornstarch", "bread",
     "basil", "oregano", "coriander", "spinach", "potato", "sweet_potato",
+    "tuna", "water", "oil", "olive_oil", "anchovy", "peach", "syrup",
+    "green_chili", "juice", "artichoke", "chicken",
 ]
 
 
@@ -92,3 +94,34 @@ def test_descriptors_are_stripped(n):
 def test_unknown_strings_stay_unmatched(n):
     assert n.match("instant pudding mix") is None
     assert n.match("") is None
+
+
+# --- "X with Y" / "X in Y": the ingredient is the head, not the packing (D26) ---
+
+
+@pytest.mark.parametrize("raw,expected", [
+    ("diced tomatoes with green chilies", "tomato"),   # matched the chili
+    ("diced tomatoes with juice", "tomato"),           # matched nothing at all
+    ("tomatoes with basil", "tomato"),
+    ("tuna in water", "tuna"),                         # matched the water
+    ("anchovies packed in oil", "anchovy"),            # matched the oil
+    ("peaches in syrup", "peach"),                     # matched the syrup
+    ("green onions with tops", "scallion"),
+])
+def test_the_head_of_a_connector_phrase_wins(n, raw, expected):
+    assert n.match(raw) == expected
+
+
+def test_connector_phrases_that_were_already_right_stay_right(n):
+    assert n.match("chicken legs with thigh") == "chicken"
+    assert n.match("water-packed artichoke hearts") == "artichoke"
+
+
+def test_an_unmatchable_head_falls_back_to_the_whole_phrase(n):
+    """Truncation is an attempt, not a commitment — otherwise this returns None."""
+    assert n.match("packed in olive oil") == "olive_oil"
+
+
+def test_and_is_not_a_connector(n):
+    """Cutting at "and" rewrote "salt and black pepper" across 327 corpus rows."""
+    assert n.match("salt and black pepper") == "black_pepper"

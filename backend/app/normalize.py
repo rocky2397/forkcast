@@ -102,6 +102,24 @@ def _word_variants(w: str) -> list[str]:
     return out
 
 
+# Words after which the rest of the string describes what an ingredient comes
+# packed with, not the ingredient: "diced tomatoes with green chilies".
+# Deliberately short. "and" joins two ingredients of equal standing, and
+# cutting there rewrote "salt and black pepper" across 327 rows. "packed" cuts
+# the wrong way round in "water-packed artichoke hearts"; "in" already handles
+# the "tomatoes packed in oil" order.
+_CONNECTORS = frozenset({"with", "in"})
+
+
+def _head_segment(t: str) -> str | None:
+    """The phrase up to its first connector word, if there is one."""
+    words = t.split()
+    for i, w in enumerate(words):
+        if w in _CONNECTORS and i > 0:
+            return " ".join(words[:i])
+    return None
+
+
 def _phrase_variants(t: str) -> Iterable[str]:
     """The phrase itself, plus last-word singularizations."""
     yield t
@@ -154,6 +172,18 @@ class Normalizer:
         t = _clean(raw)
         if not t:
             return None
+        # "X with Y" names an ingredient plus whatever it comes packed with, so
+        # the head segment is the ingredient: "diced tomatoes with green
+        # chilies" is tomatoes. Only trusted when the head actually matches —
+        # otherwise the whole phrase is tried, exactly as before.
+        head = _head_segment(t)
+        if head:
+            hit = self._match_phrase(head)
+            if hit:
+                return hit
+        return self._match_phrase(t)
+
+    def _match_phrase(self, t: str) -> str | None:
         hit = self._lookup(t)
         if hit:
             return hit
