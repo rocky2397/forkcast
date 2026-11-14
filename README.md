@@ -87,6 +87,26 @@ Claude, following written rules in
 for human review. Remaining errors and the full method are in
 [`eval/RESULTS.md`](eval/RESULTS.md).
 
+### Stage 2: substitutions
+
+When a recipe misses one ingredient, the app suggests a stand-in from your
+inventory ("needs lime, try lemon"). 150 such cases from five test kitchens
+were labelled before the engine ran:
+
+| | held-out (60 cases) |
+|---|---|
+| Cases where a suggestion is shown | 51/60 = 85% |
+| **Precision of shown suggestions** | **23/51 = 45%** |
+| Bad suggestions, share of all cases | 28/60 = 47% |
+
+**What it found:** the hand-made food classes (herbs, citrus, meat and five
+more) work, at 28 of 34 acceptable across both sets. But most missing
+ingredients have no class, and then only the embedding ranks decide. Those
+can't tell a substitute from something that merely goes with it: the engine
+offers `bell pepper` for chicken broth and `oats` for baking powder. The fix,
+more classes and silence outside them, is the next step. Details in
+[`eval/RESULTS-stage2.md`](eval/RESULTS-stage2.md).
+
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were

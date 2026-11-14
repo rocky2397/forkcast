@@ -10,16 +10,22 @@ the system under test.
 | Path | What it is |
 |---|---|
 | [`RESULTS.md`](RESULTS.md) | stage 1 scorecard and findings |
+| [`RESULTS-stage2.md`](RESULTS-stage2.md) | stage 2 (substitutions) scorecard and findings |
 | `data/strings.jsonl`, `data/holdout.jsonl` | 275 development and 150 held-out ingredient strings |
 | `data/*_labeled.jsonl` | the same rows with gold labels |
 | `data/kitchens.json`, `data/kitchens_holdout.json` | test kitchens in plain words (3 development, 1 held-out) |
 | `data/vocab.txt` | Epicure's 1,790 ingredient names, the label space |
-| [`data/LABELING.md`](data/LABELING.md) | labelling rules for both tasks |
+| `data/subs_cases.jsonl`, `data/subs_holdout.jsonl` | 90 development and 60 held-out substitution cases |
+| `data/kitchens_subs_holdout.json` | stage 2 held-out kitchens (stir-fry, taqueria) |
+| [`data/LABELING.md`](data/LABELING.md) | labelling rules for all three tasks |
 | `labeling/` | shortlists, raw labels, engine outputs, cookable judgements |
 | `scripts/` | sampling, labelling helpers, engine runner, scorer |
 
 **Stages:**
 1. Ingredient matching and "cookable now" precision: **done**.
-2. Substitutions.
+   Still to tighten: a human pass over the 34 unsure labels, and a second
+   held-out kitchen to narrow the interval around 80%.
+2. Substitutions: **measured**, not fixed yet (see
+   [`RESULTS-stage2.md`](RESULTS-stage2.md)).
 3. Taste ranking.
 4. Photo scanning.
