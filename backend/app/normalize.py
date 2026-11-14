@@ -67,6 +67,16 @@ ALIASES = {
     "gouda": "gouda_cheese",
     "feta": "feta_cheese",
     "gruyere": "gruyere_cheese",
+    # Products the D27 guard would otherwise abstain on, but which the
+    # vocabulary does name: vanilla is used as extract, and the vocabulary's
+    # pasta_sauce is what a jar of spaghetti sauce is.
+    "vanilla extract": "vanilla",
+    "spaghetti sauce": "pasta_sauce",
+    "hot pepper sauce": "hot_sauce",
+    "ice cube": "ice",
+    "sriracha sauce": "sriracha",
+    "vinaigrette dressing": "vinaigrette",
+    "preserves": "fruit_preserves",
 }
 
 DESCRIPTORS = {
@@ -157,6 +167,38 @@ _COMPOUND_UPGRADES = {
 }
 
 
+# Words that name a *product made from* the food in front of them (D27):
+# "chicken stock" is not chicken, "basil pesto" is not basil. When one of these
+# appears after the matched food, the match must cover the product word itself
+# ("basil pesto" -> pesto, "vanilla yogurt" -> yogurt). If no vocabulary name
+# does, the matcher abstains instead of falling back to the food word: a missed
+# match only drops a recipe from "cookable now", a wrong one lists a recipe you
+# can't make. Found by forkcast-evals stage 1, where this one class caused 22 of
+# 23 false "cookable" recipes. Deliberately absent: "chips" (chocolate chips is
+# the ingredient), "powder" (garlic powder is garlic), "juice" (lemon juice is
+# lemon), "meal" (almond meal), "granules" (garlic granules is garlic). A
+# matched name that is itself a product ("pesto sauce", "pudding mix", "taco
+# seasoning mix") is kept.
+_PRODUCT_WORDS = frozenset({
+    "stock", "broth", "bouillon", "cube", "concentrate", "base", "bun",
+    "paste", "puree", "sauce", "soup", "gravy", "pesto", "salsa", "dressing",
+    "marinade", "extract", "mix", "spread", "jam", "jelly", "preserve",
+    "cereal", "pudding", "yogurt", "yoghurt",
+})
+
+# Products the vocabulary has no name for, whose last word is nonetheless a
+# food it does have: powdered sugar is not the sugar staple. Abstain on them.
+_ABSTAIN_PHRASES = (
+    "powdered sugar", "confectioners sugar", "confectioner sugar", "icing sugar",
+    "seasoning salt", "seasoned salt",
+)
+
+
+def _singular_words(t: str) -> list[set[str]]:
+    """Each word of the phrase with its singular candidates."""
+    return [set(_word_variants(w)) for w in t.split()]
+
+
 class Normalizer:
     def __init__(self, vocab_names: Iterable[str]):
         names = set(vocab_names)
@@ -203,9 +245,11 @@ class Normalizer:
         head = _head_segment(t)
         if head:
             hit = self._match_phrase(head)
-            if hit:
-                return hit
-        return self._match_phrase(t)
+            if hit is not None:
+                # "" is a deliberate abstain (D27): "tomato sauce with basil"
+                # names a sauce, so it must not fall through to match basil.
+                return hit or None
+        return self._match_phrase(t) or None
 
     def _match_phrase(self, t: str) -> str | None:
         hit = self._lookup(t)
@@ -217,11 +261,55 @@ class Normalizer:
             if hit:
                 return hit
         base = stripped or t
+        if any(f" {p} " in f" {base} " or f" {p}s " in f" {base} " for p in _ABSTAIN_PHRASES):
+            return ""
         found = self._containment(base)
+        # Descriptor stripping can break a longer name apart: "dried" is a
+        # descriptor, so "sun dried tomato" became "sun tomato" and matched
+        # tomato. A longer name in the unstripped phrase wins (D27).
+        unstripped = self._containment(t) if base != t else None
+        if unstripped and (found is None or len(unstripped[0]) > len(found[0])):
+            found, base = unstripped, t
         if found is None:
             return None
         matched, target = found
+        product = self._product_guard(base, matched)
+        if product is not None:
+            return product  # "" means abstain; match() turns it into None
         return self._compound_upgrade(base, matched) or target
+
+    def _product_guard(self, base: str, matched: str) -> str | None:
+        """The product a phrase names, "" to abstain, or None if no product word.
+
+        Looks for a product word (stock, paste, pesto, ...) after the matched
+        span. If one is there, the answer must be a name that covers it: the
+        longest canonical name or alias in the phrase that contains that
+        word. Without one, "" tells the caller to abstain.
+        """
+        words = _singular_words(base)
+        span = matched.split()
+        if set(_word_variants(span[-1])) & (_PRODUCT_WORDS | {"seasoning"}):
+            return None
+        start = next(
+            (i for i in range(len(words) - len(span) + 1)
+             if all(span[j] in words[i + j] for j in range(len(span)))),
+            None,
+        )
+        if start is None:
+            return None
+        after = range(start + len(span), len(words))
+        k = next((i for i in reversed(after) if words[i] & _PRODUCT_WORDS), None)
+        if k is None:
+            return None
+        best = None
+        names = list(self._canon.items()) + list(self._aliases.items())
+        for name, target in names:
+            n = name.split()
+            for i in range(max(0, k - len(n) + 1), min(k, len(words) - len(n)) + 1):
+                if all(n[j] in words[i + j] for j in range(len(n))):
+                    if best is None or len(name) > len(best[0]):
+                        best = (name, target)
+        return best[1] if best else ""
 
     def _containment(self, base: str) -> tuple[str, str] | None:
         """First canonical span in the phrase, as (matched text, canonical).

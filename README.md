@@ -41,14 +41,56 @@ logic are built here.
 - **Corpus:** 87,861 recipes and ~794k ingredient rows after normalization, with
   per-serving nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 102 pytest tests in about 2 s, offline and without the corpus (24 of
+- **Tests:** 136 pytest tests in under a second, offline and without the corpus (24 of
   them need the Epicure weights and skip without them), plus frontend lint and
   build, all in CI.
+
+## Evaluation
+
+The question Forkcast has to get right first: **when it says a recipe is
+"cookable now", can you actually cook it?** Everything else (taste ranking,
+macros, the shopping list) builds on that list.
+
+The eval lives in [`eval/`](eval/). Its data comes from outside the app's code:
+ingredient strings sampled from the recipe corpus, and real grocery names from
+the Instacart Market Basket dataset, weighted by how often they are bought.
+Every string is labelled with its correct ingredient **without seeing the
+matcher's answer**. Four test kitchens, written in plain words, are run through
+the engine, and each listed recipe is judged from its original ingredient text.
+
+| | before | after D27 |
+|---|---|---|
+| **"Cookable now" precision@20**, held-out kitchen | 13/20 = 65% | **16/20 = 80%** |
+| "Cookable now" precision@20, design kitchens | 37/60 = 62% | 56/60 = 93% |
+| **Wrong-match rate**, 150 held-out strings | 17.3% | **14.0%** |
+| Wrong-match rate, held-out grocery names | 20.0% | 14.0% |
+| Recipes in the cookable pool | 64,375 | 52,367 |
+
+**What it found:** 22 of 23 false "cookable" recipes came from one error class.
+When the vocabulary had no entry for a product, the matcher fell back to the
+food word inside it:
+- powdered sugar became the sugar staple, which is always "in stock";
+- chicken stock became chicken;
+- tomato paste became tomato.
+
+The fix (D27) makes such a phrase match the product or nothing: `basil pesto`
+becomes pesto, and `chicken stock` becomes no match. A missed match only drops
+a recipe from the list, but a wrong one lists a recipe you can't make, so the
+pool shrinks by about 12,000 recipes on purpose.
+
+**How to read it:** the fix was designed on the development data. The
+held-out strings and kitchen were sampled with a different seed and labelled
+before the fixed matcher ran on them, so those are the honest numbers. With
+n = 20, "65% → 80%" is a direction, not a precise gain. All labels are by
+Claude, following written rules in
+[`eval/data/LABELING.md`](eval/data/LABELING.md); 34 strings are flagged unsure
+for human review. Remaining errors and the full method are in
+[`eval/RESULTS.md`](eval/RESULTS.md).
 
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 26 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 27 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

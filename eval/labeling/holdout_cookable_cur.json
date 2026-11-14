@@ -1,0 +1,317 @@
+{
+ "stirfry": {
+  "inventory": {
+   "rice": "rice",
+   "eggs": "egg",
+   "chicken thighs": "chicken",
+   "tofu": "tofu",
+   "soy sauce": "soy_sauce",
+   "fresh ginger": "ginger",
+   "garlic": "garlic",
+   "scallions": "scallion",
+   "sesame oil": "sesame_oil",
+   "rice vinegar": "rice_vinegar",
+   "honey": "honey",
+   "carrots": "carrot",
+   "broccoli": "broccoli",
+   "cabbage": "cabbage",
+   "peanut butter": "peanut_butter",
+   "limes": "lime",
+   "coconut milk": "coconut_milk",
+   "rice noodles": "rice_noodle",
+   "onions": "onion",
+   "red bell pepper": "bell_pepper",
+   "mushrooms": "mushroom",
+   "cornstarch": "cornstarch"
+  },
+  "recipes": [
+   {
+    "id": 9296,
+    "name": "asian honey chicken",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "sesame oil",
+     "honey",
+     "low sodium soy sauce",
+     "garlic cloves",
+     "boneless chicken breast halves",
+     "vegetable oil",
+     "green onions",
+     "green bell pepper",
+     "red bell pepper",
+     "carrots"
+    ]
+   },
+   {
+    "id": 31104,
+    "name": "better than takeout chicken fried rice from rachel schultz",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "rice",
+     "boneless skinless chicken breast",
+     "peas and carrots",
+     "white onion",
+     "garlic cloves",
+     "eggs",
+     "sesame oil",
+     "soy sauce"
+    ]
+   },
+   {
+    "id": 56403,
+    "name": "chinese fried rice  the real deal",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "jasmine rice",
+     "wok oil",
+     "ginger",
+     "white onions",
+     "chicken stock",
+     "sugar",
+     "sesame oil",
+     "eggs",
+     "frozen peas and carrot",
+     "salt",
+     "soy sauce"
+    ]
+   },
+   {
+    "id": 82777,
+    "name": "easy and simple fried rice",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "oil",
+     "fresh ginger",
+     "garlic",
+     "onions",
+     "salt",
+     "cooked rice",
+     "eggs",
+     "green onion",
+     "soy sauce",
+     "sesame oil"
+    ]
+   },
+   {
+    "id": 50266,
+    "name": "chicken   mushrooms  ww",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "boneless chicken",
+     "onion flakes",
+     "soy sauce",
+     "honey",
+     "garlic powder",
+     "green pepper",
+     "sliced mushrooms"
+    ]
+   },
+   {
+    "id": 5963,
+    "name": "anytime easy egg fried rice",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "vegetable oil",
+     "green onion",
+     "mushroom",
+     "broccoli",
+     "cooked rice",
+     "soy sauce",
+     "eggs",
+     "pepper"
+    ]
+   },
+   {
+    "id": 9325,
+    "name": "asian marinade",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "soy sauce",
+     "sesame oil",
+     "rice vinegar",
+     "garlic",
+     "ginger",
+     "green onions",
+     "ground black pepper"
+    ]
+   },
+   {
+    "id": 50378,
+    "name": "chicken   rice roger",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "flour",
+     "vegetable oil",
+     "chicken thighs",
+     "uncooked rice",
+     "salt and pepper",
+     "onion",
+     "garlic clove",
+     "mushrooms",
+     "chicken bouillon cubes"
+    ]
+   },
+   {
+    "id": 51606,
+    "name": "chicken cabbage stir fry",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "chicken breast halves",
+     "vegetable oil",
+     "green cabbage",
+     "cornstarch",
+     "ground ginger",
+     "garlic powder",
+     "water",
+     "soy sauce"
+    ]
+   },
+   {
+    "id": 53611,
+    "name": "chicken sausage stir fry",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "chicken sausage",
+     "garlic clove",
+     "onion",
+     "green pepper",
+     "carrots",
+     "soy sauce"
+    ]
+   },
+   {
+    "id": 73621,
+    "name": "crock pot chicken wings",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "chicken wings",
+     "soy sauce",
+     "ginger",
+     "garlic cloves",
+     "green onions",
+     "honey",
+     "oil"
+    ]
+   },
+   {
+    "id": 9263,
+    "name": "asian ginger dressing",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "garlic cloves",
+     "gingerroot",
+     "olive oil",
+     "rice vinegar",
+     "soy sauce",
+     "honey",
+     "water"
+    ]
+   },
+   {
+    "id": 10496,
+    "name": "aunt teresa s chicken",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "chicken thighs",
+     "green bell pepper",
+     "carrots",
+     "onion",
+     "condensed cream of mushroom soup"
+    ]
+   },
+   {
+    "id": 10743,
+    "name": "authentic chinese fried rice",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "instant rice",
+     "water",
+     "onion",
+     "peas and carrots",
+     "soy sauce",
+     "egg",
+     "oil"
+    ]
+   },
+   {
+    "id": 11452,
+    "name": "awesome 48 hour marinated teriyaki chicken  norm s teriyaki",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "soy sauce",
+     "water",
+     "sugar",
+     "green onion",
+     "gingerroot",
+     "bulbs of garlic",
+     "boneless chicken thighs"
+    ]
+   },
+   {
+    "id": 22713,
+    "name": "frenchs crunchy onion chicken",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "onion",
+     "garlic cloves",
+     "salt & pepper",
+     "\"frenchs french fried onions\"",
+     "boneless skinless chicken breast",
+     "egg"
+    ]
+   },
+   {
+    "id": 23513,
+    "name": "fresh vegetable medley",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "red bell pepper",
+     "green bell pepper",
+     "orange bell pepper",
+     "yellow bell pepper",
+     "green onion"
+    ]
+   },
+   {
+    "id": 23953,
+    "name": "fried rice for 2",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "oil",
+     "cooked rice",
+     "soy sauce",
+     "green onion",
+     "egg",
+     "chicken"
+    ]
+   },
+   {
+    "id": 23959,
+    "name": "fried rice w  chicken",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "white rice",
+     "boneless chicken",
+     "eggs",
+     "green onion",
+     "soy sauce"
+    ]
+   },
+   {
+    "id": 30432,
+    "name": "best ever chicken fried rice",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "egg",
+     "water",
+     "butter",
+     "onion",
+     "white rice",
+     "soy sauce",
+     "black pepper",
+     "chicken"
+    ]
+   }
+  ]
+ }
+}
