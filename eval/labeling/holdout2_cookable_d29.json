@@ -1,0 +1,990 @@
+{
+ "vegetarian": {
+  "inventory": {
+   "eggs": "egg",
+   "milk": "milk",
+   "greek yogurt": "yogurt",
+   "cheddar cheese": "cheddar_cheese",
+   "red lentils": "lentil",
+   "black beans": "black_bean",
+   "quinoa": "quinoa",
+   "brown rice": "brown_rice",
+   "whole wheat pasta": "pasta",
+   "sweet potatoes": "sweet_potato",
+   "broccoli": "broccoli",
+   "spinach": "spinach",
+   "kale": "kale",
+   "carrots": "carrot",
+   "onions": "onion",
+   "garlic": "garlic",
+   "bell peppers": "bell_pepper",
+   "tomatoes": "tomato",
+   "mushrooms": "mushroom",
+   "avocado": "avocado",
+   "lemons": "lemon",
+   "peanut butter": "peanut_butter",
+   "oats": "oat",
+   "bananas": "banana",
+   "cumin": "cumin",
+   "chili powder": "chili_powder"
+  },
+  "recipes": [
+   {
+    "id": 3406,
+    "name": "all american macaroni   cheese",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "macaroni",
+     "butter",
+     "onion",
+     "garlic clove",
+     "flour",
+     "milk",
+     "black pepper",
+     "extra-sharp cheddar cheese",
+     "sharp cheddar cheese",
+     "mild cheddar cheese"
+    ]
+   },
+   {
+    "id": 32319,
+    "name": "black bean stuffed bell peppers",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "bell peppers",
+     "onion",
+     "cooked brown rice",
+     "diced tomatoes with mild green chilies",
+     "black beans",
+     "fat-free cheddar cheese"
+    ]
+   },
+   {
+    "id": 376,
+    "name": "extraordinary  macaroni and cheese",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "small shell pasta",
+     "butter",
+     "onion",
+     "all-purpose flour",
+     "salt",
+     "milk",
+     "cheddar cheese",
+     "tomatoes"
+    ]
+   },
+   {
+    "id": 5432,
+    "name": "angel hair pasta with spinach  tomatoes and onion",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "angel hair pasta",
+     "extra virgin olive oil",
+     "garlic cloves",
+     "salt and pepper",
+     "yellow onion",
+     "tomatoes",
+     "fresh spinach"
+    ]
+   },
+   {
+    "id": 37346,
+    "name": "broccoli eggs supreme",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "eggs",
+     "milk",
+     "cheddar cheese",
+     "cooked broccoli",
+     "sliced mushrooms",
+     "salt and pepper"
+    ]
+   },
+   {
+    "id": 98,
+    "name": "the elvis  smoothie",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "banana",
+     "natural-style peanut butter",
+     "2% low-fat milk",
+     "sugar-free non-fat vanilla yogurt"
+    ]
+   },
+   {
+    "id": 2777,
+    "name": "african spinach and peanut butter stew",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "onions",
+     "tomatoes",
+     "spinach",
+     "peanut butter",
+     "salt",
+     "pepper",
+     "oil"
+    ]
+   },
+   {
+    "id": 11352,
+    "name": "avocado  cheddar  and tomato omelet",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "eggs",
+     "water",
+     "salt & freshly ground black pepper",
+     "olive oil",
+     "cheddar cheese",
+     "avocado",
+     "plum tomato"
+    ]
+   },
+   {
+    "id": 14099,
+    "name": "baked eggs w spinach and tomatoes",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic clove",
+     "diced tomatoes",
+     "spinach",
+     "eggs"
+    ]
+   },
+   {
+    "id": 14507,
+    "name": "baked mac   cheese",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "macaroni",
+     "eggs",
+     "milk",
+     "cheddar cheese",
+     "salt & pepper"
+    ]
+   },
+   {
+    "id": 20603,
+    "name": "five  or more   ingredient garlic quinoa",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "sweet onions",
+     "fresh garlic",
+     "carrot",
+     "quinoa",
+     "water",
+     "sea salt"
+    ]
+   },
+   {
+    "id": 24608,
+    "name": "banana ice cream without an ice cream maker",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "mashed bananas",
+     "2% low-fat milk",
+     "sugar",
+     "yogurt",
+     "lemon juice"
+    ]
+   },
+   {
+    "id": 24764,
+    "name": "banana oat breakfast smoothie",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "oats",
+     "yogurt",
+     "milk",
+     "banana"
+    ]
+   },
+   {
+    "id": 32400,
+    "name": "black beans for a lazy day",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "olive oil",
+     "onion",
+     "garlic clove",
+     "cumin",
+     "black beans"
+    ]
+   },
+   {
+    "id": 34993,
+    "name": "borani esfanaaj",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "fresh spinach",
+     "yogurt",
+     "onions",
+     "garlic cloves",
+     "cooking oil",
+     "salt",
+     "black pepper"
+    ]
+   },
+   {
+    "id": 37621,
+    "name": "broccoli with sauce  amish",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "broccoli",
+     "onions",
+     "flour",
+     "salt",
+     "milk",
+     "mild cheddar cheese"
+    ]
+   },
+   {
+    "id": 37730,
+    "name": "broccoli mushroom saute",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "butter",
+     "onion",
+     "broccoli florets",
+     "mushrooms",
+     "garlic salt",
+     "pepper"
+    ]
+   },
+   {
+    "id": 45018,
+    "name": "carrot pancakes  just like potato pancakes",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "raw carrots",
+     "vidalia onion",
+     "eggs",
+     "flour",
+     "salt",
+     "garlic powder"
+    ]
+   },
+   {
+    "id": 47037,
+    "name": "cheddar tomato eggs",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "eggs",
+     "cheddar cheese",
+     "diced tomatoes",
+     "onions",
+     "salt and pepper"
+    ]
+   },
+   {
+    "id": 47485,
+    "name": "cheese onions",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "yellow onions",
+     "water",
+     "salt",
+     "butter",
+     "flour",
+     "milk",
+     "garlic",
+     "sharp cheddar cheese",
+     "salt and pepper"
+    ]
+   }
+  ]
+ },
+ "grill": {
+  "inventory": {
+   "steak": null,
+   "chicken drumsticks": "chicken",
+   "pork chops": "pork",
+   "ground beef": "beef",
+   "hamburger buns": null,
+   "corn on the cob": "corn",
+   "potatoes": "potato",
+   "zucchini": "zucchini",
+   "bell peppers": "bell_pepper",
+   "red onion": "red_onion",
+   "tomatoes": "tomato",
+   "lettuce": "lettuce",
+   "cucumbers": "cucumber",
+   "lemons": "lemon",
+   "limes": "lime",
+   "garlic": "garlic",
+   "ketchup": "ketchup",
+   "mustard": "mustard",
+   "barbecue sauce": "barbecue_sauce",
+   "honey": "honey",
+   "brown sugar": "brown_sugar",
+   "paprika": "paprika",
+   "cheddar cheese": "cheddar_cheese",
+   "sour cream": "sour_cream",
+   "fresh parsley": "parsley",
+   "worcestershire sauce": "worcestershire_sauce"
+  },
+  "recipes": [
+   {
+    "id": 5661,
+    "name": "anne byrn s oven baked pork tenderloin",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "honey",
+     "ketchup",
+     "butter",
+     "light brown sugar",
+     "fresh lemon juice",
+     "garlic powder",
+     "pork tenderloin",
+     "salt and pepper",
+     "dijon mustard"
+    ]
+   },
+   {
+    "id": 84142,
+    "name": "easy crock pot barbecue chicken legs",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "chicken legs",
+     "light brown sugar",
+     "ketchup",
+     "mustard",
+     "worcestershire sauce",
+     "lemon juice"
+    ]
+   },
+   {
+    "id": 4757,
+    "name": "amazingly juicy grilled lemon chicken",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "dijon mustard",
+     "fresh lemon juice",
+     "olive oil",
+     "fresh parsley",
+     "sugar",
+     "salt and pepper",
+     "garlic cloves",
+     "water",
+     "boneless skinless chicken breasts"
+    ]
+   },
+   {
+    "id": 10474,
+    "name": "aunt romadene s beef brisket",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "beef brisket",
+     "worcestershire sauce",
+     "catsup",
+     "brown sugar",
+     "prepared mustard"
+    ]
+   },
+   {
+    "id": 11891,
+    "name": "baby back barbecue ribs",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "pork baby back ribs",
+     "brown sugar",
+     "paprika",
+     "garlic powder",
+     "pepper",
+     "water",
+     "barbecue sauce"
+    ]
+   },
+   {
+    "id": 11893,
+    "name": "baby back ribs  reynold s wrap",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "pork baby back ribs",
+     "light brown sugar",
+     "paprika",
+     "garlic powder",
+     "black pepper",
+     "water",
+     "barbecue sauce"
+    ]
+   },
+   {
+    "id": 38263,
+    "name": "brown sugar chicken",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "brown sugar",
+     "butter",
+     "catsup",
+     "worcestershire sauce",
+     "mustard",
+     "chicken breasts"
+    ]
+   },
+   {
+    "id": 49624,
+    "name": "cherry tomato and lemon sauce",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic",
+     "fresh parsley",
+     "salt",
+     "pepper",
+     "cherry tomatoes",
+     "fresh lemon rind",
+     "sugar",
+     "lemon juice"
+    ]
+   },
+   {
+    "id": 49647,
+    "name": "cherry tomato sauce with lemon",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic clove",
+     "fresh parsley",
+     "salt",
+     "fresh black pepper",
+     "cherry tomatoes",
+     "lemon zest",
+     "sugar",
+     "fresh lemon juice"
+    ]
+   },
+   {
+    "id": 54203,
+    "name": "chicken wing bbq sauce",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "ketchup",
+     "dry mustard",
+     "worcestershire sauce",
+     "brown sugar",
+     "lemon juice"
+    ]
+   },
+   {
+    "id": 54217,
+    "name": "chicken wings with bbq sauce for the crock pot",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "chicken wings",
+     "barbecue sauce",
+     "honey",
+     "prepared mustard",
+     "worcestershire sauce"
+    ]
+   },
+   {
+    "id": 72961,
+    "name": "crispy potato chicken",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "potato",
+     "dijon-style mustard",
+     "garlic clove",
+     "skinless chicken breast halves",
+     "olive oil",
+     "ground black pepper",
+     "fresh parsley"
+    ]
+   },
+   {
+    "id": 1388,
+    "name": "30 minute garlic chicken with potatoes",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "chicken breasts",
+     "red potatoes",
+     "garlic cloves",
+     "paprika",
+     "salt",
+     "olive oil"
+    ]
+   },
+   {
+    "id": 1441,
+    "name": "4 ingredient sauce for roasted lamb",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "light brown sugar",
+     "dijon mustard",
+     "lemon juice",
+     "garlic powder"
+    ]
+   },
+   {
+    "id": 5587,
+    "name": "anitas lemon chicken",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "chicken breasts",
+     "lemon juice",
+     "butter",
+     "garlic salt",
+     "worcestershire sauce"
+    ]
+   },
+   {
+    "id": 14040,
+    "name": "baked dijon chicken",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "boneless skinless chicken breasts",
+     "dijon mustard",
+     "lemon juice",
+     "garlic",
+     "black pepper"
+    ]
+   },
+   {
+    "id": 17867,
+    "name": "fall off the bone barbecued baby back ribs",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "pork baby back ribs",
+     "brown sugar",
+     "salt",
+     "black pepper",
+     "hot water",
+     "garlic powder",
+     "barbecue sauce"
+    ]
+   },
+   {
+    "id": 18876,
+    "name": "favorite brisket  crock pot",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "beef brisket",
+     "salt",
+     "dry mustard",
+     "paprika",
+     "pepper",
+     "garlic powder"
+    ]
+   },
+   {
+    "id": 22327,
+    "name": "french dressing with sour cream",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "lemon juice",
+     "sugar",
+     "salt",
+     "paprika",
+     "mustard",
+     "pepper",
+     "sour cream",
+     "olive oil"
+    ]
+   },
+   {
+    "id": 22521,
+    "name": "french roasted potatoes",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "red potatoes",
+     "garlic cloves",
+     "dijon mustard",
+     "butter",
+     "fresh parsley"
+    ]
+   }
+  ]
+ },
+ "italian": {
+  "inventory": {
+   "spaghetti": "pasta",
+   "penne": null,
+   "arborio rice": "rice",
+   "canned tomatoes": "tomato",
+   "tomato paste": null,
+   "mozzarella": "mozzarella_cheese",
+   "parmesan": "parmesan_cheese",
+   "ricotta": null,
+   "eggs": "egg",
+   "garlic": "garlic",
+   "onions": "onion",
+   "fresh basil": "basil",
+   "dried oregano": "oregano",
+   "parsley": "parsley",
+   "zucchini": "zucchini",
+   "eggplant": "eggplant",
+   "mushrooms": "mushroom",
+   "spinach": "spinach",
+   "italian sausage": "italian_sausage",
+   "ground beef": "beef",
+   "chicken breast": "chicken",
+   "pancetta": "pancetta",
+   "lemons": "lemon",
+   "white wine": "white_wine",
+   "heavy cream": "cream",
+   "red pepper flakes": "red_pepper",
+   "bread": "bread"
+  },
+  "recipes": [
+   {
+    "id": 52221,
+    "name": "chicken fra diavolo",
+    "ingredients_needed": 10,
+    "raw_ingredients": [
+     "penne pasta",
+     "onion",
+     "olive oil",
+     "garlic cloves",
+     "crushed red pepper flakes",
+     "boneless chicken",
+     "salt",
+     "dry white wine",
+     "diced tomatoes",
+     "dried oregano leaves",
+     "fresh italian parsley",
+     "fresh basil leaves"
+    ]
+   },
+   {
+    "id": 85913,
+    "name": "easy sausage   tomato farfalle  bow ties  in cream sauce",
+    "ingredients_needed": 10,
+    "raw_ingredients": [
+     "extra virgin olive oil",
+     "sweet italian sausage",
+     "dried red pepper flakes",
+     "onion",
+     "garlic cloves",
+     "tomatoes",
+     "whipping cream",
+     "salt",
+     "farfalle pasta",
+     "parsley",
+     "parmesan cheese",
+     "garlic powder"
+    ]
+   },
+   {
+    "id": 1377,
+    "name": "30 minute one pan chicken meal",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "onion",
+     "boneless skinless chicken breasts",
+     "kosher salt",
+     "pepper",
+     "fresh mushrooms",
+     "zucchini",
+     "garlic cloves",
+     "diced tomatoes",
+     "dried basil",
+     "dried oregano",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 14625,
+    "name": "baked noodles with sausage  tomatoes  and spinach",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic cloves",
+     "red pepper flakes",
+     "diced tomatoes",
+     "water",
+     "pasta",
+     "heavy cream",
+     "parmesan cheese",
+     "mozzarella cheese",
+     "mild italian sausage",
+     "frozen spinach"
+    ]
+   },
+   {
+    "id": 45591,
+    "name": "cathy s favorite spaghetti casserole",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "italian sausage",
+     "onion",
+     "garlic clove",
+     "chopped tomatoes",
+     "water",
+     "dried oregano leaves",
+     "dried basil leaves",
+     "salt and pepper",
+     "spaghetti",
+     "mozzarella cheese",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 87418,
+    "name": "eggplant  aubergine  and zucchini cake",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "eggplant",
+     "zucchini",
+     "tomatoes",
+     "onion",
+     "garlic clove",
+     "olive oil",
+     "basil leaves",
+     "plain flour",
+     "eggs",
+     "parmesan cheese",
+     "mozzarella cheese"
+    ]
+   },
+   {
+    "id": 4829,
+    "name": "america s test kitchen skillet baked ziti",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic cloves",
+     "red pepper flakes",
+     "salt & fresh ground pepper",
+     "crushed tomatoes",
+     "water",
+     "ziti pasta",
+     "heavy cream",
+     "parmesan cheese",
+     "fresh basil leaf",
+     "mozzarella cheese"
+    ]
+   },
+   {
+    "id": 13781,
+    "name": "baked chicken cacciatore",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "chicken",
+     "olive oil",
+     "flour",
+     "salt",
+     "oregano",
+     "fresh ground pepper",
+     "fresh mushrooms",
+     "red pepper",
+     "onion",
+     "italian-style stewed tomatoes",
+     "white wine",
+     "fresh flat-leaf parsley"
+    ]
+   },
+   {
+    "id": 14428,
+    "name": "baked individual eggplant parmesan",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "eggplants",
+     "coarse salt",
+     "olive oil",
+     "mozzarella cheese",
+     "parmesan cheese",
+     "italian tomatoes",
+     "onion",
+     "garlic cloves",
+     "salt & pepper",
+     "red pepper flakes",
+     "fresh basil"
+    ]
+   },
+   {
+    "id": 19464,
+    "name": "fettuccine margherita",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "fettuccine pasta",
+     "olive oil",
+     "unsalted butter",
+     "sliced mushrooms",
+     "garlic cloves",
+     "crushed red pepper flakes",
+     "plum tomatoes",
+     "white wine",
+     "heavy cream",
+     "salt",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 19575,
+    "name": "fettuccini with pancetta and tomato cream sauce",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "pancetta",
+     "olive oil",
+     "garlic cloves",
+     "diced tomatoes",
+     "dry white wine",
+     "whipping cream",
+     "dried basil",
+     "fettuccine pasta",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 21986,
+    "name": "frank sinatra s tomato spaghetti sauce",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "olive oil",
+     "onion",
+     "tomatoes",
+     "pepper",
+     "salt",
+     "basil",
+     "oregano",
+     "parsley",
+     "garlic cloves",
+     "spaghetti",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 35385,
+    "name": "bow ties with sausage",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "olive oil",
+     "sweet italian sausage",
+     "red pepper flakes",
+     "onion",
+     "garlic cloves",
+     "italian-style tomatoes",
+     "heavy cream",
+     "salt",
+     "bow tie pasta",
+     "parsley"
+    ]
+   },
+   {
+    "id": 52157,
+    "name": "chicken fettuccine with spinach",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "boneless skinless chicken breast",
+     "frozen spinach",
+     "cooked fettuccine",
+     "butter",
+     "onion",
+     "basil",
+     "minced garlic cloves",
+     "red pepper flakes",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 52639,
+    "name": "chicken lemone",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "chicken breasts",
+     "chicken thighs",
+     "chicken legs",
+     "chicken wings",
+     "salt",
+     "fresh ground black pepper",
+     "vegetable oil",
+     "lemon juice",
+     "parsley",
+     "dried oregano",
+     "lemons"
+    ]
+   },
+   {
+    "id": 54399,
+    "name": "chicken with fettuccine alfredo",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "fettuccine pasta",
+     "butter",
+     "boneless skinless chicken breast halves",
+     "salt and pepper",
+     "flour",
+     "onion",
+     "garlic",
+     "light cream",
+     "parmesan cheese",
+     "parsley",
+     "red pepper flakes"
+    ]
+   },
+   {
+    "id": 65717,
+    "name": "copycat olive garden chicken vino bianco",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "olive oil",
+     "boneless skinless chicken breasts",
+     "salt and pepper",
+     "onion",
+     "garlic",
+     "mushrooms",
+     "white wine",
+     "canned tomato",
+     "heavy cream",
+     "fresh parsley"
+    ]
+   },
+   {
+    "id": 71227,
+    "name": "creamy lemon parmesan rice",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "water",
+     "arborio rice",
+     "onion",
+     "garlic",
+     "fresh parsley",
+     "butter",
+     "dried basil",
+     "fresh lemon juice",
+     "lemon zest",
+     "salt and black pepper",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 71297,
+    "name": "creamy marinara with fresh basil",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "extra virgin olive oil",
+     "fresh garlic",
+     "tomatoes",
+     "heavy cream",
+     "fresh basil",
+     "roasted red pepper",
+     "sugar",
+     "salt & freshly ground black pepper",
+     "pasta",
+     "parmesan cheese",
+     "fresh basil leaf"
+    ]
+   },
+   {
+    "id": 87568,
+    "name": "eggplant parmesan",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "eggplants",
+     "kosher salt",
+     "olive oil",
+     "mozzarella cheese",
+     "parmesan cheese",
+     "italian tomatoes",
+     "onion",
+     "garlic cloves",
+     "salt & pepper",
+     "red pepper flakes",
+     "fresh basil"
+    ]
+   }
+  ]
+ }
+}
