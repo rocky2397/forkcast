@@ -1,0 +1,275 @@
+{"id": "s001", "set": "A", "text": "dried cranberries", "gold": ["cranberry"]}
+{"id": "s002", "set": "A", "text": "worcestershire sauce", "gold": ["worcestershire_sauce"]}
+{"id": "s003", "set": "A", "text": "cream cheese", "gold": ["cream_cheese"]}
+{"id": "s004", "set": "A", "text": "cayenne pepper", "gold": ["cayenne_pepper"]}
+{"id": "s005", "set": "A", "text": "kidney beans", "gold": ["kidney_bean"]}
+{"id": "s006", "set": "A", "text": "strawberries", "gold": ["strawberry"]}
+{"id": "s007", "set": "A", "text": "egg", "gold": ["egg"]}
+{"id": "s008", "set": "A", "text": "red bell pepper", "gold": ["bell_pepper", "red_pepper"]}
+{"id": "s009", "set": "A", "text": "dijon mustard", "gold": ["mustard"]}
+{"id": "s010", "set": "A", "text": "chicken", "gold": ["chicken"]}
+{"id": "s011", "set": "A", "text": "butter", "gold": ["butter"]}
+{"id": "s012", "set": "A", "text": "plum tomatoes", "gold": ["tomato"]}
+{"id": "s013", "set": "A", "text": "swiss cheese", "gold": ["swiss_cheese"]}
+{"id": "s014", "set": "A", "text": "eggs", "gold": ["egg"]}
+{"id": "s015", "set": "A", "text": "canned corn niblet", "gold": ["corn"]}
+{"id": "s016", "set": "A", "text": "italian seasoning", "gold": ["italian_seasoning"]}
+{"id": "s017", "set": "A", "text": "chives", "gold": ["chive"]}
+{"id": "s018", "set": "A", "text": "egg whites", "gold": ["egg_white", "egg"]}
+{"id": "s019", "set": "A", "text": "raspberries", "gold": ["raspberry"]}
+{"id": "s020", "set": "A", "text": "egg", "gold": ["egg"]}
+{"id": "s021", "set": "A", "text": "sugar", "gold": ["sugar"]}
+{"id": "s022", "set": "A", "text": "water", "gold": ["water"]}
+{"id": "s023", "set": "A", "text": "eggs", "gold": ["egg"]}
+{"id": "s024", "set": "A", "text": "worcestershire sauce", "gold": ["worcestershire_sauce"]}
+{"id": "s025", "set": "A", "text": "instant mashed potatoes", "gold": []}
+{"id": "s026", "set": "A", "text": "shallot", "gold": ["shallot"]}
+{"id": "s027", "set": "A", "text": "vanilla", "gold": ["vanilla"]}
+{"id": "s028", "set": "A", "text": "cherry tomatoes", "gold": ["tomato"]}
+{"id": "s029", "set": "A", "text": "cocoa", "gold": ["cocoa_powder"]}
+{"id": "s030", "set": "A", "text": "fresh lemon juice", "gold": ["lemon"]}
+{"id": "s031", "set": "A", "text": "baking soda", "gold": ["baking_soda"]}
+{"id": "s032", "set": "A", "text": "flour", "gold": ["flour"]}
+{"id": "s033", "set": "A", "text": "margarine", "gold": ["margarine"]}
+{"id": "s034", "set": "A", "text": "dried basil", "gold": ["basil"]}
+{"id": "s035", "set": "A", "text": "chicken stock cubes", "gold": ["chicken_broth"], "unsure": true, "note": "stock cube vs broth"}
+{"id": "s036", "set": "A", "text": "oil", "gold": ["oil"]}
+{"id": "s037", "set": "A", "text": "sambal bajak", "gold": ["sambal"]}
+{"id": "s038", "set": "A", "text": "condensed chicken with rice soup", "gold": []}
+{"id": "s039", "set": "A", "text": "chicken broth", "gold": ["chicken_broth"]}
+{"id": "s040", "set": "A", "text": "hot water", "gold": ["water"]}
+{"id": "s041", "set": "A", "text": "salt and pepper", "gold": ["salt", "black_pepper"], "multi": true}
+{"id": "s042", "set": "A", "text": "green onions", "gold": ["scallion"]}
+{"id": "s043", "set": "A", "text": "pickled hot red chilies", "gold": [], "unsure": true, "note": "pickled chili vs fresh chili_pepper"}
+{"id": "s044", "set": "A", "text": "cream", "gold": ["cream"]}
+{"id": "s045", "set": "A", "text": "boneless skinless chicken", "gold": ["chicken"]}
+{"id": "s046", "set": "A", "text": "sour cream", "gold": ["sour_cream"]}
+{"id": "s047", "set": "A", "text": "frozen chopped spinach", "gold": ["spinach"]}
+{"id": "s048", "set": "A", "text": "chicken broth", "gold": ["chicken_broth"]}
+{"id": "s049", "set": "A", "text": "red bell pepper", "gold": ["bell_pepper", "red_pepper"]}
+{"id": "s050", "set": "A", "text": "fresh green beans", "gold": ["green_bean"]}
+{"id": "s051", "set": "A", "text": "sofrito sauce", "gold": ["sofrito"]}
+{"id": "s052", "set": "A", "text": "bamboo skewers", "gold": []}
+{"id": "s053", "set": "A", "text": "baking powder", "gold": ["baking_powder"]}
+{"id": "s054", "set": "A", "text": "lettuce", "gold": ["lettuce"]}
+{"id": "s055", "set": "A", "text": "sugar", "gold": ["sugar"]}
+{"id": "s056", "set": "A", "text": "olive oil", "gold": ["olive_oil"]}
+{"id": "s057", "set": "A", "text": "salt", "gold": ["salt"]}
+{"id": "s058", "set": "A", "text": "cornstarch", "gold": ["cornstarch"]}
+{"id": "s059", "set": "A", "text": "brown sugar", "gold": ["brown_sugar"]}
+{"id": "s060", "set": "A", "text": "egg whites", "gold": ["egg_white", "egg"]}
+{"id": "s061", "set": "A", "text": "heavy cream", "gold": ["cream"]}
+{"id": "s062", "set": "A", "text": "hokkien noodles", "gold": ["hokkien_noodle", "noodle"]}
+{"id": "s063", "set": "A", "text": "cherry pie filling", "gold": ["pie_filling"]}
+{"id": "s064", "set": "A", "text": "cod", "gold": ["cod"]}
+{"id": "s065", "set": "A", "text": "all-purpose flour", "gold": ["flour"]}
+{"id": "s066", "set": "A", "text": "pecan halves", "gold": ["pecan"]}
+{"id": "s067", "set": "A", "text": "cashew pieces", "gold": ["cashew"]}
+{"id": "s068", "set": "A", "text": "ground sirloin", "gold": ["beef"]}
+{"id": "s069", "set": "A", "text": "worcestershire sauce", "gold": ["worcestershire_sauce"]}
+{"id": "s070", "set": "A", "text": "kaffir lime leaves", "gold": ["kaffir_lime_leaf"]}
+{"id": "s071", "set": "A", "text": "dried rosemary", "gold": ["rosemary"]}
+{"id": "s072", "set": "A", "text": "lemon rind", "gold": ["lemon"]}
+{"id": "s073", "set": "A", "text": "cool whip", "gold": ["whipped_topping"]}
+{"id": "s074", "set": "A", "text": "cherries", "gold": ["cherry"]}
+{"id": "s075", "set": "A", "text": "water", "gold": ["water"]}
+{"id": "s076", "set": "A", "text": "sugar", "gold": ["sugar"]}
+{"id": "s077", "set": "A", "text": "cherry jell-o", "gold": ["gelatin"], "unsure": true, "note": "flavoured gelatin dessert mix"}
+{"id": "s078", "set": "A", "text": "salt and pepper", "gold": ["salt", "black_pepper"], "multi": true}
+{"id": "s079", "set": "A", "text": "frozen peas", "gold": ["pea"]}
+{"id": "s080", "set": "A", "text": "whole milk", "gold": ["milk"]}
+{"id": "s081", "set": "A", "text": "tomatoes", "gold": ["tomato"]}
+{"id": "s082", "set": "A", "text": "eggs", "gold": ["egg"]}
+{"id": "s083", "set": "A", "text": "sliced mushrooms", "gold": ["mushroom"]}
+{"id": "s084", "set": "A", "text": "dry basil", "gold": ["basil"]}
+{"id": "s085", "set": "A", "text": "white sugar", "gold": ["sugar"]}
+{"id": "s086", "set": "A", "text": "applesauce", "gold": []}
+{"id": "s087", "set": "A", "text": "red wine vinegar", "gold": ["red_wine_vinegar"]}
+{"id": "s088", "set": "A", "text": "lime slice", "gold": ["lime"]}
+{"id": "s089", "set": "A", "text": "beef", "gold": ["beef"]}
+{"id": "s090", "set": "A", "text": "flour", "gold": ["flour"]}
+{"id": "s091", "set": "A", "text": "salt", "gold": ["salt"]}
+{"id": "s092", "set": "A", "text": "yellow sweet pepper", "gold": ["bell_pepper"]}
+{"id": "s093", "set": "A", "text": "black rice", "gold": ["black_rice"]}
+{"id": "s094", "set": "A", "text": "butter", "gold": ["butter"]}
+{"id": "s095", "set": "A", "text": "chicken bouillon", "gold": ["chicken_broth"], "unsure": true, "note": "bouillon vs broth"}
+{"id": "s096", "set": "A", "text": "sugar", "gold": ["sugar"]}
+{"id": "s097", "set": "A", "text": "panko breadcrumbs", "gold": ["bread_crumbs"]}
+{"id": "s098", "set": "A", "text": "sour cream", "gold": ["sour_cream"]}
+{"id": "s099", "set": "A", "text": "fresh ginger", "gold": ["ginger"]}
+{"id": "s100", "set": "A", "text": "sake", "gold": ["sake"]}
+{"id": "s101", "set": "B", "text": "nilla wafer crumbs", "gold": ["wafer"]}
+{"id": "s102", "set": "B", "text": "reames frozen noodles", "gold": ["egg_noodle", "noodle"]}
+{"id": "s103", "set": "B", "text": "lemon balm leaves", "gold": ["lemon_balm"]}
+{"id": "s104", "set": "B", "text": "fresh breadcrumb", "gold": ["bread_crumbs"]}
+{"id": "s105", "set": "B", "text": "dried basil leaves", "gold": ["basil"]}
+{"id": "s106", "set": "B", "text": "sugar-free chocolate chips", "gold": ["chocolate"]}
+{"id": "s107", "set": "B", "text": "sheep liver", "gold": ["liver"]}
+{"id": "s108", "set": "B", "text": "pork spare rib racks", "gold": ["pork"]}
+{"id": "s109", "set": "B", "text": "organic carrots", "gold": ["carrot"]}
+{"id": "s110", "set": "B", "text": "steak-ums", "gold": ["beef"], "unsure": true, "note": "frozen sliced steak product"}
+{"id": "s111", "set": "B", "text": "white hominy", "gold": ["hominy"]}
+{"id": "s112", "set": "B", "text": "dessert tofu", "gold": ["tofu_pudding", "tofu"], "unsure": true, "note": "dessert tofu"}
+{"id": "s113", "set": "B", "text": "vermicelli rice noodles", "gold": ["rice_noodle", "vermicelli"]}
+{"id": "s114", "set": "B", "text": "apricot yoghurt", "gold": ["yogurt"]}
+{"id": "s115", "set": "B", "text": "liquid fruit pectin", "gold": ["pectin"]}
+{"id": "s116", "set": "B", "text": "herb-ox beef flavor cube", "gold": ["broth", "meat_stock"], "unsure": true, "note": "beef bouillon cube"}
+{"id": "s117", "set": "B", "text": "dark creme de cacao", "gold": ["creme_de_cacao"]}
+{"id": "s118", "set": "B", "text": "mushroom soup", "gold": ["cream_of_mushroom_soup"], "unsure": true, "note": "mushroom soup usually means condensed cream of mushroom"}
+{"id": "s119", "set": "B", "text": "white truffle", "gold": ["white_truffle"]}
+{"id": "s120", "set": "B", "text": "mixed baby lettuces and spring greens", "gold": ["salad_greens", "lettuce"]}
+{"id": "s121", "set": "B", "text": "coconut", "gold": ["coconut"]}
+{"id": "s122", "set": "B", "text": "prawns", "gold": ["shrimp"]}
+{"id": "s123", "set": "B", "text": "fresh figs", "gold": ["fig"]}
+{"id": "s124", "set": "B", "text": "regular grind coffee", "gold": ["coffee"]}
+{"id": "s125", "set": "B", "text": "jalapeno sauce", "gold": ["hot_sauce"], "unsure": true, "note": "jalapeno sauce"}
+{"id": "s126", "set": "B", "text": "lemon juice", "gold": ["lemon"]}
+{"id": "s127", "set": "B", "text": "cotija cheese", "gold": ["cotija_cheese"]}
+{"id": "s128", "set": "B", "text": "7-inch flour tortillas", "gold": ["flour_tortilla", "tortilla"]}
+{"id": "s129", "set": "B", "text": "caraway powder", "gold": ["caraway_seed"]}
+{"id": "s130", "set": "B", "text": "mangoes in juice", "gold": ["mango"]}
+{"id": "s131", "set": "B", "text": "cranberry juice cocktail", "gold": ["fruit_juice"]}
+{"id": "s132", "set": "B", "text": "vegetable bouillon", "gold": ["broth"], "unsure": true, "note": "vegetable bouillon"}
+{"id": "s133", "set": "B", "text": "no-salt-added garbanzo beans", "gold": ["chickpea"]}
+{"id": "s134", "set": "B", "text": "muskellunge", "gold": ["pike", "fish"]}
+{"id": "s135", "set": "B", "text": "chapati flour", "gold": ["whole_wheat_flour", "flour"]}
+{"id": "s136", "set": "B", "text": "chicken bouillon concentrate", "gold": ["chicken_broth"], "unsure": true, "note": "bouillon concentrate"}
+{"id": "s137", "set": "B", "text": "fat free sugar free yogurt", "gold": ["yogurt"]}
+{"id": "s138", "set": "B", "text": "no-sugar-added relish", "gold": ["pickle_relish"]}
+{"id": "s139", "set": "B", "text": "chunk chicken", "gold": ["chicken"]}
+{"id": "s140", "set": "B", "text": "red apple", "gold": ["apple"]}
+{"id": "s141", "set": "B", "text": "dried coconut", "gold": ["coconut"]}
+{"id": "s142", "set": "B", "text": "coriander seeds", "gold": ["coriander"]}
+{"id": "s143", "set": "B", "text": "pure vanilla extract", "gold": ["vanilla"]}
+{"id": "s144", "set": "B", "text": "swai fillets", "gold": ["basa", "fish"]}
+{"id": "s145", "set": "B", "text": "frozen waffle sticks", "gold": ["waffle"]}
+{"id": "s146", "set": "B", "text": "frozen cut green beans", "gold": ["green_bean"]}
+{"id": "s147", "set": "B", "text": "open pit barbecue sauce", "gold": ["barbecue_sauce"]}
+{"id": "s148", "set": "B", "text": "boneless pork ribs", "gold": ["pork"]}
+{"id": "s149", "set": "B", "text": "turkey gizzard", "gold": ["turkey"], "unsure": true, "note": "gizzard is offal"}
+{"id": "s150", "set": "B", "text": "biscuits", "gold": ["biscuit"]}
+{"id": "s151", "set": "B", "text": "aquavit", "gold": ["aquavit"]}
+{"id": "s152", "set": "B", "text": "gluten-free chocolate chip cookies", "gold": ["cookie"]}
+{"id": "s153", "set": "B", "text": "lawry teriyaki marinade with pineapple juice", "gold": ["teriyaki_sauce"]}
+{"id": "s154", "set": "B", "text": "caper juice", "gold": ["caper"]}
+{"id": "s155", "set": "B", "text": "nuoc cham sauce", "gold": [], "unsure": true, "note": "nuoc cham is a fish-sauce dip"}
+{"id": "s156", "set": "B", "text": "head iceberg lettuce", "gold": ["lettuce"]}
+{"id": "s157", "set": "B", "text": "cider vinegar", "gold": ["apple_cider_vinegar", "vinegar"]}
+{"id": "s158", "set": "B", "text": "bittersweet chocolate chips", "gold": ["chocolate"]}
+{"id": "s159", "set": "B", "text": "vegan parmesan cheese", "gold": ["plant_based_cheese"]}
+{"id": "s160", "set": "B", "text": "chocolate pudding", "gold": ["pudding"]}
+{"id": "s161", "set": "B", "text": "fresh white garlic", "gold": ["garlic"]}
+{"id": "s162", "set": "B", "text": "bamboo skewers", "gold": []}
+{"id": "s163", "set": "B", "text": "canned diced potatoes", "gold": ["potato"]}
+{"id": "s164", "set": "B", "text": "plastic flowers", "gold": []}
+{"id": "s165", "set": "B", "text": "orange spice tea bags", "gold": ["tea", "black_tea"]}
+{"id": "s166", "set": "B", "text": "green maraschino cherry", "gold": ["maraschino_cherry"]}
+{"id": "s167", "set": "B", "text": "thai seasoning", "gold": ["spice_mix"], "unsure": true, "note": "thai seasoning blend"}
+{"id": "s168", "set": "B", "text": "pineapple in syrup", "gold": ["pineapple"]}
+{"id": "s169", "set": "B", "text": "glace pineapple", "gold": ["candied_fruit"]}
+{"id": "s170", "set": "B", "text": "sausage-filled ravioli", "gold": ["ravioli"]}
+{"id": "s171", "set": "B", "text": "smoked chicken", "gold": ["chicken"]}
+{"id": "s172", "set": "B", "text": "bulk sausage", "gold": ["sausage"]}
+{"id": "s173", "set": "B", "text": "mustard greens", "gold": ["mustard_green"]}
+{"id": "s174", "set": "B", "text": "dill", "gold": ["dill"]}
+{"id": "s175", "set": "B", "text": "lancashire cheese", "gold": ["cheese"]}
+{"id": "s176", "set": "C", "text": "Cereal, Panda Puffs, Peanut Butter", "gold": ["cereal"]}
+{"id": "s177", "set": "C", "text": "White Vinegar", "gold": ["white_vinegar", "vinegar"]}
+{"id": "s178", "set": "C", "text": "Feta Crumbled Traditional Cheese", "gold": ["feta_cheese"]}
+{"id": "s179", "set": "C", "text": "Dairy Pure Heavy Whipping Cream", "gold": ["cream"]}
+{"id": "s180", "set": "C", "text": "Organic Diced Fire Roasted Tomatoes", "gold": ["tomato"]}
+{"id": "s181", "set": "C", "text": "Unsweetened Coconut Milk Beverage", "gold": ["coconut_milk"]}
+{"id": "s182", "set": "C", "text": "Hazelnut Spread With Skim Milk & Cocoa", "gold": ["chocolate_hazelnut_spread"]}
+{"id": "s183", "set": "C", "text": "Home Style Meals Beef Steak & Noodles", "gold": []}
+{"id": "s184", "set": "C", "text": "Seedless Red Grapes", "gold": ["grape"]}
+{"id": "s185", "set": "C", "text": "Green Onions", "gold": ["scallion"]}
+{"id": "s186", "set": "C", "text": "Organic Lemon", "gold": ["lemon"]}
+{"id": "s187", "set": "C", "text": "Hot Pocket  Applewood Bacon, Egg and Low Fat Cheese Breakfast Sandwich", "gold": []}
+{"id": "s188", "set": "C", "text": "Traditional Hummus", "gold": ["hummus"]}
+{"id": "s189", "set": "C", "text": "Chicken Tikka Masala with Cumin Infused Basmati Rice Frozen Meal", "gold": []}
+{"id": "s190", "set": "C", "text": "Sheeps Milk Maple Yogurt", "gold": ["yogurt"]}
+{"id": "s191", "set": "C", "text": "Organic Raspberry Lowfat Yogurt", "gold": ["yogurt"]}
+{"id": "s192", "set": "C", "text": "Medium Cheddar Cheese Block", "gold": ["cheddar_cheese"]}
+{"id": "s193", "set": "C", "text": "Original Prepared Cheese Product", "gold": ["velveeta_cheese", "american_cheese"], "unsure": true, "note": "processed cheese product"}
+{"id": "s194", "set": "C", "text": "Honey Greek Yogurt", "gold": ["yogurt"]}
+{"id": "s195", "set": "C", "text": "Organic White Rice Bowl", "gold": ["rice"], "unsure": true, "note": "ready-cooked rice bowl"}
+{"id": "s196", "set": "C", "text": "Bag of Organic Bananas", "gold": ["banana"]}
+{"id": "s197", "set": "C", "text": "Ground Black Pepper", "gold": ["black_pepper"]}
+{"id": "s198", "set": "C", "text": "Asian Pears", "gold": ["asian_pear", "pear"]}
+{"id": "s199", "set": "C", "text": "Mild Salsa", "gold": ["salsa"]}
+{"id": "s200", "set": "C", "text": "Organic Mint", "gold": ["mint"]}
+{"id": "s201", "set": "C", "text": "Organic Raisin Bread", "gold": ["bread"]}
+{"id": "s202", "set": "C", "text": "Organic Sprouted Wheat Bagels", "gold": ["bagel"]}
+{"id": "s203", "set": "C", "text": "Original Vegenaise Dressing & Sandwich Spread", "gold": ["mayonnaise"], "unsure": true, "note": "vegan mayonnaise"}
+{"id": "s204", "set": "C", "text": "Vitamin D Organic Milk", "gold": ["milk"]}
+{"id": "s205", "set": "C", "text": "Mild Cheddar Cheese Sticks", "gold": ["cheddar_cheese"]}
+{"id": "s206", "set": "C", "text": "Organic Grade A Free Range Large Brown Eggs", "gold": ["egg"]}
+{"id": "s207", "set": "C", "text": "Low Fat No Chicken Noodle Soup", "gold": []}
+{"id": "s208", "set": "C", "text": "Red Chile Enchilada Sauce", "gold": ["enchilada_sauce"]}
+{"id": "s209", "set": "C", "text": "Organic Butternut Squash", "gold": ["butternut_squash", "squash"]}
+{"id": "s210", "set": "C", "text": "Organic Large Extra Fancy Fuji Apple", "gold": ["apple"]}
+{"id": "s211", "set": "C", "text": "Classic Tomato Puree", "gold": []}
+{"id": "s212", "set": "C", "text": "Organic Strawberries", "gold": ["strawberry"]}
+{"id": "s213", "set": "C", "text": "Organic Baby Spinach", "gold": ["spinach"]}
+{"id": "s214", "set": "C", "text": "Green Bell Pepper", "gold": ["bell_pepper"]}
+{"id": "s215", "set": "C", "text": "YoBaby Blueberry Apple Yogurt", "gold": ["yogurt"]}
+{"id": "s216", "set": "C", "text": "Fresh Cut Blue Lake No Salt Added Cut Green Beans", "gold": ["green_bean"]}
+{"id": "s217", "set": "C", "text": "Sugar Free Chocolate Vanilla Swirls Pudding", "gold": ["pudding"]}
+{"id": "s218", "set": "C", "text": "Ranchero Queso Fresco Cheese", "gold": ["queso_fresco"]}
+{"id": "s219", "set": "C", "text": "Reduced Fat Milk 100% Lactose Free", "gold": ["milk"]}
+{"id": "s220", "set": "C", "text": "Marinara Sauce", "gold": ["marinara_sauce", "pasta_sauce"]}
+{"id": "s221", "set": "C", "text": "Snacks Extra Sharp Cheddar Cheese Sticks", "gold": ["cheddar_cheese"]}
+{"id": "s222", "set": "C", "text": "Organic Smoked Turkey Breast", "gold": ["turkey"]}
+{"id": "s223", "set": "C", "text": "2% Reduced Fat Milk", "gold": ["milk"]}
+{"id": "s224", "set": "C", "text": "Total 2% Yogurt Key Lime", "gold": ["yogurt"]}
+{"id": "s225", "set": "C", "text": "Vanilla Skyr Nonfat Yogurt", "gold": ["yogurt"]}
+{"id": "s226", "set": "C", "text": "Organic Garlic", "gold": ["garlic"]}
+{"id": "s227", "set": "C", "text": "Seedless Small Watermelon", "gold": ["watermelon"]}
+{"id": "s228", "set": "C", "text": "Organic Gala Apples, Bag", "gold": ["apple"]}
+{"id": "s229", "set": "C", "text": "Organic Roma Tomato", "gold": ["tomato"]}
+{"id": "s230", "set": "C", "text": "Romaine Lettuce", "gold": ["lettuce"]}
+{"id": "s231", "set": "C", "text": "Half & Half", "gold": ["cream"]}
+{"id": "s232", "set": "C", "text": "Fresh Cauliflower", "gold": ["cauliflower"]}
+{"id": "s233", "set": "C", "text": "Big Chewy Chocolate Chip Granola", "gold": ["cereal"], "unsure": true, "note": "granola"}
+{"id": "s234", "set": "C", "text": "Organic Lacinato (Dinosaur) Kale", "gold": ["kale"]}
+{"id": "s235", "set": "C", "text": "Organic Whole Milk", "gold": ["milk"]}
+{"id": "s236", "set": "C", "text": "Organic Raspberries", "gold": ["raspberry"]}
+{"id": "s237", "set": "C", "text": "Organic Fuji Apple", "gold": ["apple"]}
+{"id": "s238", "set": "C", "text": "Original Light Ranch Salad Dressing", "gold": ["ranch_dressing", "salad_dressing"]}
+{"id": "s239", "set": "C", "text": "Honey Bunches of Oats Honey Roasted Cereal", "gold": ["cereal"]}
+{"id": "s240", "set": "C", "text": "Raw Basil Pesto", "gold": ["pesto"]}
+{"id": "s241", "set": "C", "text": "Baby Arugula", "gold": ["arugula"]}
+{"id": "s242", "set": "C", "text": "Quaker Life Cinnamon Cereal", "gold": ["cereal"]}
+{"id": "s243", "set": "C", "text": "Organic Large Brown Grade AA Cage Free Eggs", "gold": ["egg"]}
+{"id": "s244", "set": "C", "text": "Organic Cucumber", "gold": ["cucumber"]}
+{"id": "s245", "set": "C", "text": "Red Hot Original Cayenne Pepper Sauce", "gold": ["hot_sauce"]}
+{"id": "s246", "set": "C", "text": "Organic Large Grade AA Brown Eggs", "gold": ["egg"]}
+{"id": "s247", "set": "C", "text": "Organic Golden Delicious Apple", "gold": ["apple"]}
+{"id": "s248", "set": "C", "text": "All Natural Medium Fire-Roasted Tomato & Jalapeno Salsa", "gold": ["salsa"]}
+{"id": "s249", "set": "C", "text": "Chicken Flavor Top Ramen Noodles", "gold": ["ramen_noodle"]}
+{"id": "s250", "set": "C", "text": "Organic Jalapeno Pepper", "gold": ["jalapeno"]}
+{"id": "s251", "set": "C", "text": "Organic Yellow Peaches", "gold": ["peach"]}
+{"id": "s252", "set": "C", "text": "Organic Ginger", "gold": ["ginger"]}
+{"id": "s253", "set": "C", "text": "Organic White Onions", "gold": ["onion"]}
+{"id": "s254", "set": "C", "text": "Meyer Lemon", "gold": ["lemon"]}
+{"id": "s255", "set": "C", "text": "Dill Sandwich Pickle Slices", "gold": ["pickled_cucumber"]}
+{"id": "s256", "set": "C", "text": "0% Greek Strained Yogurt", "gold": ["yogurt"]}
+{"id": "s257", "set": "C", "text": "Organic Apple Cider Vinegar", "gold": ["apple_cider_vinegar", "vinegar"]}
+{"id": "s258", "set": "C", "text": "Santa Cruz OG Sdls Red Raspberry Fruit Spread", "gold": ["fruit_preserves", "jam"]}
+{"id": "s259", "set": "C", "text": "Organic Tomato Cluster", "gold": ["tomato"]}
+{"id": "s260", "set": "C", "text": "Macaroni & Cheese", "gold": []}
+{"id": "s261", "set": "C", "text": "Organic Southwest Salad", "gold": ["salad_greens"], "unsure": true, "note": "salad kit"}
+{"id": "s262", "set": "C", "text": "Organic Peeled Whole Baby Carrots", "gold": ["carrot"]}
+{"id": "s263", "set": "C", "text": "Unsweetened Soy Milk", "gold": ["soy_milk"]}
+{"id": "s264", "set": "C", "text": "Pepper Jack Cheese", "gold": ["monterey_jack_cheese", "cheese"]}
+{"id": "s265", "set": "C", "text": "Organic Spring Mix Salad", "gold": ["salad_greens", "lettuce"]}
+{"id": "s266", "set": "C", "text": "Honeycrisp Apple", "gold": ["apple"]}
+{"id": "s267", "set": "C", "text": "Gluten Free Tofu Scramble Breakfast Wrap", "gold": []}
+{"id": "s268", "set": "C", "text": "Nacho Sliced Jalapenos", "gold": ["jalapeno"]}
+{"id": "s269", "set": "C", "text": "Harvest Casserole Bowls", "gold": []}
+{"id": "s270", "set": "C", "text": "Pineapple Chunks", "gold": ["pineapple"]}
+{"id": "s271", "set": "C", "text": "Unsweetened Original Almond Breeze Almond Milk", "gold": ["almond_milk", "plant_based_milk"]}
+{"id": "s272", "set": "C", "text": "Uncured Hickory Smoked Sunday Bacon", "gold": ["bacon"]}
+{"id": "s273", "set": "C", "text": "Organic Half & Half", "gold": ["cream"]}
+{"id": "s274", "set": "C", "text": "100% Lactose Free Fat Free Milk", "gold": ["milk"]}
+{"id": "s275", "set": "C", "text": "Cucumber Kirby", "gold": ["cucumber"]}

@@ -1,0 +1,5 @@
+{
+  "mediterranean": ["chicken breast", "eggs", "greek yogurt", "feta", "parmesan", "spinach", "cherry tomatoes", "red onion", "garlic", "lemon", "basil", "zucchini", "bell pepper", "chickpeas", "canned tomatoes", "pasta", "rice", "oats", "honey", "cumin", "paprika", "milk", "potatoes", "carrots", "ginger", "soy sauce"],
+  "student": ["eggs", "milk", "butter", "cheddar cheese", "bread", "pasta", "rice", "canned tomatoes", "onions", "garlic", "potatoes", "carrots", "frozen peas", "chicken thighs", "ground beef", "apples", "bananas", "oats", "peanut butter", "honey", "soy sauce", "ketchup", "mustard", "mayonnaise"],
+  "baking": ["flour", "sugar", "brown sugar", "eggs", "butter", "milk", "baking powder", "baking soda", "vanilla extract", "cinnamon", "cocoa powder", "chocolate chips", "oats", "raisins", "lemons", "cream cheese", "yogurt", "honey", "bananas", "walnuts"]
+}

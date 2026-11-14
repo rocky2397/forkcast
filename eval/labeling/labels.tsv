@@ -1,0 +1,257 @@
+1	cranberry	
+2	worcestershire_sauce	
+3	cream_cheese	
+4	cayenne_pepper	
+5	kidney_bean	
+6	strawberry	
+7	egg	
+8	bell_pepper red_pepper	
+9	mustard	
+10	chicken	
+11	butter	
+12	tomato	
+13	swiss_cheese	
+14	egg	
+15	corn	
+16	italian_seasoning	
+17	chive	
+18	egg_white egg	
+19	raspberry	
+20	sugar	
+21	water	
+22		
+23	shallot	
+24	vanilla	
+25	tomato	
+26	cocoa_powder	
+27	lemon	
+28	baking_soda	
+29	flour	
+30	margarine	
+31	basil	
+32	chicken_broth	unsure:stock cube vs broth
+33	oil	
+34	sambal	
+35		
+36	chicken_broth	
+37	water	
+38	salt black_pepper	multi
+39	scallion	
+40		unsure:pickled chili vs fresh chili_pepper
+41	cream	
+42	chicken	
+43	sour_cream	
+44	spinach	
+45	green_bean	
+46	sofrito	
+47		
+48	baking_powder	
+49	lettuce	
+50	olive_oil	
+51	salt	
+52	cornstarch	
+53	brown_sugar	
+54	cream	
+55	hokkien_noodle noodle	
+56	pie_filling	
+57	cod	
+58	flour	
+59	pecan	
+60	cashew	
+61	beef	
+62	kaffir_lime_leaf	
+63	rosemary	
+64	lemon	
+65	whipped_topping	
+66	cherry	
+67	gelatin	unsure:flavoured gelatin dessert mix
+68	pea	
+69	milk	
+70	tomato	
+71	mushroom	
+72	basil	
+73	sugar	
+74		
+75	red_wine_vinegar	
+76	lime	
+77	beef	
+78	bell_pepper	
+79	black_rice	
+80	chicken_broth	unsure:bouillon vs broth
+81	bread_crumbs	
+82	ginger	
+83	sake	
+84	wafer	
+85	egg_noodle noodle	
+86	lemon_balm	
+87	bread_crumbs	
+88	basil	
+89	chocolate	
+90	liver	
+91	pork	
+92	carrot	
+93	beef	unsure:frozen sliced steak product
+94	hominy	
+95	tofu_pudding tofu	unsure:dessert tofu
+96	rice_noodle vermicelli	
+97	yogurt	
+98	pectin	
+99	broth meat_stock	unsure:beef bouillon cube
+100	creme_de_cacao	
+101	cream_of_mushroom_soup	unsure:mushroom soup usually means condensed cream of mushroom
+102	white_truffle	
+103	salad_greens lettuce	
+104	coconut	
+105	shrimp	
+106	fig	
+107	coffee	
+108	hot_sauce	unsure:jalapeno sauce
+109	lemon	
+110	cotija_cheese	
+111	flour_tortilla tortilla	
+112	caraway_seed	
+113	mango	
+114	fruit_juice	
+115	broth	unsure:vegetable bouillon
+116	chickpea	
+117	pike fish	
+118	whole_wheat_flour flour	
+119	chicken_broth	unsure:bouillon concentrate
+120	yogurt	
+121	pickle_relish	
+122	chicken	
+123	apple	
+124	coconut	
+125	coriander	
+126	vanilla	
+127	basa fish	
+128	waffle	
+129	green_bean	
+130	barbecue_sauce	
+131	pork	
+132	turkey	unsure:gizzard is offal
+133	biscuit	
+134	aquavit	
+135	cookie	
+136	teriyaki_sauce	
+137	caper	
+138		unsure:nuoc cham is a fish-sauce dip
+139	lettuce	
+140	apple_cider_vinegar vinegar	
+141	chocolate	
+142	plant_based_cheese	
+143	pudding	
+144	garlic	
+145	potato	
+146		
+147	tea black_tea	
+148	maraschino_cherry	
+149	spice_mix	unsure:thai seasoning blend
+150	pineapple	
+151	candied_fruit	
+152	ravioli	
+153	chicken	
+154	sausage	
+155	mustard_green	
+156	dill	
+157	cheese	
+158	cereal	
+159	white_vinegar vinegar	
+160	feta_cheese	
+161	cream	
+162	tomato	
+163	coconut_milk	
+164	chocolate_hazelnut_spread	
+165		
+166	grape	
+167	scallion	
+168	lemon	
+169		
+170	hummus	
+171		
+172	yogurt	
+173	yogurt	
+174	cheddar_cheese	
+175	velveeta_cheese american_cheese	unsure:processed cheese product
+176	yogurt	
+177	rice	unsure:ready-cooked rice bowl
+178	banana	
+179	black_pepper	
+180	asian_pear pear	
+181	salsa	
+182	mint	
+183	bread	
+184	bagel	
+185	mayonnaise	unsure:vegan mayonnaise
+186	milk	
+187	cheddar_cheese	
+188	egg	
+189		
+190	enchilada_sauce	
+191	butternut_squash squash	
+192	apple	
+193		
+194	strawberry	
+195	spinach	
+196	bell_pepper	
+197	yogurt	
+198	green_bean	
+199	pudding	
+200	queso_fresco	
+201	milk	
+202	marinara_sauce pasta_sauce	
+203	cheddar_cheese	
+204	turkey	
+205	milk	
+206	yogurt	
+207	yogurt	
+208	garlic	
+209	watermelon	
+210	apple	
+211	tomato	
+212	lettuce	
+213	cream	
+214	cauliflower	
+215	cereal	unsure:granola
+216	kale	
+217	milk	
+218	raspberry	
+219	apple	
+220	ranch_dressing salad_dressing	
+221	cereal	
+222	pesto	
+223	arugula	
+224	cereal	
+225	egg	
+226	cucumber	
+227	hot_sauce	
+228	egg	
+229	apple	
+230	salsa	
+231	ramen_noodle	
+232	jalapeno	
+233	peach	
+234	ginger	
+235	onion	
+236	lemon	
+237	pickled_cucumber	
+238	yogurt	
+239	apple_cider_vinegar vinegar	
+240	fruit_preserves jam	
+241	tomato	
+242		
+243	salad_greens	unsure:salad kit
+244	carrot	
+245	soy_milk	
+246	monterey_jack_cheese cheese	
+247	salad_greens lettuce	
+248	apple	
+249		
+250	jalapeno	
+251		
+252	pineapple	
+253	almond_milk plant_based_milk	
+254	bacon	
+255	cream	
+256	milk	
+257	cucumber	
