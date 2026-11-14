@@ -1,0 +1,117 @@
+{
+ "split": "dev",
+ "users": 2709,
+ "no_taste_profile": 2,
+ "next": {
+  "users": 2707,
+  "forkcast": {
+   "pct": 55.0,
+   "interval": [
+    54.4,
+    55.5
+   ],
+   "users_above_coin_flip_pct": 63.3
+  },
+  "popular": {
+   "pct": 78.4,
+   "interval": [
+    77.8,
+    79.0
+   ],
+   "users_above_coin_flip_pct": 94.1
+  },
+  "crowd": {
+   "pct": 48.8,
+   "interval": [
+    48.4,
+    49.2
+   ],
+   "users_above_coin_flip_pct": 44.8
+  },
+  "average": {
+   "pct": 49.2,
+   "interval": [
+    48.7,
+    49.7
+   ],
+   "users_above_coin_flip_pct": 48.2
+  },
+  "forkcast_minus_popular": {
+   "pts": -23.4,
+   "interval": [
+    -24.3,
+    -22.6
+   ]
+  },
+  "forkcast_minus_crowd": {
+   "pts": 6.2,
+   "interval": [
+    5.5,
+    6.8
+   ]
+  },
+  "forkcast_minus_average": {
+   "pts": 5.8,
+   "interval": [
+    5.2,
+    6.3
+   ]
+  }
+ },
+ "loved": {
+  "users": 833,
+  "forkcast": {
+   "pct": 47.8,
+   "interval": [
+    45.7,
+    49.8
+   ],
+   "users_above_coin_flip_pct": 40.6
+  },
+  "popular": {
+   "pct": 59.1,
+   "interval": [
+    56.9,
+    61.2
+   ],
+   "users_above_coin_flip_pct": 58.2
+  },
+  "crowd": {
+   "pct": 64.4,
+   "interval": [
+    62.4,
+    66.5
+   ],
+   "users_above_coin_flip_pct": 67.1
+  },
+  "average": {
+   "pct": 47.1,
+   "interval": [
+    45.1,
+    49.3
+   ],
+   "users_above_coin_flip_pct": 41.5
+  },
+  "forkcast_minus_popular": {
+   "pts": -11.3,
+   "interval": [
+    -14.4,
+    -8.3
+   ]
+  },
+  "forkcast_minus_crowd": {
+   "pts": -16.7,
+   "interval": [
+    -19.6,
+    -13.9
+   ]
+  },
+  "forkcast_minus_average": {
+   "pts": 0.6,
+   "interval": [
+    -1.5,
+    2.9
+   ]
+  }
+ }
+}

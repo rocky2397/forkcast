@@ -59,7 +59,7 @@ map. Recipes, matching and all the app logic are built here.
   away. Recipes close to that point rank higher. The feed says which
   ingredients your taste sits nearest to ("your kitchen leans garlic, parmesan,
   tomato"), so you can see why. It works from the first logged meal and needs
-  no training.
+  no training. Test 3 below shows it is weak: it barely beats a coin flip.
 - **Swaps.** A swap must come from the same food family (two herbs, two
   melting cheeses, two vinegars: 47 families written by hand) and be used in
   similar recipes according to the map. Being close on the map is not enough
@@ -76,20 +76,19 @@ still missing today. When you are short on protein, high-protein dishes move up.
 
 ## Evaluation
 
-The app makes promises you act on. Two are tested so far:
+The app makes promises you act on. Three are tested:
 
 1. **"You can cook this now."** Is a listed recipe really cookable from your
    kitchen?
 2. **"Try this instead."** Would a cook actually use the suggested swap?
+3. **"Suits your taste."** Does the taste ranking know what a real person
+   likes? (It barely does; see test 3.)
 
-**Not tested yet:** whether the taste ranking matches what people like, and
-photo scanning. Taste needs real people's ratings linked to the recipes. The
-food.com ratings are public, but the table that links them to recipes sits
-behind a Kaggle sign-in, so that test is parked.
+**Not tested yet:** photo scanning.
 
 ### How the tests work
 
-Both tests work like marking an exam.
+Tests 1 and 2 work like marking an exam.
 
 - **Real examples from outside the app:** ingredient lines from the recipes,
   grocery product names from the Instacart shopping dataset, and test kitchens
@@ -175,6 +174,38 @@ those suggestions almost always work. It even finds a usable swap more often
 than before, because the old version often picked a wrong item when a right
 one was on hand.
 
+### Test 3: does it know what you like?
+
+No hand-made answer key here: real people's ratings are the key. 2,710
+food.com users, chosen and frozen before the app scored anyone, were replayed
+through the app. The earliest 70% of each person's ratings became their
+cooking history (5 stars = liked, 3 or fewer = disliked), and the app's
+unchanged taste code ranked recipes. Then two questions about the 30% it
+never saw, each scored as "out of 100 pairs, how many in the right order"
+(50 is a coin flip):
+
+| | Forkcast taste | Most popular | Other people's stars | Taste of the average recipe |
+|---|---|---|---|---|
+| **What they cook next**, against 100 random recipes | **55** | 78 | 49 | 49 |
+| **Which they'll love**: 5-star picks above 3-star-or-lower ones | **48** | 59 | 63 | 48 |
+
+**What it means:** taste picks up a little about *what kind of food* you cook
+(55, against 49 for a version that ignores you), and nothing about *which*
+dishes you'll love (48, a coin flip). Two simple signals that ignore you,
+what's popular and what other people rated it, do much better.
+
+**Why:** your taste is an average of ingredients, and averages blur. Someone
+who cooks curries and cakes ends up halfway between, close to neither. And two
+chicken curries share almost every ingredient even when one is great and one
+is bland; ingredients can't see quality, other people's stars can. Turning
+off the 30-day fading or ignoring dislikes changed nothing.
+
+**Status:** measured, not fixed. The sample is large, so these gaps are real,
+not noise. A food.com rating is not a logged meal, and 72% of all ratings are
+5 stars, which makes "which will they love" hard for any method, but other
+people's stars show it can be answered better than a coin flip. Details:
+[`eval/RESULTS-stage3.md`](eval/RESULTS-stage3.md).
+
 ### How much to trust these numbers
 
 - **Two markers, checked against each other.** Test 1's answer keys were
@@ -189,13 +220,15 @@ one was on hand.
   unseen kitchen would score 70% instead of 80%. Fresh cilantro does *not*
   count as ground coriander, which costs the app three recipes in the newest
   kitchens. Test 2's keys have one marker so far (10 cases flagged unsure).
-- **Small samples.** "55 of 60" means the true share is likely between about
+- **Small samples in tests 1 and 2.** "55 of 60" means the true share is likely between about
   82% and 96%. Each fix moved only a few recipes, so read the before/after
-  pairs as "clearly better", not as exact gains.
+  pairs as "clearly better", not as exact gains. Test 3 is the opposite:
+  thousands of people, so its gaps are firm.
 - **Everything is public:** every example, answer key, script and remaining
   error is in [`eval/`](eval/), with the full write-ups in
-  [`eval/RESULTS.md`](eval/RESULTS.md) (test 1) and
-  [`eval/RESULTS-stage2.md`](eval/RESULTS-stage2.md) (test 2).
+  [`eval/RESULTS.md`](eval/RESULTS.md) (test 1),
+  [`eval/RESULTS-stage2.md`](eval/RESULTS-stage2.md) (test 2) and
+  [`eval/RESULTS-stage3.md`](eval/RESULTS-stage3.md) (test 3).
 
 ## Numbers
 
@@ -240,8 +273,9 @@ can and cannot do. A few that shaped the app:
 
 - **No trained recommender (D6).** With one user there is nobody else's
   behaviour to learn from, so taste is the average of what you cooked:
-  explainable, and useful from the first meal. How well it ranks is not
-  measured yet.
+  explainable, and works from the first meal. Test 3 shows the price: on
+  real food.com users it barely beats a coin flip, and other people's ratings
+  predict far better.
 - **Wrong is worse than missing (D27, D28, D29).** Both fixes above trade coverage
   for trust: fewer recipes and fewer swaps, but ones you can rely on.
 - **Confirm before commit (D8).** Vision miscounts are expected, so the cheap
@@ -299,6 +333,10 @@ download anything fails loudly instead.
   EMNLP 2019). The mirror states no licence. Recipe text belongs to its food.com
   authors, and the derived corpus is shared for non-commercial, research and
   demo use only.
+- **Ratings (test 3 only):** `RAW_recipes.csv` and `RAW_interactions.csv` from
+  Kaggle's [*Food.com Recipes and User Interactions*](https://www.kaggle.com/datasets/shuyangli94/food-com-recipes-and-user-interactions)
+  (Majumder et al., [EMNLP 2019](https://aclanthology.org/D19-1613/)). Not
+  redistributed here; only food.com user ids for the frozen test split are.
 - **Packaged food:** [Open Food Facts](https://world.openfoodfacts.org), ODbL.
 
 ## License
