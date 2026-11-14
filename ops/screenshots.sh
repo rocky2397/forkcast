@@ -8,6 +8,8 @@
 # Needs Google Chrome, Node (frontend/node_modules installed) and the backend's
 # Python environment with the Epicure weights cached.
 #
+# With ffmpeg installed it also records the walkthrough, docs/screenshots/demo.gif.
+#
 # Usage:  ops/screenshots.sh [corpus.db]     (default: data/corpus.db)
 set -euo pipefail
 
@@ -37,4 +39,14 @@ for _ in $(seq 1 60); do
 done
 curl -fs "http://localhost:$PORT/health" >/dev/null || { echo "backend did not start"; exit 1; }
 
-(cd frontend && node scripts/screenshots.mjs "http://localhost:$PORT" ../docs/screenshots)
+(cd frontend && node scripts/screenshots.mjs "http://localhost:$PORT" ../docs/screenshots "$DATA/video")
+
+# The walkthrough GIF for the README: 12 fps, 360 px wide, one shared palette.
+if command -v ffmpeg >/dev/null; then
+  ffmpeg -loglevel error -y -f concat -safe 0 -i "$DATA/video/frames.txt" -vf \
+    "fps=12,scale=360:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle" \
+    docs/screenshots/demo.gif
+  echo "  demo.gif ($(du -h docs/screenshots/demo.gif | cut -f1))"
+else
+  echo "  ffmpeg not found: skipped demo.gif"
+fi
