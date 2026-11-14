@@ -1,36 +1,171 @@
 # Forkcast 🍴
 
-**What should I cook next?** A food-inventory PWA that ranks 87,861 recipes by
-what is actually in your kitchen, learns your taste from what you cook, and
-steers suggestions toward the calories and macros you still have left today.
-
-It is built on the [Epicure ingredient embeddings](https://arxiv.org/abs/2605.22391)
-(Radzikowski & Chen, KAIKAKU.AI): 300-dimensional vectors over 1,790 canonical
-ingredients, trained so that one space answers *"what goes with this?"*
-(co-occurrence) and another answers *"what can replace this?"* (flavour chemistry).
-Epicure stops at ingredients. Recipes, quantities, input normalization and goal
-logic are built here.
+**What should I cook next?** Forkcast is a kitchen app. It knows what food you
+have, finds which of 87,861 recipes you can cook with it right now, puts the
+ones that suit your taste and today's calorie and protein budget first, and
+tells you what to buy to unlock more.
 
 | Today | Recipe feed | Recipe detail | Worth buying |
 |---|---|---|---|
 | <img src="docs/screenshots/today.jpg" width="200" alt="Today: calorie and macro progress against targets, with today's logged meals and their ratings"> | <img src="docs/screenshots/recipes.jpg" width="200" alt="Recipe feed: cookable recipes with taste match, a fits-macros badge and a protein-to-go hint"> | <img src="docs/screenshots/recipe.jpg" width="200" alt="Recipe detail: the recipe's own ingredient wording, ticked against the inventory, lemon suggested for the missing lime, staples shown as pantry"> | <img src="docs/screenshots/shopping.jpg" width="200" alt="Worth buying: yeast unlocks 196 recipes, then bread 131 more, then onion 107 more"> |
-| Macros against Mifflin-St Jeor targets | Ranked by taste and by what fits today's remaining macros | Ingredients you have are ticked; lemon stands in for lime | Three purchases that unlock 434 more recipes |
+| Calories and macros against your daily targets | Ranked by taste and by what fits today's remaining budget | Ingredients you have are ticked; lemon stands in for lime | Three purchases that unlock 434 more recipes |
 
 > **The UI is a working first version, not a finished design.** It shows the
-> engine behind it (ranking, substitutions, macro steering), and a visual polish
-> pass is next. Screenshots come from a demo kitchen with a sample profile.
+> engine behind it (ranking, swaps, macro steering), and a visual polish pass
+> is next. Screenshots come from a demo kitchen with a sample profile.
 
-## What it does
+## How it works
 
-| Feature | How it works |
-|---|---|
-| **Inventory from a photo** | Snap your groceries → `claude-haiku-4-5` with structured outputs returns a validated item list → you confirm on a checklist before anything is saved. Free text is normalized to Epicure's vocabulary with an alias table and fuzzy matching. |
-| **Packaged food, barcode first** | In-browser barcode detection (native `BarcodeDetector`, self-hosted zxing WASM fallback for iOS) → Open Food Facts. Only when that fails does a photo of the German *Nährwerttabelle* go to Haiku. Each product is resolved once and cached. |
-| **Cookable-now ranking** | Recipes sorted by how few ingredients you are missing, then by taste and macro fit. Staples (salt, oil, water…) never count as missing. |
-| **Substitutions** | "Needs basil, try your oregano": a candidate must rank in the missing ingredient's top co-occurrence **and** top chemistry neighbours, and pass a coarse food-class check. Ranks, not raw cosines, because cosines are not comparable across hub and tail ingredients. |
-| **Taste learning** | Your taste is a time-decayed (30-day half-life) centroid of the ingredient vectors in what you cooked, with likes boosted and dislikes subtracted. No training, works from the first logged meal, and explainable: the feed says which ingredients your kitchen leans towards. |
-| **Macro-aware feed** | Targets from Mifflin-St Jeor × activity, adjusted for cut / maintain / bulk. Each recipe gets a 0–1 fit: the cosine between its calorie split and what is left of today's budget, decayed rather than cut off when it overshoots. |
-| **Shopping suggestions** | Greedy set cover over the ~15k recipes you are 1–3 ingredients short of: "yeast unlocks 141 recipes, then milk +177 more", with counts that are marginal and never double-counted. |
+Everything rests on one step: turning messy food words into a fixed list of
+1,790 ingredients. "2 cups chopped fresh basil", "Organic Basil" and "basil
+leaves" all have to become `basil`, both for what is in your kitchen and for
+every line of every recipe. Once both sides use the same list, the rest is
+comparison.
+
+1. **Your kitchen.** You type items, photograph your groceries or scan a
+   barcode. A photo goes to a small vision model (Claude Haiku), which returns
+   a list you confirm before anything is saved. A barcode is looked up in Open
+   Food Facts, with a photo of the nutrition label as the fallback. Every item
+   is then matched to the ingredient list.
+2. **The recipes.** The 87,861 food.com recipes were matched to the same list
+   once, ahead of time. A recipe with a line that can't be matched is left out
+   of the suggestions, because the app couldn't tell whether you have it.
+3. **Cookable now.** A recipe is cookable when every ingredient is in your
+   kitchen. Basics (salt, pepper, water, oil, butter, flour, sugar) are assumed
+   to be in every kitchen. Recipes missing one or two things get their own
+   tabs.
+4. **Order.** Among recipes missing equally few things, the ones that match
+   your taste and fit what's left of today's budget come first.
+5. **Swaps.** When a recipe misses one ingredient, the app may suggest
+   something you have instead: "needs lime, try lemon".
+6. **What to buy.** It picks the few items that would unlock the most new
+   recipes: "yeast unlocks 196 recipes, then bread 131 more".
+
+### The ingredient map
+
+Taste and swaps use the [Epicure ingredient embeddings](https://arxiv.org/abs/2605.22391)
+(Radzikowski & Chen, KAIKAKU.AI). Think of them as a map on which each of the
+1,790 ingredients has a position, learned from a large collection of recipes:
+ingredients that show up in similar recipes sit close together. (Technically,
+300-dimensional vectors. One map is built from which ingredients appear
+together, another from shared flavour compounds.) Epicure only provides the
+map. Recipes, matching and all the app logic are built here.
+
+- **Taste.** Every dish has a position on the map: the average of its
+  ingredients. Your taste is the average position of what you cooked. Recent
+  dishes and dishes you liked count more, and dishes you disliked push it
+  away. Recipes close to that point rank higher. The feed says which
+  ingredients your taste sits nearest to ("your kitchen leans garlic, parmesan,
+  tomato"), so you can see why. It works from the first logged meal and needs
+  no training.
+- **Swaps.** A swap must come from the same food family (two herbs, two
+  melting cheeses, two vinegars: 47 families written by hand) and be used in
+  similar recipes according to the map. Being close on the map is not enough
+  on its own: coconut and banana are neighbours because they are cooked
+  *together*, not because one replaces the other. The evaluation below found
+  exactly that.
+
+### Calories and macros
+
+Daily targets come from a standard formula (Mifflin-St Jeor) using your body,
+activity level and goal (lose, keep or gain weight). Each recipe gets a score
+from 0 to 1 for how well its mix of protein, carbs and fat matches what is
+still missing today. When you are short on protein, high-protein dishes move up.
+
+## Evaluation
+
+The app makes promises you act on. Two are tested so far:
+
+1. **"You can cook this now."** Is a listed recipe really cookable from your
+   kitchen?
+2. **"Try this instead."** Would a cook actually use the suggested swap?
+
+**Not tested yet:** whether the taste ranking matches what people like, and
+photo scanning. Taste needs real people's ratings linked to the recipes. The
+food.com ratings are public, but the table that links them to recipes sits
+behind a Kaggle sign-in, so that test is parked.
+
+### How the tests work
+
+Both tests work like marking an exam.
+
+- **Real examples from outside the app:** ingredient lines from the recipes,
+  grocery product names from the Instacart shopping dataset, and test kitchens
+  written as plain shopping lists ("chicken thighs, rice, limes, …").
+- **The answer key comes first.** Each example gets its correct answer by
+  hand, following written rules, *before* the app's answer is looked at, so the
+  key can't drift toward what the app does.
+- **Then the app answers, and the two are compared.**
+- **Some examples are kept aside.** When a test found a problem, the fix was
+  built while looking at one part of the examples only. The result that counts
+  is measured on examples nobody looked at while fixing (the "unseen" or
+  held-out set), the way you test a student on new questions, not the ones
+  they practised.
+
+### Test 1: can you really cook what it lists?
+
+Four test kitchens were run through the app. For each, the top 20 "cookable
+now" recipes were checked by hand against the recipe's original wording.
+
+| | before fix | after fix |
+|---|---|---|
+| **Listed recipes that are really cookable** (unseen kitchen) | 13 of 20 (65%) | **16 of 20 (80%)** |
+| Same, in the three kitchens used while fixing | 37 of 60 (62%) | 56 of 60 (93%) |
+| **Ingredient lines matched to the wrong food** (150 unseen lines) | 17% | **14%** |
+
+**Why it was wrong:** 22 of the 23 false "cookable" recipes had one cause.
+When the ingredient list had no entry for a product, the app matched the food
+word inside it: "chicken stock" became chicken, "tomato paste" became tomato,
+and "powdered sugar" became sugar, which every kitchen is assumed to have. A
+kitchen with chicken therefore looked ready for every recipe that needs
+chicken stock.
+
+**The fix:** a product now matches its own entry ("basil pesto" becomes pesto)
+or nothing, and a recipe with an unmatched line stays out of the list. That is
+the safer mistake. A missing recipe costs nothing; a recipe you can't make
+costs a dinner. About 12,000 of 64,000 recipes leave the pool because of it.
+
+**Still wrong:** roughly one listed recipe in five needs something you don't
+have, usually a ready-made product (instant potato flakes, chips). Ready-made
+foods are also most of the remaining wrong matches ("Macaroni & Cheese"
+becomes cheese).
+
+### Test 2: are the swaps any good?
+
+210 cases from seven test kitchens, each a recipe missing exactly one
+ingredient, with the kitchen's other items as possible swaps. The usable swaps
+were marked by hand before the app ran.
+
+| 60 unseen cases (two new kitchens) | before fix | after fix |
+|---|---|---|
+| **Suggested swaps that work** | 18 of 54 (33%) | **20 of 21 (95%)** |
+| Cases with a bad suggestion | 60% | 2% |
+| Cases with a usable swap on hand that got one | 53% | 59% |
+
+**Why it was wrong:** there were only eight food families (herbs, citrus, meat
+and five more). For everything else the app trusted the ingredient map alone,
+and the map puts things close that are *cooked together*, not things that
+*replace* each other. So it offered bell pepper for chicken broth and oats for
+baking powder.
+
+**The fix:** 47 food families, and no suggestion at all outside them. The app
+now suggests a swap in about a third of cases instead of nine in ten, but
+those suggestions almost always work. It even finds a usable swap more often
+than before, because the old version often picked a wrong item when a right
+one was on hand.
+
+### How much to trust these numbers
+
+- **One marker.** Every answer key was written by Claude, the AI that built
+  the eval, following written rules. Unclear cases are flagged for a human to
+  check (34 ingredient lines, 10 swap cases).
+- **Small samples.** "80%" rests on 20 recipes, so the true value could be
+  anywhere from about 60% to 90%. Read it as "clearly better", not as an exact
+  figure.
+- **Everything is public:** every example, answer key, script and remaining
+  error is in [`eval/`](eval/), with the full write-ups in
+  [`eval/RESULTS.md`](eval/RESULTS.md) (test 1) and
+  [`eval/RESULTS-stage2.md`](eval/RESULTS-stage2.md) (test 2).
 
 ## Numbers
 
@@ -38,77 +173,12 @@ logic are built here.
   food.com recipes): 94.9% of ingredient mentions map to Epicure's 1,790
   ingredients, and 95.1% of recipes match at ≥ 80%. That result picked the
   recipe source (decision D1).
-- **Corpus:** 87,861 recipes and ~794k ingredient rows after normalization, with
-  per-serving nutrition.
+- **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
+  nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
 - **Tests:** 153 pytest tests in under a second, offline and without the corpus (41 of
   them need the Epicure weights and skip without them), plus frontend lint and
   build, all in CI.
-
-## Evaluation
-
-The question Forkcast has to get right first: **when it says a recipe is
-"cookable now", can you actually cook it?** Everything else (taste ranking,
-macros, the shopping list) builds on that list.
-
-The eval lives in [`eval/`](eval/). Its data comes from outside the app's code:
-ingredient strings sampled from the recipe corpus, and real grocery names from
-the Instacart Market Basket dataset, weighted by how often they are bought.
-Every string is labelled with its correct ingredient **without seeing the
-matcher's answer**. Four test kitchens, written in plain words, are run through
-the engine, and each listed recipe is judged from its original ingredient text.
-
-| | before | after D27 |
-|---|---|---|
-| **"Cookable now" precision@20**, held-out kitchen | 13/20 = 65% | **16/20 = 80%** |
-| "Cookable now" precision@20, design kitchens | 37/60 = 62% | 56/60 = 93% |
-| **Wrong-match rate**, 150 held-out strings | 17.3% | **14.0%** |
-| Wrong-match rate, held-out grocery names | 20.0% | 14.0% |
-| Recipes in the cookable pool | 64,375 | 52,367 |
-
-**What it found:** 22 of 23 false "cookable" recipes came from one error class.
-When the vocabulary had no entry for a product, the matcher fell back to the
-food word inside it:
-- powdered sugar became the sugar staple, which is always "in stock";
-- chicken stock became chicken;
-- tomato paste became tomato.
-
-The fix (D27) makes such a phrase match the product or nothing: `basil pesto`
-becomes pesto, and `chicken stock` becomes no match. A missed match only drops
-a recipe from the list, but a wrong one lists a recipe you can't make, so the
-pool shrinks by about 12,000 recipes on purpose.
-
-**How to read it:** the fix was designed on the development data. The
-held-out strings and kitchen were sampled with a different seed and labelled
-before the fixed matcher ran on them, so those are the honest numbers. With
-n = 20, "65% → 80%" is a direction, not a precise gain. All labels are by
-Claude, following written rules in
-[`eval/data/LABELING.md`](eval/data/LABELING.md); 34 strings are flagged unsure
-for human review. Remaining errors and the full method are in
-[`eval/RESULTS.md`](eval/RESULTS.md).
-
-### Stage 2: substitutions
-
-When a recipe misses one ingredient, the app suggests a stand-in from your
-inventory ("needs lime, try lemon"). The eval found that most of those hints
-were wrong, so the engine was fixed (D28) and measured on a fresh held-out set
-of 60 cases from two new kitchens, labelled before either engine ran:
-
-| | before | after D28 |
-|---|---|---|
-| **Usable share of shown suggestions** | 18/54 = 33% | **20/21 = 95%** |
-| Cases with a bad suggestion | 36/60 = 60% | 1/60 = 2% |
-| Recall, cases with a usable stand-in on hand | 18/34 = 53% | 20/34 = 59% |
-
-**What it found:** most missing ingredients had no food class, and then only
-the embedding ranks decided. Those can't tell a substitute from something
-that merely goes with it: `coconut` and `banana` are each other's nearest
-neighbours, so the engine offered `bell pepper` for chicken broth and `oats`
-for baking powder. D28 widens the hand-made class map from 8 to 47 classes
-and stays silent outside it. The engine now suggests something in a third of
-cases instead of nine in ten, and recall still rises, because the old engine
-often picked a wrong item when a right one was on hand. Details in
-[`eval/RESULTS-stage2.md`](eval/RESULTS-stage2.md).
 
 ## Design decisions
 
@@ -117,8 +187,12 @@ rejected: 28 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
-- **No trained recommender (D6).** With one user there is no collaborative
-  signal. An embedding centroid is honest about that and still ranks well.
+- **No trained recommender (D6).** With one user there is nobody else's
+  behaviour to learn from, so taste is the average of what you cooked:
+  explainable, and useful from the first meal. How well it ranks is not
+  measured yet.
+- **Wrong is worse than missing (D27, D28).** Both fixes above trade coverage
+  for trust: fewer recipes and fewer swaps, but ones you can rely on.
 - **Confirm before commit (D8).** Vision miscounts are expected, so the cheap
   model plus a mandatory checklist beats an expensive model trusted blindly.
 - **Shared password, not accounts (D15).** Real multi-user means a `user_id`
