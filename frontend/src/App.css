@@ -316,7 +316,6 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .tag-taste { color: var(--accent); }
 .tag-fit { color: var(--herb); }
 .swap-line { margin: 0; font-size: 14px; }
-.swap-line s { text-decoration-color: var(--accent); }
 .swap-line em { font-family: var(--font-display); color: var(--accent); }
 
 .skeleton {
@@ -556,3 +555,58 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 
 /* Card children are spans inside a <button>; give the block ones block layout. */
 .recipe-title, .swap-line { display: block; }
+
+/* ==========================================================================
+   Explaining the interface: the feed guide and the "?" that reopens it
+   ========================================================================== */
+
+.filter-row { display: flex; align-items: flex-end; gap: 12px; margin-top: 20px; border-bottom: 1px solid var(--line); }
+.filter-row .filter-tabs { flex: 1; margin: 0; border-bottom: none; }
+.help-btn {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--ink-3);
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1;
+}
+.help-btn[aria-expanded="true"] { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+/* A 32px circle with a 44px hit area, so it stays small but easy to tap. */
+.help-btn { position: relative; }
+.help-btn::after { content: ""; position: absolute; inset: -6px; }
+
+.guide {
+  margin: 16px 0 4px;
+  padding: 18px 18px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.guide-title {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 20px;
+}
+.guide-list { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.guide-list div { display: grid; gap: 3px; }
+.guide-list dt { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.guide-list dd { margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.45; }
+.guide-close { margin-top: 16px; min-height: 44px; padding: 10px 20px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.swap-line strong { font-weight: 600; }
+.group-hint { margin: -2px 0 6px; font-size: 13px; color: var(--ink-3); }

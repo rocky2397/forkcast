@@ -110,7 +110,7 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
           <IngredientGroup label="Missing" kind="missing" items={missing} />
           {swaps.map(([food, sub]) => (
             <p key={food} className="swap-note">
-              Use your <strong>{pretty(sub)}</strong> instead of {pretty(food ?? "")}.
+              No {pretty(food ?? "")}? Your <strong>{pretty(sub)}</strong> works instead.
             </p>
           ))}
           <IngredientGroup label="Pantry" kind="pantry" items={pantry} />
@@ -185,11 +185,16 @@ function Stat({ value, label }: { value: string | number; label: string }) {
   );
 }
 
+const GROUP_HINTS: Record<string, string> = {
+  pantry: "Basics Forkcast assumes every kitchen has.",
+};
+
 function IngredientGroup({ label, kind, items }: { label: string; kind: string; items: Ingredient[] }) {
   if (items.length === 0) return null;
   return (
     <>
       <p className={`group-label ${kind}`}>{label}</p>
+      {GROUP_HINTS[kind] && <p className="group-hint">{GROUP_HINTS[kind]}</p>}
       <ul className={`ingredient-list ${kind}`}>
         {items.map((ing, i) => (
           <li key={i}>{ing.raw}</li>
