@@ -241,12 +241,14 @@ def cookable_recipes(
 ):
     """Recipes you can cook now (max_missing=0) or almost (1-3 missing).
 
-    When cooks have been logged, results are re-ranked by taste similarity
-    within each missing-count group (fewest-missing always wins first).
+    Re-ranked within each missing-count group (fewest-missing always wins
+    first) by taste similarity once cooks have been logged, and by how well
+    the serving fits what's left of today's macro budget (D20).
     """
     with connect() as con:
         taste_vec, n_meals = taste.taste_vector(con)
-        pool = limit if taste_vec is None else min(limit * 8, 300)
+        budget = _remaining_today(con)
+        pool = min(limit * 8, 300) if taste_vec is not None or budget else limit
         results = recipes.cookable(
             con, max_missing=max_missing, assume_staples=assume_staples, limit=pool
         )
@@ -254,10 +256,56 @@ def cookable_recipes(
             scores = taste.score_recipes(con, [r["id"] for r in results], taste_vec)
             for r in results:
                 r["taste_sim"] = round(scores.get(r["id"], 0.0), 3)
-            results.sort(key=lambda r: (r["ingredients_missing"], -r["taste_sim"]))
+        if budget:
+            for r in results:
+                fit = goals.macro_fit(r, budget["remaining"])
+                if fit is not None:
+                    r["macro_fit"] = round(fit, 3)
+        if taste_vec is not None or budget:
+            results.sort(key=lambda r: (r["ingredients_missing"], -_rank_score(r)))
             results = results[:limit]
         _annotate_subs(con, results)
-    return {"count": len(results), "personalized": taste_vec is not None, "recipes": results}
+    return {
+        "count": len(results),
+        "personalized": taste_vec is not None,
+        "macro_focus": budget["focus"] if budget else None,
+        "recipes": results,
+    }
+
+
+# Taste outweighs macro fit: taste is learned over months, macro fit is a
+# within-day nudge — the feed should stay recognizably yours on a protein day.
+TASTE_WEIGHT = 0.6
+MACRO_WEIGHT = 0.4
+
+
+def _rank_score(r: dict) -> float:
+    return TASTE_WEIGHT * r.get("taste_sim", 0.0) + MACRO_WEIGHT * r.get("macro_fit", 0.0)
+
+
+def _remaining_today(con) -> dict | None:
+    """Today's leftover macro budget + which macro is furthest behind (D20).
+
+    None when there is no profile to derive targets from, or when so little of
+    the day is left that steering suggestions by it would be noise.
+    """
+    profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+    if profile is None:
+        return None
+    target = goals.targets(profile)
+    totals = con.execute(
+        """SELECT COALESCE(SUM(COALESCE(ml.calories, r.calories)), 0)   AS calories,
+                  COALESCE(SUM(COALESCE(ml.protein_g, r.protein_g)), 0) AS protein_g,
+                  COALESCE(SUM(COALESCE(ml.carbs_g, r.carbs_g)), 0)     AS carbs_g,
+                  COALESCE(SUM(COALESCE(ml.fat_g, r.fat_g)), 0)         AS fat_g
+           FROM meal_log ml
+           LEFT JOIN recipes r ON r.id = ml.recipe_id
+           WHERE date(ml.logged_at, 'localtime') = date('now', 'localtime')"""
+    ).fetchone()
+    rem = goals.remaining(dict(totals), target)
+    if rem["calories"] < goals.MIN_REMAINING_KCAL:
+        return None
+    return {"remaining": rem, "focus": goals.focus(rem, target)}
 
 
 def _annotate_subs(con, results: list[dict]) -> None:

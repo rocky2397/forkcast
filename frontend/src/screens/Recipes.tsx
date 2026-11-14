@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
-import { api, pretty, type CookableRecipe, type TasteProfile } from "../api";
+import { api, pretty, type CookableRecipe, type MacroFocus, type TasteProfile } from "../api";
 import { RecipeView } from "./RecipeView";
+
+const MACRO_LABELS: Record<MacroFocus["macro"], string> = {
+  protein_g: "protein",
+  carbs_g: "carbs",
+  fat_g: "fat",
+};
 
 export function Recipes() {
   const [maxMissing, setMaxMissing] = useState(0);
   const [recipes, setRecipes] = useState<CookableRecipe[]>([]);
   const [tasteInfo, setTasteInfo] = useState<TasteProfile | null>(null);
+  const [focus, setFocus] = useState<MacroFocus | null>(null);
   const [openId, setOpenId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +24,10 @@ export function Recipes() {
     setLoading(true);
     api
       .cookable(maxMissing)
-      .then((r) => setRecipes(r.recipes))
+      .then((r) => {
+        setRecipes(r.recipes);
+        setFocus(r.macro_focus);
+      })
       .finally(() => setLoading(false));
   }, [maxMissing]);
 
@@ -44,6 +54,11 @@ export function Recipes() {
           kitchen leans {tasteInfo.profile.slice(0, 3).map((p) => pretty(p.ingredient)).join(", ")}.
         </p>
       )}
+      {focus && focus.grams > 0 && (
+        <p className="taste-note">
+          {focus.grams}g {MACRO_LABELS[focus.macro]} to go today — these help you get there.
+        </p>
+      )}
       {loading && <p className="empty">Searching 87,861 recipes…</p>}
       {!loading && recipes.length === 0 && (
         <p className="empty">Nothing cookable yet — add more ingredients to your inventory.</p>
@@ -56,6 +71,9 @@ export function Recipes() {
               <span className="minutes">
                 {r.taste_sim != null && r.taste_sim > 0 && (
                   <span className="match">♥ {Math.round(r.taste_sim * 100)}%</span>
+                )}{" "}
+                {r.macro_fit != null && r.macro_fit >= 0.8 && (
+                  <span className="match">◎ fits macros</span>
                 )}{" "}
                 {r.minutes} min
               </span>

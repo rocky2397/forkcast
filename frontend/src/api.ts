@@ -16,6 +16,13 @@ export interface CookableRecipe {
   missing: string[];
   subs?: Record<string, string>;
   taste_sim?: number;
+  macro_fit?: number;
+}
+
+/** The macro furthest behind today, when a profile exists and the day isn't done. */
+export interface MacroFocus {
+  macro: "protein_g" | "carbs_g" | "fat_g";
+  grams: number;
 }
 
 export interface TasteProfile {
@@ -144,9 +151,12 @@ export const api = {
   normalize: (q: string) =>
     req<{ query: string; canonical: string | null }>(`/api/normalize?q=${encodeURIComponent(q)}`),
   cookable: (maxMissing: number) =>
-    req<{ count: number; personalized: boolean; recipes: CookableRecipe[] }>(
-      `/api/recipes/cookable?max_missing=${maxMissing}&limit=30`,
-    ),
+    req<{
+      count: number;
+      personalized: boolean;
+      macro_focus: MacroFocus | null;
+      recipes: CookableRecipe[];
+    }>(`/api/recipes/cookable?max_missing=${maxMissing}&limit=30`),
   taste: () => req<TasteProfile>("/api/taste"),
   scanPhoto: (file: File) => {
     const form = new FormData();
