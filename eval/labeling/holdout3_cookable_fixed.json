@@ -1,0 +1,1008 @@
+{
+ "comfort": {
+  "inventory": {
+   "chicken breasts": "chicken",
+   "ground beef": "beef",
+   "bacon": "bacon",
+   "eggs": "egg",
+   "milk": "milk",
+   "sour cream": "sour_cream",
+   "cheddar cheese": "cheddar_cheese",
+   "cream of mushroom soup": "cream_of_mushroom_soup",
+   "chicken broth": "chicken_broth",
+   "egg noodles": "egg_noodle",
+   "elbow macaroni": "pasta",
+   "potatoes": "potato",
+   "frozen peas": "pea",
+   "frozen corn": "corn",
+   "carrots": "carrot",
+   "celery": "celery",
+   "onions": "onion",
+   "garlic": "garlic",
+   "canned tomatoes": "tomato",
+   "tomato juice": "tomato",
+   "ketchup": "ketchup",
+   "worcestershire sauce": "worcestershire_sauce",
+   "bread crumbs": "bread_crumbs",
+   "paprika": "paprika",
+   "dried thyme": "thyme",
+   "bay leaves": "bay_leaf"
+  },
+  "recipes": [
+   {
+    "id": 86778,
+    "name": "eat your veggies chicken soup",
+    "ingredients_needed": 10,
+    "raw_ingredients": [
+     "reduced-sodium fat-free chicken broth",
+     "white potatoes",
+     "carrot",
+     "celery",
+     "onion",
+     "diced tomatoes with juice",
+     "water",
+     "boneless skinless chicken breasts",
+     "frozen corn kernels",
+     "frozen peas",
+     "salt and pepper",
+     "dried thyme leaves"
+    ]
+   },
+   {
+    "id": 81572,
+    "name": "dried beef macaroni bake",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "eggs",
+     "elbow macaroni",
+     "cheddar cheese",
+     "sweet peas",
+     "condensed cream of mushroom soup",
+     "dried beef",
+     "milk",
+     "dried onion flakes",
+     "paprika"
+    ]
+   },
+   {
+    "id": 28528,
+    "name": "beef potato casserole",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "ground beef",
+     "onion",
+     "celery",
+     "celery leaves",
+     "cream of mushroom soup",
+     "milk",
+     "worcestershire sauce",
+     "salt and pepper",
+     "potatoes"
+    ]
+   },
+   {
+    "id": 36962,
+    "name": "brisket pot roast style",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "beef brisket",
+     "olive oil",
+     "garlic salt",
+     "paprika",
+     "stewed tomatoes",
+     "yellow onion",
+     "carrots",
+     "white potatoes",
+     "garlic cloves"
+    ]
+   },
+   {
+    "id": 84675,
+    "name": "easy hamburger stew",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "lean ground beef",
+     "garlic",
+     "onion",
+     "potatoes",
+     "carrots",
+     "kernel corn",
+     "cream of mushroom soup",
+     "water",
+     "salt and pepper",
+     "worcestershire sauce"
+    ]
+   },
+   {
+    "id": 3406,
+    "name": "all american macaroni   cheese",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "macaroni",
+     "butter",
+     "onion",
+     "garlic clove",
+     "flour",
+     "milk",
+     "black pepper",
+     "extra-sharp cheddar cheese",
+     "sharp cheddar cheese",
+     "mild cheddar cheese"
+    ]
+   },
+   {
+    "id": 5739,
+    "name": "another chicken noodle soup from scratch",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "chicken breasts",
+     "celery ribs",
+     "onion",
+     "garlic cloves",
+     "carrots",
+     "salt",
+     "peppercorn",
+     "bay leaves",
+     "wide egg noodles",
+     "water"
+    ]
+   },
+   {
+    "id": 18465,
+    "name": "fast   easy chicken noodle soup",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "celery ribs",
+     "baby carrots",
+     "boneless skinless chicken breasts",
+     "low sodium chicken broth",
+     "water",
+     "onion powder",
+     "garlic powder",
+     "black pepper",
+     "salt",
+     "wide egg noodles"
+    ]
+   },
+   {
+    "id": 30271,
+    "name": "best cheesy potato soup ever",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "butter",
+     "celery",
+     "onion",
+     "potatoes",
+     "chicken broth",
+     "milk",
+     "salt",
+     "paprika",
+     "cheddar cheese"
+    ]
+   },
+   {
+    "id": 46854,
+    "name": "cheddar cheese bacon wrapped chicken breast at its best",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "boneless chicken breasts",
+     "bacon",
+     "salt",
+     "pepper",
+     "garlic powder",
+     "onion powder",
+     "paprika",
+     "water",
+     "onion",
+     "cheddar cheese"
+    ]
+   },
+   {
+    "id": 51053,
+    "name": "chicken and tomato topped potatoes",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "baking potatoes",
+     "oven-roasted deli chicken",
+     "cheddar cheese",
+     "roma tomatoes",
+     "garlic pepper seasoning",
+     "sour cream",
+     "cooked bacon"
+    ]
+   },
+   {
+    "id": 52026,
+    "name": "chicken elegante",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "boneless skinless chicken",
+     "sour cream",
+     "cream of mushroom soup",
+     "dried beef",
+     "bacon",
+     "garlic salt",
+     "ground pepper",
+     "egg noodles"
+    ]
+   },
+   {
+    "id": 53817,
+    "name": "chicken stew in a skillet",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "flour",
+     "boneless skinless chicken breasts",
+     "salt and pepper",
+     "butter",
+     "garlic",
+     "onion",
+     "potatoes",
+     "carrots",
+     "chicken broth",
+     "frozen peas"
+    ]
+   },
+   {
+    "id": 53863,
+    "name": "chicken stock recipe",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "whole chickens",
+     "kosher salt",
+     "pepper",
+     "water",
+     "onions",
+     "carrots",
+     "celery",
+     "bay leaves",
+     "peppercorns",
+     "thyme",
+     "garlic cloves"
+    ]
+   },
+   {
+    "id": 54152,
+    "name": "chicken vegetable soup",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "chicken broth",
+     "frozen corn",
+     "celery rib",
+     "carrot",
+     "onion",
+     "cooked chicken",
+     "diced tomato",
+     "salt and pepper"
+    ]
+   },
+   {
+    "id": 78302,
+    "name": "dee anne s breakfast casseroles",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "frozen hash brown potatoes",
+     "eggs",
+     "milk",
+     "bacon",
+     "shredded cheddar cheese",
+     "onion powder",
+     "garlic powder",
+     "salt",
+     "pepper"
+    ]
+   },
+   {
+    "id": 81428,
+    "name": "drastic chicken  variation of chicken ala king",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "boneless skinless chicken breasts",
+     "onion",
+     "garlic cloves",
+     "paprika",
+     "thyme",
+     "olive oil",
+     "milk",
+     "cheddar cheese",
+     "flour",
+     "butter"
+    ]
+   },
+   {
+    "id": 4644,
+    "name": "amazing hungarian chicken paprikash with dumplings",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "boneless skinless chicken breasts",
+     "oil",
+     "paprika",
+     "onion powder",
+     "salt",
+     "pepper",
+     "chicken broth",
+     "sour cream",
+     "water",
+     "flour",
+     "eggs"
+    ]
+   },
+   {
+    "id": 12420,
+    "name": "bacon cheddar puffs",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "milk",
+     "butter",
+     "all-purpose flour",
+     "eggs",
+     "sharp cheddar cheese",
+     "bacon",
+     "onion salt",
+     "garlic salt",
+     "fresh ground black pepper"
+    ]
+   },
+   {
+    "id": 12542,
+    "name": "bacon hash browns bake",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "hash brown potatoes",
+     "bacon",
+     "milk",
+     "onion",
+     "salt",
+     "pepper",
+     "garlic powder",
+     "butter",
+     "paprika"
+    ]
+   }
+  ]
+ },
+ "middle_eastern": {
+  "inventory": {
+   "lamb": "lamb",
+   "chicken thighs": "chicken",
+   "chickpeas": "chickpea",
+   "red lentils": "lentil",
+   "bulgur": "bulgur",
+   "couscous": "couscous",
+   "pita bread": "pita_bread",
+   "plain yogurt": "yogurt",
+   "feta cheese": "feta_cheese",
+   "tahini": "tahini",
+   "eggplant": "eggplant",
+   "zucchini": "zucchini",
+   "tomatoes": "tomato",
+   "cucumbers": "cucumber",
+   "red onion": "red_onion",
+   "garlic": "garlic",
+   "lemons": "lemon",
+   "fresh parsley": "parsley",
+   "fresh mint": "mint",
+   "cumin": "cumin",
+   "ground coriander": "coriander",
+   "cinnamon": "cinnamon",
+   "paprika": "paprika",
+   "pine nuts": "pine_nut",
+   "pomegranate": "pomegranate",
+   "honey": "honey"
+  },
+  "recipes": [
+   {
+    "id": 53956,
+    "name": "chicken tahini salad with pine nuts on mini pita rounds",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "pita breads",
+     "olive oil",
+     "garlic clove",
+     "tahini",
+     "fresh lemon juice",
+     "lemon peel",
+     "water",
+     "fresh cilantro",
+     "cooked chicken",
+     "pine nuts"
+    ]
+   },
+   {
+    "id": 16972,
+    "name": "epicure hummus",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "chickpeas",
+     "tahini",
+     "garlic cloves",
+     "fresh lemon juice",
+     "extra virgin olive oil",
+     "hot water",
+     "parsley",
+     "cumin",
+     "paprika"
+    ]
+   },
+   {
+    "id": 19392,
+    "name": "feta  lentil   cilantro salad",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "feta cheese",
+     "black lentils",
+     "cherry tomatoes",
+     "olive oil",
+     "salt and pepper",
+     "red onion",
+     "garlic clove",
+     "lemon",
+     "cilantro"
+    ]
+   },
+   {
+    "id": 19417,
+    "name": "fetteh",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "chickpeas",
+     "garlic clove",
+     "lemon",
+     "yogurt",
+     "pine nuts",
+     "olive oil",
+     "salt",
+     "cumin",
+     "pita bread"
+    ]
+   },
+   {
+    "id": 55969,
+    "name": "chilled cucumber and yogurt soup",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "cucumbers",
+     "yogurt",
+     "garlic cloves",
+     "mint",
+     "cilantro",
+     "paprika",
+     "cumin seed",
+     "salt"
+    ]
+   },
+   {
+    "id": 70833,
+    "name": "creamy couscous salad",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "couscous",
+     "boiling water",
+     "tomatoes",
+     "chickpeas",
+     "feta cheese",
+     "plain yogurt",
+     "lemon juice",
+     "of fresh mint",
+     "salt and pepper"
+    ]
+   },
+   {
+    "id": 11844,
+    "name": "baba ganoush or caviar daubergines",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "eggplants",
+     "lemon juice",
+     "salt",
+     "fresh garlic",
+     "tahini",
+     "parsley",
+     "pine nuts",
+     "olive oil"
+    ]
+   },
+   {
+    "id": 11856,
+    "name": "baba ghanoush   rachael ray",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "eggplants",
+     "flat leaf parsley",
+     "lemon juice",
+     "tahini",
+     "garlic cloves",
+     "extra virgin olive oil",
+     "salt and pepper",
+     "pita bread"
+    ]
+   },
+   {
+    "id": 53229,
+    "name": "chicken pitas with lemon  garlic and cumin dressing",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "cooked boneless skinless chicken breasts",
+     "cucumber",
+     "fresh lemon juice",
+     "salt",
+     "extra virgin olive oil",
+     "cumin seeds",
+     "garlic cloves",
+     "pita bread"
+    ]
+   },
+   {
+    "id": 75822,
+    "name": "cucumber and onion salad with yogurt cumin vinaigrette",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "cucumbers",
+     "red onion",
+     "salt",
+     "plain yogurt",
+     "ground cumin",
+     "olive oil",
+     "lemon juice",
+     "fresh parsley",
+     "fresh ground black pepper"
+    ]
+   },
+   {
+    "id": 87554,
+    "name": "eggplant hummus",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "eggplant",
+     "garlic cloves",
+     "chickpeas",
+     "lemon juice",
+     "water",
+     "tahini",
+     "cumin",
+     "salt"
+    ]
+   },
+   {
+    "id": 11840,
+    "name": "baba ganoujh  eggplant salad with tehina",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "garlic cloves",
+     "eggplant",
+     "tahini",
+     "lemon juice",
+     "cumin",
+     "salt and pepper"
+    ]
+   },
+   {
+    "id": 11848,
+    "name": "baba ghannouj  smoked eggplant   aubergine  puree",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "eggplants",
+     "ground cumin",
+     "garlic cloves",
+     "salt",
+     "tahini",
+     "lemon juice",
+     "extra virgin olive oil"
+    ]
+   },
+   {
+    "id": 11857,
+    "name": "baba ghanouzh  arabian style roasted eggplants",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "eggplant",
+     "parsley",
+     "garlic cloves",
+     "salt",
+     "lemon juice",
+     "tahini",
+     "olive oil"
+    ]
+   },
+   {
+    "id": 18795,
+    "name": "fatit hummus  chickpea casserole",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "chickpeas",
+     "pita bread",
+     "greek yogurt",
+     "ground cumin",
+     "garlic cloves",
+     "salt",
+     "water",
+     "butter"
+    ]
+   },
+   {
+    "id": 19338,
+    "name": "feta chicken with zucchini",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "olive oil",
+     "lemon",
+     "boneless skinless chicken breasts",
+     "kosher salt",
+     "zucchini",
+     "flat leaf parsley",
+     "black pepper",
+     "feta"
+    ]
+   },
+   {
+    "id": 27631,
+    "name": "beanless hummus",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "zucchini",
+     "tahini",
+     "fresh lemon juice",
+     "olive oil",
+     "garlic cloves",
+     "sea salt",
+     "ground cumin"
+    ]
+   },
+   {
+    "id": 38409,
+    "name": "browned eggplant  aubergine  with yogurt",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "eggplant",
+     "olive oil",
+     "plain low-fat yogurt",
+     "garlic clove",
+     "salt",
+     "ground cumin",
+     "coriander powder"
+    ]
+   },
+   {
+    "id": 49624,
+    "name": "cherry tomato and lemon sauce",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic",
+     "fresh parsley",
+     "salt",
+     "pepper",
+     "cherry tomatoes",
+     "fresh lemon rind",
+     "sugar",
+     "lemon juice"
+    ]
+   },
+   {
+    "id": 49647,
+    "name": "cherry tomato sauce with lemon",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic clove",
+     "fresh parsley",
+     "salt",
+     "fresh black pepper",
+     "cherry tomatoes",
+     "lemon zest",
+     "sugar",
+     "fresh lemon juice"
+    ]
+   }
+  ]
+ },
+ "seafood": {
+  "inventory": {
+   "salmon fillets": "salmon",
+   "shrimp": "shrimp",
+   "cod": "cod",
+   "canned tuna": "tuna",
+   "mussels": "mussel",
+   "linguine": "pasta",
+   "white rice": "rice",
+   "lemons": "lemon",
+   "limes": "lime",
+   "garlic": "garlic",
+   "shallots": "shallot",
+   "butter": "butter",
+   "heavy cream": "cream",
+   "white wine": "white_wine",
+   "capers": "caper",
+   "fresh dill": "dill",
+   "fresh parsley": "parsley",
+   "cherry tomatoes": "tomato",
+   "asparagus": "asparagus",
+   "spinach": "spinach",
+   "potatoes": "potato",
+   "mayonnaise": "mayonnaise",
+   "dijon mustard": "mustard",
+   "old bay seasoning": null,
+   "hot sauce": "hot_sauce",
+   "panko": null
+  },
+  "recipes": [
+   {
+    "id": 23501,
+    "name": "fresh tuna steaks with lemon",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "fresh parsley",
+     "garlic clove",
+     "lemons",
+     "dry white wine",
+     "extra virgin olive oil",
+     "fresh tuna",
+     "salt and pepper",
+     "lemon",
+     "parsley"
+    ]
+   },
+   {
+    "id": 80240,
+    "name": "dilled tartar sauce",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "mayonnaise",
+     "dill pickle",
+     "capers",
+     "lemon juice",
+     "dill weed",
+     "parsley",
+     "dijon mustard"
+    ]
+   },
+   {
+    "id": 15082,
+    "name": "baked salmon with garlic and dijon",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "salmon fillets",
+     "parsley",
+     "garlic clove",
+     "dijon mustard",
+     "salt",
+     "black pepper",
+     "light olive oil",
+     "fresh lemon juice",
+     "lemon slice"
+    ]
+   },
+   {
+    "id": 75386,
+    "name": "crushed macaroni and vegetables",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "olive oil",
+     "water",
+     "garlic cloves",
+     "macaroni",
+     "fresh tomatoes",
+     "salt and black pepper",
+     "fresh spinach leaves",
+     "parsley",
+     "stewed tomatoes"
+    ]
+   },
+   {
+    "id": 2269,
+    "name": "abruzzi  shrimp pasta sauce",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "medium shrimp",
+     "pasta",
+     "olive oil",
+     "garlic cloves",
+     "crushed tomatoes",
+     "flat-leaf italian parsley"
+    ]
+   },
+   {
+    "id": 43115,
+    "name": "caper mayonnaise  for seafood or vegetables",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "mayonnaise",
+     "garlic clove",
+     "capers",
+     "lemon juice",
+     "dried dill"
+    ]
+   },
+   {
+    "id": 45977,
+    "name": "cedar planked salmon with garlic lemon and dill",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "salmon fillets",
+     "extra virgin olive oil",
+     "garlic cloves",
+     "fresh dill",
+     "salt",
+     "ground black pepper",
+     "lemon zest",
+     "lemon wedge"
+    ]
+   },
+   {
+    "id": 49624,
+    "name": "cherry tomato and lemon sauce",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic",
+     "fresh parsley",
+     "salt",
+     "pepper",
+     "cherry tomatoes",
+     "fresh lemon rind",
+     "sugar",
+     "lemon juice"
+    ]
+   },
+   {
+    "id": 49647,
+    "name": "cherry tomato sauce with lemon",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic clove",
+     "fresh parsley",
+     "salt",
+     "fresh black pepper",
+     "cherry tomatoes",
+     "lemon zest",
+     "sugar",
+     "fresh lemon juice"
+    ]
+   },
+   {
+    "id": 75417,
+    "name": "crusted salmon",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "light mayonnaise",
+     "salmon steaks",
+     "fresh lemon juice",
+     "garlic clove",
+     "dried dill",
+     "salt",
+     "pepper"
+    ]
+   },
+   {
+    "id": 86003,
+    "name": "easy shrimp scampi bake",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "butter",
+     "dijon mustard",
+     "fresh lemon juice",
+     "garlic",
+     "fresh parsley",
+     "medium raw shrimp"
+    ]
+   },
+   {
+    "id": 567,
+    "name": "twist your own way  mayonnaise  this one is with garlic twist",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "mayonnaise",
+     "garlic",
+     "olive oil",
+     "lemon juice",
+     "hot pepper sauce"
+    ]
+   },
+   {
+    "id": 3281,
+    "name": "alioli de limon  garlic mayonnaise with lemon",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "lemon zest",
+     "fresh lemon juice",
+     "garlic",
+     "mayonnaise",
+     "salt",
+     "fresh ground black pepper"
+    ]
+   },
+   {
+    "id": 6047,
+    "name": "appetizing shrimp scampi",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "butter",
+     "olive oil",
+     "fresh parsley",
+     "salt",
+     "pepper",
+     "garlic cloves",
+     "lemon juice",
+     "fresh shrimp"
+    ]
+   },
+   {
+    "id": 9782,
+    "name": "asparagus dijonnaise",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "fresh asparagus",
+     "mayonnaise",
+     "dijon mustard",
+     "lemon juice"
+    ]
+   },
+   {
+    "id": 11418,
+    "name": "award winning  salmon with garlic and sun dried tomatoes",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "salmon fillet",
+     "garlic",
+     "salt",
+     "fresh parsley",
+     "sun-dried tomatoes packed in oil",
+     "olive oil"
+    ]
+   },
+   {
+    "id": 15074,
+    "name": "baked salmon with caper sauce",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "salmon steaks",
+     "fresh lemon juice",
+     "butter",
+     "salt and pepper",
+     "parsley",
+     "capers"
+    ]
+   },
+   {
+    "id": 19576,
+    "name": "fettuccini with shallots",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "fettuccine pasta",
+     "white wine",
+     "half-and-half",
+     "olive oil",
+     "shallots",
+     "salt and pepper"
+    ]
+   },
+   {
+    "id": 21560,
+    "name": "fonda san miguel s camarones al mojo de ajo",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "butter",
+     "garlic cloves",
+     "olive oil",
+     "raw shrimp",
+     "fresh parsley leaves",
+     "vegetable oil",
+     "garlic"
+    ]
+   },
+   {
+    "id": 22521,
+    "name": "french roasted potatoes",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "red potatoes",
+     "garlic cloves",
+     "dijon mustard",
+     "butter",
+     "fresh parsley"
+    ]
+   }
+  ]
+ }
+}

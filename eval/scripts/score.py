@@ -1,6 +1,6 @@
 """Stage-1 scorecard: ingredient matching and "cookable now" precision.
 
-usage: python score.py old=<checkout> cur=<checkout> fixed=<checkout> [--details]
+usage: python score.py old=<checkout> cur=<checkout> fixed=<checkout> d29=<checkout> [--details]
 
 For each named version: runs that checkout's matcher on the labelled strings
 (development set data/strings_labeled.jsonl and held-out set
@@ -13,7 +13,9 @@ from collections import defaultdict
 
 versions = [a.split("=", 1) for a in sys.argv[1:] if "=" in a]
 details = "--details" in sys.argv
-STRINGS = {"dev": "data/strings_labeled.jsonl", "held-out": "data/holdout_labeled.jsonl"}
+STRINGS = {"dev": "data/strings_labeled.jsonl", "held-out": "data/holdout_labeled.jsonl",
+           # held-out 3 was sampled and labelled for D29, before that fix was written
+           "held-out 3": "data/holdout3_labeled.jsonl"}
 rows = {k: [json.loads(l) for l in open(p)] for k, p in STRINGS.items()}
 
 PREDICT = """
@@ -57,9 +59,11 @@ def load_labels(path):
         out[(k, int(rid))] = (ok == "yes", note)
     return out
 labels = {**load_labels("labeling/cookable_labels.tsv"), **load_labels("labeling/holdout_cookable_labels.tsv"),
-          **load_labels("labeling/holdout2_cookable_labels.tsv")}
+          **load_labels("labeling/holdout2_cookable_labels.tsv"),
+          **load_labels("labeling/holdout3_cookable_labels.tsv")}
 # held-out 2 (vegetarian, grill, italian) was added later and judged for the current engine only
-SPLITS = [("dev", "cookable"), ("held-out", "holdout_cookable"), ("held-out 2", "holdout2_cookable")]
+SPLITS = [("dev", "cookable"), ("held-out", "holdout_cookable"), ("held-out 2", "holdout2_cookable"),
+          ("held-out 3", "holdout3_cookable")]  # held-out 3: kitchens set aside for D29
 
 print("\nCOOKABLE NOW   precision@20 (listed recipes that are really cookable)")
 held = {}
@@ -73,11 +77,11 @@ for split, prefix in SPLITS:
             good = sum(labels[(k, r["id"])][0] for r in d["recipes"]); ok += good; tot += len(d["recipes"])
             parts.append(f"{k} {good}/{len(d['recipes'])}")
         print(f"  {split:10} {name:6} {ok:2}/{tot} = {pct(ok/tot)}%   ({', '.join(parts)})")
-        if split.startswith("held-out"):
+        if split in ("held-out", "held-out 2"):
             h = held.setdefault(name, [0, 0, 0]); h[0] += ok; h[1] += tot; h[2] += 1
 for name, (ok, tot, n) in held.items():
     if n == 2:
-        print(f"  held-out, all four kitchens, {name}: {ok}/{tot} = {pct(ok/tot)}%")
+        print(f"  held-out + held-out 2 (four kitchens), {name}: {ok}/{tot} = {pct(ok/tot)}%")
 
 if details and len(versions) >= 2:
     a, b = versions[-2][0], versions[-1][0]

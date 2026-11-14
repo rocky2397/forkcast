@@ -1,0 +1,5 @@
+{
+  "comfort": ["chicken breasts", "ground beef", "bacon", "eggs", "milk", "sour cream", "cheddar cheese", "cream of mushroom soup", "chicken broth", "egg noodles", "elbow macaroni", "potatoes", "frozen peas", "frozen corn", "carrots", "celery", "onions", "garlic", "canned tomatoes", "tomato juice", "ketchup", "worcestershire sauce", "bread crumbs", "paprika", "dried thyme", "bay leaves"],
+  "middle_eastern": ["lamb", "chicken thighs", "chickpeas", "red lentils", "bulgur", "couscous", "pita bread", "plain yogurt", "feta cheese", "tahini", "eggplant", "zucchini", "tomatoes", "cucumbers", "red onion", "garlic", "lemons", "fresh parsley", "fresh mint", "cumin", "ground coriander", "cinnamon", "paprika", "pine nuts", "pomegranate", "honey"],
+  "seafood": ["salmon fillets", "shrimp", "cod", "canned tuna", "mussels", "linguine", "white rice", "lemons", "limes", "garlic", "shallots", "butter", "heavy cream", "white wine", "capers", "fresh dill", "fresh parsley", "cherry tomatoes", "asparagus", "spinach", "potatoes", "mayonnaise", "dijon mustard", "old bay seasoning", "hot sauce", "panko"]
+}

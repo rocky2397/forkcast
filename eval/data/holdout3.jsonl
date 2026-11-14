@@ -1,0 +1,150 @@
+{"id": "s001", "set": "A", "text": "dates"}
+{"id": "s002", "set": "A", "text": "unsweetened applesauce"}
+{"id": "s003", "set": "A", "text": "banana"}
+{"id": "s004", "set": "A", "text": "orange zest"}
+{"id": "s005", "set": "A", "text": "canned tomatoes"}
+{"id": "s006", "set": "A", "text": "chopped tomatoes"}
+{"id": "s007", "set": "A", "text": "cinnamon"}
+{"id": "s008", "set": "A", "text": "snow peas"}
+{"id": "s009", "set": "A", "text": "caraway seed"}
+{"id": "s010", "set": "A", "text": "lime peel"}
+{"id": "s011", "set": "A", "text": "conchiglie"}
+{"id": "s012", "set": "A", "text": "figs"}
+{"id": "s013", "set": "A", "text": "cornmeal"}
+{"id": "s014", "set": "A", "text": "cooked rice"}
+{"id": "s015", "set": "A", "text": "fresh gingerroot"}
+{"id": "s016", "set": "A", "text": "part-skim mozzarella cheese"}
+{"id": "s017", "set": "A", "text": "vanilla extract"}
+{"id": "s018", "set": "A", "text": "fresh parmesan cheese"}
+{"id": "s019", "set": "A", "text": "romaine lettuce"}
+{"id": "s020", "set": "A", "text": "blueberries"}
+{"id": "s021", "set": "A", "text": "light cream"}
+{"id": "s022", "set": "A", "text": "basil"}
+{"id": "s023", "set": "A", "text": "chicken breasts"}
+{"id": "s024", "set": "A", "text": "plum jam"}
+{"id": "s025", "set": "A", "text": "nutmeg"}
+{"id": "s026", "set": "A", "text": "orange juice"}
+{"id": "s027", "set": "A", "text": "cooked chicken breasts"}
+{"id": "s028", "set": "A", "text": "dark brown sugar"}
+{"id": "s029", "set": "A", "text": "black pepper"}
+{"id": "s030", "set": "A", "text": "plain yogurt"}
+{"id": "s031", "set": "A", "text": "bell pepper"}
+{"id": "s032", "set": "A", "text": "flour tortillas"}
+{"id": "s033", "set": "A", "text": "fresh onion"}
+{"id": "s034", "set": "A", "text": "ground red pepper"}
+{"id": "s035", "set": "A", "text": "soy sauce"}
+{"id": "s036", "set": "A", "text": "bay leaves"}
+{"id": "s037", "set": "A", "text": "dried currants"}
+{"id": "s038", "set": "A", "text": "coconut milk"}
+{"id": "s039", "set": "A", "text": "golden delicious apples"}
+{"id": "s040", "set": "A", "text": "fresh cilantro"}
+{"id": "s041", "set": "A", "text": "duncan hines orange supreme cake mix"}
+{"id": "s042", "set": "A", "text": "salted butter"}
+{"id": "s043", "set": "A", "text": "carrots"}
+{"id": "s044", "set": "A", "text": "queso fresco"}
+{"id": "s045", "set": "A", "text": "vanilla extract"}
+{"id": "s046", "set": "A", "text": "black pepper"}
+{"id": "s047", "set": "A", "text": "fresh mushrooms"}
+{"id": "s048", "set": "A", "text": "mexican cheese"}
+{"id": "s049", "set": "A", "text": "semisweet mini chocolate chips"}
+{"id": "s050", "set": "A", "text": "capers"}
+{"id": "s051", "set": "B", "text": "papaya nectar"}
+{"id": "s052", "set": "B", "text": "porcini mushrooms"}
+{"id": "s053", "set": "B", "text": "burrito-size whole wheat tortillas"}
+{"id": "s054", "set": "B", "text": "wild rice mix"}
+{"id": "s055", "set": "B", "text": "dark rye bread"}
+{"id": "s056", "set": "B", "text": "yellow curry paste"}
+{"id": "s057", "set": "B", "text": "frozen raspberries in light syrup"}
+{"id": "s058", "set": "B", "text": "\"emerils original essence\""}
+{"id": "s059", "set": "B", "text": "potassium chloride"}
+{"id": "s060", "set": "B", "text": "bartlett pears"}
+{"id": "s061", "set": "B", "text": "\"cracklin oat bran cereal\""}
+{"id": "s062", "set": "B", "text": "prego spaghetti sauce"}
+{"id": "s063", "set": "B", "text": "canned jalapeno pepper"}
+{"id": "s064", "set": "B", "text": "betty crocker double chocolate chunk cookie mix"}
+{"id": "s065", "set": "B", "text": "live lobsters"}
+{"id": "s066", "set": "B", "text": "martini mix"}
+{"id": "s067", "set": "B", "text": "seeds"}
+{"id": "s068", "set": "B", "text": "chocolate bark"}
+{"id": "s069", "set": "B", "text": "matzo cake flour"}
+{"id": "s070", "set": "B", "text": "country sausage"}
+{"id": "s071", "set": "B", "text": "low-fat coffee-flavored frozen yogurt"}
+{"id": "s072", "set": "B", "text": "basil and parmesan tapenade"}
+{"id": "s073", "set": "B", "text": "refrigerated breadstick dough"}
+{"id": "s074", "set": "B", "text": "oil-cured green olives"}
+{"id": "s075", "set": "B", "text": "reduced-fat crescent rolls"}
+{"id": "s076", "set": "B", "text": "canada dry ginger ale"}
+{"id": "s077", "set": "B", "text": "green lentils"}
+{"id": "s078", "set": "B", "text": "cornichons"}
+{"id": "s079", "set": "B", "text": "butter pound cake"}
+{"id": "s080", "set": "B", "text": "brown onions"}
+{"id": "s081", "set": "B", "text": "godiva milk chocolate liqueur"}
+{"id": "s082", "set": "B", "text": "polyunsaturated margarine"}
+{"id": "s083", "set": "B", "text": "instant dashi stock"}
+{"id": "s084", "set": "B", "text": "soybean oil"}
+{"id": "s085", "set": "B", "text": "dry onion flakes"}
+{"id": "s086", "set": "B", "text": "mutton stock"}
+{"id": "s087", "set": "B", "text": "butterscotch sundae sauce"}
+{"id": "s088", "set": "B", "text": "fine noodles"}
+{"id": "s089", "set": "B", "text": "goji berry"}
+{"id": "s090", "set": "B", "text": "buttercream frosting"}
+{"id": "s091", "set": "B", "text": "black vodka"}
+{"id": "s092", "set": "B", "text": "\"m&ms peanut chocolate candies\""}
+{"id": "s093", "set": "B", "text": "hock"}
+{"id": "s094", "set": "B", "text": "light coconut milk"}
+{"id": "s095", "set": "B", "text": "dessert crepes"}
+{"id": "s096", "set": "B", "text": "spicy mustard"}
+{"id": "s097", "set": "B", "text": "borage"}
+{"id": "s098", "set": "B", "text": "bread"}
+{"id": "s099", "set": "B", "text": "sugar-free raspberry gelatin"}
+{"id": "s100", "set": "B", "text": "powdered ginger"}
+{"id": "s101", "set": "C", "text": "Injera Flat Bread"}
+{"id": "s102", "set": "C", "text": "Mango Chunks"}
+{"id": "s103", "set": "C", "text": "Ice Bag"}
+{"id": "s104", "set": "C", "text": "Taco Seasoning"}
+{"id": "s105", "set": "C", "text": "Total 2% Lowfat Greek Strained Yogurt With Blueberry"}
+{"id": "s106", "set": "C", "text": "Chicken Thighs"}
+{"id": "s107", "set": "C", "text": "Organic Navel Orange"}
+{"id": "s108", "set": "C", "text": "Apple Honeycrisp Organic"}
+{"id": "s109", "set": "C", "text": "Baby Cucumbers"}
+{"id": "s110", "set": "C", "text": "Original Cooking Spray"}
+{"id": "s111", "set": "C", "text": "Organic Broccoli"}
+{"id": "s112", "set": "C", "text": "Rosemary & Sea Salt Fries"}
+{"id": "s113", "set": "C", "text": "Non Dairy Chunky Monkey"}
+{"id": "s114", "set": "C", "text": "Gluten Free Oatmeal Classic with Flax & Chia"}
+{"id": "s115", "set": "C", "text": "Mezzi Rigatoni"}
+{"id": "s116", "set": "C", "text": "Organic Free Range Low Sodium Chicken Broth"}
+{"id": "s117", "set": "C", "text": "Roasted Turkey"}
+{"id": "s118", "set": "C", "text": "Organic Broccoli Florets"}
+{"id": "s119", "set": "C", "text": "Roasted Red Pepper Hummus"}
+{"id": "s120", "set": "C", "text": "Organic D'Anjou Pears"}
+{"id": "s121", "set": "C", "text": "Red Peppers"}
+{"id": "s122", "set": "C", "text": "Organic Whole Strawberries"}
+{"id": "s123", "set": "C", "text": "Organic Plain Greek Whole Milk Yogurt"}
+{"id": "s124", "set": "C", "text": "Salted Caramel & Chocolate Non Dairy Frozen Dessert"}
+{"id": "s125", "set": "C", "text": "Organic Honey Nut O's Cereal"}
+{"id": "s126", "set": "C", "text": "Frozen Broccoli Florets"}
+{"id": "s127", "set": "C", "text": "Michigan Organic Kale"}
+{"id": "s128", "set": "C", "text": "Dairy Free Unsweetened Coconut Milk"}
+{"id": "s129", "set": "C", "text": "Potato Yukon Gold Organic"}
+{"id": "s130", "set": "C", "text": "Thick Medium Cheddar Slices"}
+{"id": "s131", "set": "C", "text": "Romaine Hearts"}
+{"id": "s132", "set": "C", "text": "Sinfully Sweet Campari Tomatoes"}
+{"id": "s133", "set": "C", "text": "Spicy Brown Mustard"}
+{"id": "s134", "set": "C", "text": "Organic Baby Kale"}
+{"id": "s135", "set": "C", "text": "Organic Mixed Vegetables"}
+{"id": "s136", "set": "C", "text": "Organic Mango"}
+{"id": "s137", "set": "C", "text": "Crushed Red Peppers"}
+{"id": "s138", "set": "C", "text": "Organic Gala Apples"}
+{"id": "s139", "set": "C", "text": "Special Dark Cocoa"}
+{"id": "s140", "set": "C", "text": "Organic Whole Wheat Fusilli"}
+{"id": "s141", "set": "C", "text": "Berry Medley"}
+{"id": "s142", "set": "C", "text": "Organic Grape Tomatoes"}
+{"id": "s143", "set": "C", "text": "Organic Baby Carrots"}
+{"id": "s144", "set": "C", "text": "Raspberries"}
+{"id": "s145", "set": "C", "text": "Organic Ice Cream Vanilla Bean"}
+{"id": "s146", "set": "C", "text": "Organic Long Grain Brown Rice"}
+{"id": "s147", "set": "C", "text": "Sweet Rolls"}
+{"id": "s148", "set": "C", "text": "Organic Free Range Chicken Broth"}
+{"id": "s149", "set": "C", "text": "Channa Masala"}
+{"id": "s150", "set": "C", "text": "Organic Pinto Beans"}

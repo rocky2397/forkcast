@@ -104,38 +104,50 @@ Both tests work like marking an exam.
 
 ### Test 1: can you really cook what it lists?
 
-Seven test kitchens were run through the app. For each, the top 20 "cookable
-now" recipes were checked against the recipe's original wording.
+Ten test kitchens were run through the app. For each, the top 20 "cookable
+now" recipes were checked against the recipe's original wording. The test
+found two rounds of problems, and each fix was judged on kitchens and
+ingredient lines set aside *before* that fix was written.
 
-| | before fix | after fix |
+| | before | after |
 |---|---|---|
-| **Listed recipes that are really cookable** (unseen kitchen) | 13 of 20 (65%) | **16 of 20 (80%)** |
-| Same, in the three kitchens used while fixing | 37 of 60 (62%) | 56 of 60 (93%) |
-| **Ingredient lines matched to the wrong food** (150 unseen lines) | 17% | **14%** |
-| Listed recipes that are really cookable, all four unseen kitchens | | **65 of 80 (81%)** |
+| **Fix 1: listed recipes that are really cookable** (unseen kitchen) | 13 of 20 (65%) | **16 of 20 (80%)** |
+| Fix 1: ingredient lines matched to the wrong food (150 unseen lines) | 17% | 14% |
+| **Fix 2: listed recipes that are really cookable** (3 new kitchens) | 53 of 60 (88%) | **55 of 60 (92%)** |
+| Fix 2: ingredient lines matched to the wrong food (150 new lines) | 7.3% | 5.3% |
 
-The last row was added later with three more unseen kitchens (vegetarian,
-grill, italian), to pin the number down: 81% over 80 recipes is far less
-shaky than 80% over 20.
+**Where it stands:** about **9 in 10** listed recipes are really cookable
+(55 of 60 in kitchens no fix was designed on). Two other ways of counting agree.
+In the four kitchens fix 2 *was* designed with, it went from 81% to 94%; in
+the three development kitchens, from 93% to 98%. Those flatter the fix, so the
+headline uses the fresh kitchens.
 
-**Why it was wrong:** 22 of the 23 false "cookable" recipes had one cause.
-When the ingredient list had no entry for a product, the app matched the food
-word inside it: "chicken stock" became chicken, "tomato paste" became tomato,
-and "powdered sugar" became sugar, which every kitchen is assumed to have. A
-kitchen with chicken therefore looked ready for every recipe that needs
-chicken stock.
+**Why it was wrong, round 1:** 22 of the first 23 false "cookable" recipes
+had one cause. When the ingredient list had no entry for a product, the app
+matched the food word inside it: "chicken stock" became chicken, "tomato
+paste" became tomato, and "powdered sugar" became sugar, which every kitchen
+is assumed to have. A kitchen with chicken therefore looked ready for every
+recipe that needs chicken stock.
 
-**The fix:** a product now matches its own entry ("basil pesto" becomes pesto)
-or nothing, and a recipe with an unmatched line stays out of the list. That is
-the safer mistake. A missing recipe costs nothing; a recipe you can't make
-costs a dinner. About 12,000 of 64,000 recipes leave the pool because of it.
+**The fix (D27):** a product now matches its own entry ("basil pesto" becomes
+pesto) or nothing, and a recipe with an unmatched line stays out of the list.
+That is the safer mistake. A missing recipe costs nothing; a recipe you can't
+make costs a dinner. About 12,000 of 64,000 recipes leave the pool because of
+it.
 
-**Still wrong:** roughly one listed recipe in five needs something you don't
-have, almost always a ready-made product read as its main food: "tomato
-juice" counts as tomatoes, "creamed corn" as corn, "chicken sausage" as
-chicken. It's the same kind of mistake the fix addressed, for product words it
-doesn't cover yet. Ready-made foods are also most of the remaining wrong
-matches ("Macaroni & Cheese" becomes cheese).
+**Round 2, the same mistake for other words:** "tomato juice" still counted as
+tomatoes, "chicken sausage" as chicken, "creamed corn" as corn, and "sweet
+green pepper" as black pepper, a pantry staple. **The second fix (D29)** adds
+those product words (juice from anything but citrus, syrup, sausage, cookie,
+bread, pickle and more), stops on products like potato chips or Rice-a-Roni,
+and reads sweet peppers as bell peppers. It also stops being too eager: a
+chorizo sausage stays chorizo, and lemon juice is still lemon.
+
+**Still wrong:** roughly one listed recipe in ten. The ingredient list has one
+entry for coriander, so it can't tell fresh cilantro from ground coriander
+seed; "dried beef" counts as beef; a bare "red pepper" is read as chili flakes
+even when the recipe means a bell pepper; and "peas and carrots" is satisfied
+by carrots alone.
 
 ### Test 2: are the swaps any good?
 
@@ -166,18 +178,18 @@ one was on hand.
 - **Two markers, checked against each other.** Test 1's answer keys were
   written twice, independently: once by Claude Opus 5.5, which built the eval,
   and once by a different model, GPT-6 Astra, that saw only the questions and
-  the rules, never the other answers or the app. They gave compatible answers for 93% of
-  ingredient lines and the same verdict for 88% of the first 108 recipes, then
-  for all 60 recipes of the three newer kitchens. Where they disagreed, a human
-  made the call, usually by settling a rule. The biggest one: a recipe asking
-  for garlic powder counts as cookable if you have fresh garlic. Decided the
-  other way, the unseen kitchen would score 70% instead of 80%, so the number
-  depends on that definition. Test 2's keys have one marker so far (10 cases
-  flagged unsure).
-- **Small samples.** The current engine's 81% rests on 80 recipes, so the true
-  value is likely between about 71% and 88%. The before/after comparison rests
-  on one kitchen of 20 recipes: read "65% → 80%" as "clearly better", not as
-  an exact gain.
+  the rules, never the other answers or the app. Across all rounds they gave
+  compatible answers for 94% of ingredient lines (538 of 575) and the same
+  verdict for 93% of recipes (213 of 230). Where they disagreed, a human made
+  the call, usually by settling a rule, and the rules record each decision.
+  Two of them move the numbers most. A recipe asking for garlic powder counts
+  as cookable if you have fresh garlic; decided the other way, the first
+  unseen kitchen would score 70% instead of 80%. Fresh cilantro does *not*
+  count as ground coriander, which costs the app three recipes in the newest
+  kitchens. Test 2's keys have one marker so far (10 cases flagged unsure).
+- **Small samples.** "55 of 60" means the true share is likely between about
+  82% and 96%. Each fix moved only a few recipes, so read the before/after
+  pairs as "clearly better", not as exact gains.
 - **Everything is public:** every example, answer key, script and remaining
   error is in [`eval/`](eval/), with the full write-ups in
   [`eval/RESULTS.md`](eval/RESULTS.md) (test 1) and
@@ -192,14 +204,14 @@ one was on hand.
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 153 pytest tests in under a second, offline and without the corpus (41 of
+- **Tests:** 204 pytest tests in under a second, offline and without the corpus (41 of
   them need the Epicure weights and skip without them), plus frontend lint and
   build, all in CI.
 
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 28 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 29 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -207,7 +219,7 @@ can and cannot do. A few that shaped the app:
   behaviour to learn from, so taste is the average of what you cooked:
   explainable, and useful from the first meal. How well it ranks is not
   measured yet.
-- **Wrong is worse than missing (D27, D28).** Both fixes above trade coverage
+- **Wrong is worse than missing (D27, D28, D29).** Both fixes above trade coverage
   for trust: fewer recipes and fewer swaps, but ones you can rely on.
 - **Confirm before commit (D8).** Vision miscounts are expected, so the cheap
   model plus a mandatory checklist beats an expensive model trusted blindly.

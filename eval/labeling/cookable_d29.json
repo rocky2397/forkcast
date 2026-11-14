@@ -1,0 +1,1062 @@
+{
+ "mediterranean": {
+  "inventory": {
+   "chicken breast": "chicken",
+   "eggs": "egg",
+   "greek yogurt": "yogurt",
+   "feta": "feta_cheese",
+   "parmesan": "parmesan_cheese",
+   "spinach": "spinach",
+   "cherry tomatoes": "tomato",
+   "red onion": "red_onion",
+   "garlic": "garlic",
+   "lemon": "lemon",
+   "basil": "basil",
+   "zucchini": "zucchini",
+   "bell pepper": "bell_pepper",
+   "chickpeas": "chickpea",
+   "canned tomatoes": "tomato",
+   "pasta": "pasta",
+   "rice": "rice",
+   "oats": "oat",
+   "honey": "honey",
+   "cumin": "cumin",
+   "paprika": "paprika",
+   "milk": "milk",
+   "potatoes": "potato",
+   "carrots": "carrot",
+   "ginger": "ginger",
+   "soy sauce": "soy_sauce"
+  },
+  "recipes": [
+   {
+    "id": 26780,
+    "name": "basil lemon bow ties",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic clove",
+     "bow tie pasta",
+     "fresh lemon juice",
+     "lemon zest",
+     "basil",
+     "salt",
+     "black pepper",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 5395,
+    "name": "angel hair pasta with basil   tomatoes",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "angel hair pasta",
+     "fresh garlic",
+     "roma tomatoes",
+     "fresh basil leaf",
+     "light butter",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 19429,
+    "name": "fettuccine alfredo  low fat and healthy",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "salt",
+     "pasta",
+     "olive oil",
+     "garlic",
+     "parmesan cheese",
+     "low-fat milk",
+     "plain yogurt",
+     "salt & pepper"
+    ]
+   },
+   {
+    "id": 21529,
+    "name": "foil chicken casserole for 1",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "parmesan cheese",
+     "garlic salt",
+     "boneless skinless chicken breast half",
+     "olive oil",
+     "zucchini",
+     "red potatoes",
+     "salt and pepper"
+    ]
+   },
+   {
+    "id": 26677,
+    "name": "basil grilled chicken",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "fresh coarse ground black pepper",
+     "chicken breast halves",
+     "butter",
+     "fresh basil",
+     "parmesan cheese",
+     "garlic powder",
+     "pepper",
+     "salt",
+     "basil sprig"
+    ]
+   },
+   {
+    "id": 31076,
+    "name": "better than olive garden pasta pomodoro",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "garlic cloves",
+     "tomatoes",
+     "fresh basil leaf",
+     "extra virgin olive oil",
+     "parmesan cheese",
+     "pasta",
+     "fresh ground pepper",
+     "salt"
+    ]
+   },
+   {
+    "id": 43103,
+    "name": "capellini pomodoro",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "garlic cloves",
+     "plum tomatoes",
+     "fresh basil",
+     "olive oil",
+     "fresh parmesan cheese",
+     "angel hair pasta",
+     "black pepper"
+    ]
+   },
+   {
+    "id": 46494,
+    "name": "charcoal grilled chicken",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "chicken",
+     "fresh lemon juice",
+     "olive oil",
+     "soy sauce",
+     "garlic",
+     "ground cumin",
+     "sugar",
+     "black pepper"
+    ]
+   },
+   {
+    "id": 49644,
+    "name": "cherry tomato pasta",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "olive oil",
+     "garlic cloves",
+     "cherry tomatoes",
+     "sugar",
+     "salt and pepper",
+     "fresh basil leaf",
+     "thin spaghetti",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 50160,
+    "name": "chicken  scaloppine",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "boneless chicken breasts",
+     "eggs",
+     "milk",
+     "parmesan cheese",
+     "garlic powder",
+     "salt",
+     "all-purpose flour",
+     "butter",
+     "olive oil"
+    ]
+   },
+   {
+    "id": 54206,
+    "name": "chicken wing or steak tip marinade",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "chicken wings",
+     "low sodium soy sauce",
+     "olive oil",
+     "garlic",
+     "garlic salt",
+     "lemon juice"
+    ]
+   },
+   {
+    "id": 55094,
+    "name": "chickpea dip   garbanzo bean dip",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "garlic cloves",
+     "plain low-fat yogurt",
+     "fresh lemon juice",
+     "olive oil",
+     "salt",
+     "paprika",
+     "pepper",
+     "chickpeas"
+    ]
+   },
+   {
+    "id": 67296,
+    "name": "county fair chicken",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "parmesan cheese",
+     "flour",
+     "paprika",
+     "salt",
+     "pepper",
+     "chicken pieces",
+     "egg",
+     "milk",
+     "butter"
+    ]
+   },
+   {
+    "id": 72564,
+    "name": "crisp garlic potato skins",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "baking potatoes",
+     "olive oil",
+     "tomatoes",
+     "dried basil",
+     "garlic powder",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 72665,
+    "name": "crispy baked spuds",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "baking potato",
+     "fresh lemon juice",
+     "butter",
+     "garlic salt",
+     "parmesan cheese",
+     "ground black pepper",
+     "dried basil"
+    ]
+   },
+   {
+    "id": 84461,
+    "name": "easy fresh tomato and basil pasta",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "farfalle pasta",
+     "roma tomatoes",
+     "olive oil",
+     "fresh garlic",
+     "fresh basil leaf",
+     "salt & fresh ground pepper",
+     "parmesan cheese"
+    ]
+   },
+   {
+    "id": 421,
+    "name": "i don t have any tahini  hummus",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "chickpeas",
+     "garlic cloves",
+     "lemon juice",
+     "ground cumin",
+     "salt"
+    ]
+   },
+   {
+    "id": 1388,
+    "name": "30 minute garlic chicken with potatoes",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "chicken breasts",
+     "red potatoes",
+     "garlic cloves",
+     "paprika",
+     "salt",
+     "olive oil"
+    ]
+   },
+   {
+    "id": 2444,
+    "name": "acini di pepe with lemon butter and zucchini",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "acini di pepe pasta",
+     "lemon juice",
+     "butter",
+     "fresh lemon zest",
+     "zucchini"
+    ]
+   },
+   {
+    "id": 10501,
+    "name": "aunt trish s salad dressing  from the pioneer woman",
+    "ingredients_needed": 4,
+    "raw_ingredients": [
+     "olive oil",
+     "lemons",
+     "parmesan cheese",
+     "salt",
+     "fresh ground black pepper",
+     "sugar",
+     "paprika",
+     "garlic clove"
+    ]
+   }
+  ]
+ },
+ "student": {
+  "inventory": {
+   "eggs": "egg",
+   "milk": "milk",
+   "butter": "butter",
+   "cheddar cheese": "cheddar_cheese",
+   "bread": "bread",
+   "pasta": "pasta",
+   "rice": "rice",
+   "canned tomatoes": "tomato",
+   "onions": "onion",
+   "garlic": "garlic",
+   "potatoes": "potato",
+   "carrots": "carrot",
+   "frozen peas": "pea",
+   "chicken thighs": "chicken",
+   "ground beef": "beef",
+   "apples": "apple",
+   "bananas": "banana",
+   "oats": "oat",
+   "peanut butter": "peanut_butter",
+   "honey": "honey",
+   "soy sauce": "soy_sauce",
+   "ketchup": "ketchup",
+   "mustard": "mustard",
+   "mayonnaise": "mayonnaise"
+  },
+  "recipes": [
+   {
+    "id": 449,
+    "name": "loco moco  style hamburger steak with gravy",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "lean ground beef",
+     "bread",
+     "milk",
+     "egg",
+     "onion",
+     "catsup",
+     "salt",
+     "pepper",
+     "beef",
+     "water",
+     "salt and pepper",
+     "cooked rice",
+     "eggs"
+    ]
+   },
+   {
+    "id": 3406,
+    "name": "all american macaroni   cheese",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "macaroni",
+     "butter",
+     "onion",
+     "garlic clove",
+     "flour",
+     "milk",
+     "black pepper",
+     "extra-sharp cheddar cheese",
+     "sharp cheddar cheese",
+     "mild cheddar cheese"
+    ]
+   },
+   {
+    "id": 28760,
+    "name": "beef stuffed potatoes",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "ground beef",
+     "baking potatoes",
+     "cheddar cheese",
+     "milk",
+     "mayonnaise",
+     "onion",
+     "garlic salt",
+     "salt & pepper",
+     "butter"
+    ]
+   },
+   {
+    "id": 29721,
+    "name": "benihana hibachi chicken rice",
+    "ingredients_needed": 7,
+    "raw_ingredients": [
+     "cooked rice",
+     "frozen peas",
+     "carrots",
+     "eggs",
+     "onion",
+     "butter",
+     "soy sauce",
+     "chicken breast",
+     "salt",
+     "black pepper"
+    ]
+   },
+   {
+    "id": 18040,
+    "name": "famous meatloaf",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "ground beef",
+     "white bread",
+     "whole milk",
+     "egg",
+     "instant minced onion",
+     "salt and pepper",
+     "ketchup",
+     "water"
+    ]
+   },
+   {
+    "id": 29723,
+    "name": "benihana japanese fried rice",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "cooked rice",
+     "frozen peas",
+     "carrots",
+     "eggs",
+     "onion",
+     "butter",
+     "soy sauce",
+     "salt",
+     "pepper"
+    ]
+   },
+   {
+    "id": 43895,
+    "name": "caramelized onion   potato scramble",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "eggs",
+     "milk",
+     "salt and pepper",
+     "butter",
+     "onion",
+     "potato",
+     "carrot",
+     "green peas"
+    ]
+   },
+   {
+    "id": 47759,
+    "name": "cheeseburger mac",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "ground beef",
+     "water",
+     "ketchup",
+     "onion powder",
+     "garlic powder",
+     "macaroni",
+     "cheddar cheese"
+    ]
+   },
+   {
+    "id": 47762,
+    "name": "cheeseburger macaroni and cheese",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "oil",
+     "onion",
+     "ground beef",
+     "flour",
+     "milk",
+     "butter",
+     "garlic salt",
+     "pepper",
+     "cheddar cheese",
+     "cooked macaroni"
+    ]
+   },
+   {
+    "id": 48376,
+    "name": "cheesy golden rice",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "rice",
+     "cheddar cheese",
+     "carrots",
+     "eggs",
+     "milk",
+     "onion",
+     "salt",
+     "ground black pepper"
+    ]
+   },
+   {
+    "id": 50911,
+    "name": "chicken and rice 1 pot meal",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "soy sauce",
+     "oil",
+     "diced onion",
+     "dark chicken meat",
+     "rice",
+     "water",
+     "carrots",
+     "peas"
+    ]
+   },
+   {
+    "id": 85858,
+    "name": "easy roasted potatoes",
+    "ingredients_needed": 6,
+    "raw_ingredients": [
+     "baking potatoes",
+     "olive oil",
+     "pepper",
+     "salt",
+     "garlic powder",
+     "garlic salt",
+     "onion salt",
+     "onion powder",
+     "garlic"
+    ]
+   },
+   {
+    "id": 376,
+    "name": "extraordinary  macaroni and cheese",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "small shell pasta",
+     "butter",
+     "onion",
+     "all-purpose flour",
+     "salt",
+     "milk",
+     "cheddar cheese",
+     "tomatoes"
+    ]
+   },
+   {
+    "id": 943,
+    "name": "15 minute cheeseburger rice",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "lean ground beef",
+     "water",
+     "ketchup",
+     "mustard",
+     "minute white rice",
+     "cheddar cheese"
+    ]
+   },
+   {
+    "id": 10743,
+    "name": "authentic chinese fried rice",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "instant rice",
+     "water",
+     "onion",
+     "peas and carrots",
+     "soy sauce",
+     "egg",
+     "oil"
+    ]
+   },
+   {
+    "id": 20193,
+    "name": "finnish macaroni bake",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "macaroni",
+     "ground beef",
+     "onion",
+     "milk",
+     "eggs",
+     "black pepper",
+     "salt"
+    ]
+   },
+   {
+    "id": 22592,
+    "name": "french toast cheddar sandwiches",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "eggs",
+     "milk",
+     "salt",
+     "white bread",
+     "mustard",
+     "cheddar cheese",
+     "butter"
+    ]
+   },
+   {
+    "id": 23736,
+    "name": "fried egg sandwich",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "whole wheat bread",
+     "eggs",
+     "olive oil",
+     "light mayonnaise",
+     "tomatoes",
+     "extra-sharp cheddar cheese",
+     "salt",
+     "fresh ground pepper"
+    ]
+   },
+   {
+    "id": 26924,
+    "name": "battered chicken tapas with honey and mustard    pollo rebozado",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "chicken breasts",
+     "eggs",
+     "flour",
+     "olive oil",
+     "salt & freshly ground black pepper",
+     "honey",
+     "dijon mustard",
+     "soy sauce"
+    ]
+   },
+   {
+    "id": 28241,
+    "name": "beef chuck roast stew  baby food",
+    "ingredients_needed": 5,
+    "raw_ingredients": [
+     "boneless beef chuck roast",
+     "water",
+     "carrots",
+     "onion",
+     "peas",
+     "potato"
+    ]
+   }
+  ]
+ },
+ "baking": {
+  "inventory": {
+   "flour": "flour",
+   "sugar": "sugar",
+   "brown sugar": "brown_sugar",
+   "eggs": "egg",
+   "butter": "butter",
+   "milk": "milk",
+   "baking powder": "baking_powder",
+   "baking soda": "baking_soda",
+   "vanilla extract": "vanilla",
+   "cinnamon": "cinnamon",
+   "cocoa powder": "cocoa_powder",
+   "chocolate chips": "chocolate",
+   "oats": "oat",
+   "raisins": "raisin",
+   "lemons": "lemon",
+   "cream cheese": "cream_cheese",
+   "yogurt": "yogurt",
+   "honey": "honey",
+   "bananas": "banana",
+   "walnuts": "walnut"
+  },
+  "recipes": [
+   {
+    "id": 25141,
+    "name": "banana  raisin  and oatmeal pancakes",
+    "ingredients_needed": 11,
+    "raw_ingredients": [
+     "old fashioned oats",
+     "all-purpose flour",
+     "golden brown sugar",
+     "baking powder",
+     "baking soda",
+     "ground cinnamon",
+     "plain yogurt",
+     "milk",
+     "eggs",
+     "vanilla",
+     "bananas",
+     "raisins",
+     "unsalted butter",
+     "butter"
+    ]
+   },
+   {
+    "id": 46111,
+    "name": "celticbrewer s raisin chocolate chip oatmeal cookies",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "all-purpose flour",
+     "baking soda",
+     "baking powder",
+     "salt",
+     "unsalted butter",
+     "dark brown sugar",
+     "eggs",
+     "vanilla extract",
+     "oats",
+     "raisins",
+     "ground cinnamon",
+     "dark chocolate chips"
+    ]
+   },
+   {
+    "id": 57958,
+    "name": "chocolate chip muffins",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "butter",
+     "sugar",
+     "eggs",
+     "plain yogurt",
+     "vanilla extract",
+     "all-purpose flour",
+     "baking soda",
+     "baking powder",
+     "salt",
+     "semi-sweet chocolate chips",
+     "miniature semisweet chocolate chips",
+     "brown sugar",
+     "cinnamon"
+    ]
+   },
+   {
+    "id": 58037,
+    "name": "chocolate chip streusel coffee cake",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "brown sugar",
+     "flour",
+     "butter",
+     "walnuts",
+     "chocolate chips",
+     "cream cheese",
+     "sugar",
+     "eggs",
+     "milk",
+     "vanilla",
+     "baking powder",
+     "baking soda",
+     "salt"
+    ]
+   },
+   {
+    "id": 81248,
+    "name": "doubletree chocolate chip cookies",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "rolled oats",
+     "all-purpose flour",
+     "baking soda",
+     "salt",
+     "cinnamon",
+     "butter",
+     "brown sugar",
+     "granulated sugar",
+     "vanilla",
+     "lemon juice",
+     "eggs",
+     "semi-sweet chocolate chips",
+     "walnuts"
+    ]
+   },
+   {
+    "id": 81249,
+    "name": "doubletree hotel chocolate chip cookies",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "rolled oats",
+     "all-purpose flour",
+     "baking soda",
+     "salt",
+     "cinnamon",
+     "butter",
+     "brown sugar",
+     "granulated sugar",
+     "vanilla",
+     "lemon juice",
+     "eggs",
+     "semi-sweet chocolate chips",
+     "walnuts"
+    ]
+   },
+   {
+    "id": 81250,
+    "name": "doubletree hotel s cookies",
+    "ingredients_needed": 9,
+    "raw_ingredients": [
+     "all-purpose flour",
+     "rolled oats",
+     "baking soda",
+     "salt",
+     "ground cinnamon",
+     "butter",
+     "sugar",
+     "brown sugar",
+     "eggs",
+     "vanilla extract",
+     "lemon juice",
+     "semi-sweet chocolate chips",
+     "walnuts"
+    ]
+   },
+   {
+    "id": 4643,
+    "name": "amazing huge chocolate chip cookies",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "rolled oats",
+     "all-purpose flour",
+     "baking soda",
+     "salt",
+     "cinnamon",
+     "butter",
+     "brown sugar",
+     "granulated sugar",
+     "vanilla",
+     "lemon juice",
+     "eggs",
+     "semisweet chocolate chunks"
+    ]
+   },
+   {
+    "id": 24352,
+    "name": "banana choco chip muffins",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "bananas",
+     "vegetable oil",
+     "brown sugar",
+     "eggs",
+     "milk",
+     "vanilla",
+     "flour",
+     "baking powder",
+     "baking soda",
+     "miniature chocolate chip"
+    ]
+   },
+   {
+    "id": 24391,
+    "name": "banana chocolate walnut cake",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "all-purpose flour",
+     "baking soda",
+     "salt",
+     "unsalted butter",
+     "sugar",
+     "eggs",
+     "bananas",
+     "plain yogurt",
+     "pure vanilla extract",
+     "bittersweet chocolate",
+     "walnuts",
+     "cinnamon"
+    ]
+   },
+   {
+    "id": 24454,
+    "name": "banana cream cheese muffins with crumb topping",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "all-purpose flour",
+     "baking soda",
+     "baking powder",
+     "salt",
+     "bananas",
+     "white sugar",
+     "egg",
+     "butter",
+     "vanilla extract",
+     "cream cheese",
+     "sugar",
+     "light brown sugar",
+     "ground cinnamon"
+    ]
+   },
+   {
+    "id": 25265,
+    "name": "bananalicious banana muffins",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "bananas",
+     "white sugar",
+     "brown sugar",
+     "egg",
+     "butter",
+     "baking soda",
+     "baking powder",
+     "salt",
+     "cinnamon",
+     "flour",
+     "walnuts",
+     "chocolate chips"
+    ]
+   },
+   {
+    "id": 36469,
+    "name": "breakfast cream cheese snack cake",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "butter",
+     "cream cheese",
+     "eggs",
+     "sugar",
+     "vanilla",
+     "flour",
+     "baking powder",
+     "baking soda",
+     "salt",
+     "milk",
+     "brown sugar",
+     "cinnamon"
+    ]
+   },
+   {
+    "id": 38457,
+    "name": "brownie cookies",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "semisweet chocolate",
+     "unsweetened chocolate",
+     "all-purpose flour",
+     "baking soda",
+     "baking powder",
+     "unsalted butter",
+     "granulated sugar",
+     "vanilla extract",
+     "eggs",
+     "milk",
+     "walnuts"
+    ]
+   },
+   {
+    "id": 49874,
+    "name": "chewy chocolate chip oatmeal cookies",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "butter",
+     "light brown sugar",
+     "white sugar",
+     "eggs",
+     "vanilla extract",
+     "all-purpose flour",
+     "baking soda",
+     "salt",
+     "quick-cooking oats",
+     "walnuts",
+     "semi-sweet chocolate chips",
+     "ground cinnamon"
+    ]
+   },
+   {
+    "id": 49958,
+    "name": "chewy oatmeal chip cookies",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "unsalted butter",
+     "brown sugar",
+     "egg",
+     "vanilla extract",
+     "all-purpose flour",
+     "baking soda",
+     "cinnamon",
+     "salt",
+     "rolled oats",
+     "chocolate chips",
+     "raisins"
+    ]
+   },
+   {
+    "id": 49966,
+    "name": "chewy oatmeal raisin cookies",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "all-purpose flour",
+     "baking soda",
+     "baking powder",
+     "cinnamon",
+     "unsalted butter",
+     "sugar",
+     "dark brown sugar",
+     "eggs",
+     "vanilla",
+     "oats",
+     "raisins"
+    ]
+   },
+   {
+    "id": 57848,
+    "name": "chocolate chip cookie dough brownies",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "chocolate chips",
+     "butter",
+     "sugar",
+     "eggs",
+     "vanilla extract",
+     "flour",
+     "baking soda",
+     "walnuts",
+     "brown sugar",
+     "milk",
+     "vanilla"
+    ]
+   },
+   {
+    "id": 57965,
+    "name": "chocolate chip oaties  cookies",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "butter",
+     "light brown sugar",
+     "egg",
+     "milk",
+     "vanilla",
+     "rolled oats",
+     "all-purpose flour",
+     "unsweetened cocoa powder",
+     "baking powder",
+     "semi-sweet chocolate chips"
+    ]
+   },
+   {
+    "id": 58092,
+    "name": "chocolate chocolate chip muffins",
+    "ingredients_needed": 8,
+    "raw_ingredients": [
+     "all-purpose flour",
+     "unsweetened cocoa powder",
+     "white sugar",
+     "baking soda",
+     "baking powder",
+     "salt",
+     "milk",
+     "egg",
+     "vegetable oil",
+     "vanilla extract",
+     "semi-sweet chocolate chips",
+     "walnuts"
+    ]
+   }
+  ]
+ }
+}
