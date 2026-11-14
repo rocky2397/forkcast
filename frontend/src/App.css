@@ -110,7 +110,10 @@ h2 { text-transform: capitalize; margin: 8px 0 4px; }
 .description { opacity: 0.75; font-size: 0.9rem; }
 
 .ingredient-list { list-style: none; padding: 0; }
-.ingredient-list li { padding: 4px 0; text-transform: capitalize; }
+/* Sentence case, not title case: these rows now show the recipe's own
+   wording ("lime zest"), which capitalize would render "Lime Zest". */
+.ingredient-list li { padding: 4px 0; }
+.ingredient-list li::first-letter { text-transform: uppercase; }
 .ingredient-list li.missing { opacity: 0.55; }
 
 .steps li { margin-bottom: 8px; line-height: 1.4; }
