@@ -2,15 +2,15 @@
 
 from app import goals
 
-PROFILE = {"sex": "m", "age": 31, "height_cm": 179, "weight_kg": 92, "activity": "light", "goal": "cut"}
+PROFILE = {"sex": "m", "age": 30, "height_cm": 175, "weight_kg": 80, "activity": "light", "goal": "cut"}
 TARGET = {"calories": 2400, "protein_g": 150, "carbs_g": 270, "fat_g": 67}
 
 
 def test_targets_follow_mifflin_st_jeor():
-    # 10*92 + 6.25*179 - 5*31 + 5 = 1888.75 BMR, x1.375 light, -15% cut
+    # 10*80 + 6.25*175 - 5*30 + 5 = 1748.75 BMR, x1.375 light, -15% cut
     t = goals.targets(PROFILE)
-    assert t["calories"] == round(1888.75 * 1.375 * 0.85)
-    assert t["protein_g"] == round(1.8 * 92)  # D12: 1.8 g/kg
+    assert t["calories"] == round(1748.75 * 1.375 * 0.85)
+    assert t["protein_g"] == round(1.8 * 80)  # D12: 1.8 g/kg
 
 
 def test_targets_differ_by_sex_and_goal():
