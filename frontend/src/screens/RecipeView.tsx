@@ -74,10 +74,16 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
       <h3>Ingredients</h3>
       <ul className="ingredient-list">
         {recipe.ingredients.map((ing, i) => (
-          // The recipe's own wording, not the matched name: "lime zest" and
-          // "lime juice" both match lime and would appear as two "Lime"s.
-          <li key={i} className={ing.in_inventory ? "have" : "missing"}>
-            {ing.in_inventory ? "✓" : "○"} {ing.raw}
+          // Staples are assumed present when recipes are ranked, so the row
+          // must not read like a missing ingredient. The recipe's own wording
+          // is shown rather than the matched name: "lime zest" and "lime
+          // juice" both match lime and would otherwise appear as two "Lime"s.
+          <li
+            key={i}
+            className={ing.in_inventory ? "have" : ing.staple ? "pantry" : "missing"}
+          >
+            {ing.in_inventory ? "✓" : ing.staple ? "·" : "○"} {ing.raw}
+            {ing.staple && !ing.in_inventory && <span className="sub-hint"> — pantry</span>}
             {ing.sub && <span className="sub-hint"> — you could use {pretty(ing.sub)}</span>}
           </li>
         ))}

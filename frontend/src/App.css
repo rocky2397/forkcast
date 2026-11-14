@@ -115,6 +115,8 @@ h2 { text-transform: capitalize; margin: 8px 0 4px; }
 .ingredient-list li { padding: 4px 0; }
 .ingredient-list li::first-letter { text-transform: uppercase; }
 .ingredient-list li.missing { opacity: 0.55; }
+/* Assumed present, so neither ticked nor flagged as missing. */
+.ingredient-list li.pantry { opacity: 0.45; }
 
 .steps li { margin-bottom: 8px; line-height: 1.4; }
 
