@@ -1,5 +1,10 @@
 # Deploying Forkcast
 
+> **Status:** optional, and not currently deployed. No Render service exists;
+> day-to-day use runs locally and on the phone through Tailscale (D18). This
+> guide and `render.yaml` are kept as a ready deployment path. The Dockerfile
+> itself is host-neutral.
+
 Puts Forkcast on a permanent public URL behind a shared password (D15), so it
 can be shared without the owner's Mac staying awake — the limitation of the
 D14 Cloudflare quick tunnel, which remains the right tool for a throwaway demo.
@@ -27,9 +32,9 @@ The corpus/user split is what makes this cheap: a 1 GB disk holds a few KB.
 
 ### 1. Build and publish the corpus
 
-The app repo is private, and Render warns that Docker build args can end up in
-image layers — so the build can't use a GitHub token. The corpus goes to a
-separate **public** data repo instead. It contains nothing private: recipes
+The corpus is too big for git, and Render warns that Docker build args can end
+up in image layers, so the build fetches it without a token from a separate
+**public** data repo. It contains nothing private: recipes
 from the public food.com dataset (see the README for its terms), normalized
 against the public Epicure vocabulary.
 
@@ -99,7 +104,8 @@ it is now billed against whoever is using the link.
 
 ## Updating
 
-Push to `main` — Render rebuilds and redeploys. The disk survives.
+With a service deployed, pushing to `main` makes Render rebuild and redeploy.
+The disk survives.
 
 Re-import of the recipe corpus is the exception: rerun
 `backend/scripts/import_recipes.py`, then `split_corpus.py`,
@@ -116,7 +122,8 @@ python backend/scripts/renormalize_corpus.py data/forkcast.db --apply   # dev co
 ops/publish-corpus.sh corpus-$(date +%Y%m%d)
 ```
 
-Then point `FORKCAST_CORPUS_URL` and the README's download URL at the new tag.
+Then point the README’s download URL at the new tag, and `FORKCAST_CORPUS_URL`
+too if a service is deployed.
 Both scripts back the database up before writing, and dry-run without `--apply`.
 
 ---

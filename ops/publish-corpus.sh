@@ -42,5 +42,5 @@ gh release create "$TAG" "$CORPUS" \
   || gh release upload "$TAG" "$CORPUS" --repo "$DATA_REPO" --clobber
 
 echo
-echo "Set this as FORKCAST_CORPUS_URL on the Render service:"
+echo "Corpus URL (README download link; also FORKCAST_CORPUS_URL if a Render service is deployed):"
 echo "  https://github.com/$DATA_REPO/releases/download/$TAG/corpus.db"

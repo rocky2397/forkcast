@@ -63,7 +63,7 @@ can and cannot do. A few that shaped the app:
 
 FastAPI · SQLite · numpy · Epicure embeddings (Hugging Face) · Claude Haiku
 (vision, structured outputs) · Open Food Facts · React + TypeScript + Vite PWA ·
-Docker · Render · GitHub Actions
+Docker · GitHub Actions
 
 ## Running it
 
@@ -83,7 +83,7 @@ uvicorn app.main:app --app-dir backend --port 8000
 Then open http://localhost:8000. The Epicure weights (~6 MB) download from
 Hugging Face on first start. `dev.sh` and `ops/` are the author's own setup,
 which keeps everything on an external drive (D10, D11). Their paths are
-machine-specific. [`DEPLOY.md`](DEPLOY.md) covers the Docker image and hosting
+machine-specific. [`DEPLOY.md`](DEPLOY.md) covers the Docker image and optional hosting
 behind a shared password.
 
 ## Tests
