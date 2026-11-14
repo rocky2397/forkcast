@@ -25,9 +25,15 @@ staples. Judged from each recipe's raw ingredient wording.
 | Student (dev) | 12/20 | 12/20 | 18/20 |
 | Baking (dev) | 12/20 | 12/20 | 19/20 |
 | **Stir-fry (held-out)** | **13/20 = 65%** | **13/20 = 65%** | **16/20 = 80%** |
+| Vegetarian (held-out 2) | | | 17/20 |
+| Grill (held-out 2) | | | 15/20 |
+| Italian (held-out 2) | | | 17/20 |
+| **All four held-out kitchens** | | | **65/80 = 81%** (95% CI 71–88%) |
 
 On the development kitchens precision goes from 61.7% (cur) to 93.3% (fixed),
 which overstates the effect: the fix was built from those false positives.
+The three "held-out 2" kitchens were added later (see "Tightening" below) and
+were judged for the current engine only.
 
 ## Ingredient matching
 
@@ -76,14 +82,64 @@ lies.
   held-out numbers stay honest: `sofrito sauce`, `… Balsamic Vinaigrette …
   Dressing`, and the plural `sun-dried tomatoes packed in oil`.
 
+## Tightening: a second marker, a human review, more kitchens
+
+Added on 2026-11-14, after the results above, to address the two weak spots:
+one labeller, and a held-out kitchen of only 20 recipes.
+
+**A second, independent marker.** Codex (GPT-6 Astra) relabelled all 425
+ingredient strings and judged all 108 recipes from scratch. It worked in a
+separate private repository that contained only the questions, the rules and
+a format checker: no first-marker labels, no app answers, and no Forkcast
+code. Its labels are kept in `data/*_labeled.jsonl` (`marker_b`) and
+[`labeling/marker_b/`](labeling/marker_b/).
+
+| Agreement between the two markers | |
+|---|---|
+| Ingredient strings, identical answer | 362/425 = 85% |
+| Ingredient strings, compatible (share a name, or both "no ingredient") | 396/425 = 93% |
+| Cookable judgements | 95/108 = 88%, Cohen's kappa 0.75 |
+
+**A human settled the disagreements** with four policy decisions, now rules
+9–12 in [`data/LABELING.md`](data/LABELING.md): dried and seasoned forms count
+(garlic powder or garlic salt is satisfied by fresh garlic), a branded product
+takes the broad entry (cereal, candy, syrup), half-and-half counts as cream,
+and two defensible entries are both correct. Twelve of the thirteen recipe
+disagreements were the garlic-powder question alone. It matters: had it gone
+the other way, the held-out stir-fry kitchen would score 14/20 instead of
+16/20, and the development kitchens 46/60 instead of 56/60. Every label now
+records how it was settled, and none is left unsure. The headline numbers
+above are unchanged by the review.
+
+**Three more held-out kitchens** (vegetarian, grill, italian) were written and
+committed before the engine ran on them. Both markers judged their 60 recipes
+blind and agreed on all 60. One caveat: the second marker's rules for this
+round were written after the first marker had judged, and besides the human
+decisions they spell out a few examples that follow from the existing rules
+(canned tomatoes count as tomatoes, another pasta shape counts, a bottled juice
+is a product). That may have pulled the markers closer.
+
+What the new kitchens add: **65 of 80 held-out recipes are really cookable
+(81%, 95% CI 71–88%)**, close to the single kitchen's 80% but with half the
+uncertainty. Of the 11 new false "cookable" recipes, nine need a ready-made
+product the kitchen doesn't have: tomato juice (twice, once with carrot
+juice), diced tomatoes with chilies, creamed corn, pork and beans,
+Rice-a-Roni, corn flake crumbs and chicken sausage. The other two need a bell
+pepper the kitchen lacks, written in a way the matcher misreads: "sweet green
+pepper" becomes the black-pepper staple, "red pepper" the chili flakes. The
+product misses are D27's error class again, for words D27 doesn't list:
+`tomato juice` → tomato, `creamed corn` → corn, `chicken sausage` → chicken.
+That is the obvious next fix, to be judged on yet another fresh kitchen.
+
 ## Caveats
 
-- **One labeller.** All gold labels and cookable judgements are by Claude
-  (Opus), following [`data/LABELING.md`](data/LABELING.md), blind to the
-  matcher's output. 34 strings are flagged unsure. A human pass over those is
-  the obvious next step.
-- **Small samples.** For the held-out kitchen, n = 20 means the 95% interval on
-  80% is roughly 58–92%. Read "65% → 80%" as a direction, not a precise gain.
+- **Two model markers and one human decision-maker, no human marker.** The
+  labels come from Claude (Opus) and Codex (GPT-6 Astra) working blind and
+  apart; a human only decided the policy questions where they disagreed.
+- **Small samples.** The before/after comparison still rests on the stir-fry
+  kitchen alone (n = 20, 95% interval roughly 58–92% around 80%), so read
+  "65% → 80%" as a direction. The current engine's level is better pinned:
+  81% over 80 held-out recipes (71–88%).
 - **The old matcher was not deterministic** (fixed by D24): equal-length names
   were tie-broken by hash order, so "old" numbers wobble by about a point
   between runs.

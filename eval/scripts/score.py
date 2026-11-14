@@ -56,17 +56,28 @@ def load_labels(path):
         k, rid, ok, note = (line.rstrip("\n").split("\t") + [""])[:4]
         out[(k, int(rid))] = (ok == "yes", note)
     return out
-labels = {**load_labels("labeling/cookable_labels.tsv"), **load_labels("labeling/holdout_cookable_labels.tsv")}
+labels = {**load_labels("labeling/cookable_labels.tsv"), **load_labels("labeling/holdout_cookable_labels.tsv"),
+          **load_labels("labeling/holdout2_cookable_labels.tsv")}
+# held-out 2 (vegetarian, grill, italian) was added later and judged for the current engine only
+SPLITS = [("dev", "cookable"), ("held-out", "holdout_cookable"), ("held-out 2", "holdout2_cookable")]
 
 print("\nCOOKABLE NOW   precision@20 (listed recipes that are really cookable)")
-for split, prefix in [("dev", "cookable"), ("held-out", "holdout_cookable")]:
+held = {}
+for split, prefix in SPLITS:
     for name, _ in versions:
+        if not os.path.exists(f"labeling/{prefix}_{name}.json"):
+            continue
         res = json.load(open(f"labeling/{prefix}_{name}.json"))
         ok = tot = 0; parts = []
         for k, d in res.items():
             good = sum(labels[(k, r["id"])][0] for r in d["recipes"]); ok += good; tot += len(d["recipes"])
             parts.append(f"{k} {good}/{len(d['recipes'])}")
-        print(f"  {split:9} {name:6} {ok:2}/{tot} = {pct(ok/tot)}%   ({', '.join(parts)})")
+        print(f"  {split:10} {name:6} {ok:2}/{tot} = {pct(ok/tot)}%   ({', '.join(parts)})")
+        if split.startswith("held-out"):
+            h = held.setdefault(name, [0, 0, 0]); h[0] += ok; h[1] += tot; h[2] += 1
+for name, (ok, tot, n) in held.items():
+    if n == 2:
+        print(f"  held-out, all four kitchens, {name}: {ok}/{tot} = {pct(ok/tot)}%")
 
 if details and len(versions) >= 2:
     a, b = versions[-2][0], versions[-1][0]
@@ -81,7 +92,9 @@ if details and len(versions) >= 2:
             t = r["text"]; x, y = preds[a][t], preds[b][t]
             if x != y and t not in seen:
                 seen.add(t); print(f"  {t!r}: {x} -> {y}   [{outcome(x, r['gold'])} -> {outcome(y, r['gold'])}]")
-    for split, prefix in [("dev", "cookable"), ("held-out", "holdout_cookable")]:
+    for split, prefix in SPLITS:
+        if not os.path.exists(f"labeling/{prefix}_{b}.json"):
+            continue
         print(f"\nFALSE 'COOKABLE', {b}, {split}")
         for k, d in json.load(open(f"labeling/{prefix}_{b}.json")).items():
             for r in d["recipes"]:
