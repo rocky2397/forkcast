@@ -104,14 +104,19 @@ Both tests work like marking an exam.
 
 ### Test 1: can you really cook what it lists?
 
-Four test kitchens were run through the app. For each, the top 20 "cookable
-now" recipes were checked by hand against the recipe's original wording.
+Seven test kitchens were run through the app. For each, the top 20 "cookable
+now" recipes were checked against the recipe's original wording.
 
 | | before fix | after fix |
 |---|---|---|
 | **Listed recipes that are really cookable** (unseen kitchen) | 13 of 20 (65%) | **16 of 20 (80%)** |
 | Same, in the three kitchens used while fixing | 37 of 60 (62%) | 56 of 60 (93%) |
 | **Ingredient lines matched to the wrong food** (150 unseen lines) | 17% | **14%** |
+| Listed recipes that are really cookable, all four unseen kitchens | | **65 of 80 (81%)** |
+
+The last row was added later with three more unseen kitchens (vegetarian,
+grill, italian), to pin the number down: 81% over 80 recipes is far less
+shaky than 80% over 20.
 
 **Why it was wrong:** 22 of the 23 false "cookable" recipes had one cause.
 When the ingredient list had no entry for a product, the app matched the food
@@ -126,9 +131,11 @@ the safer mistake. A missing recipe costs nothing; a recipe you can't make
 costs a dinner. About 12,000 of 64,000 recipes leave the pool because of it.
 
 **Still wrong:** roughly one listed recipe in five needs something you don't
-have, usually a ready-made product (instant potato flakes, chips). Ready-made
-foods are also most of the remaining wrong matches ("Macaroni & Cheese"
-becomes cheese).
+have, almost always a ready-made product read as its main food: "tomato
+juice" counts as tomatoes, "creamed corn" as corn, "chicken sausage" as
+chicken. It's the same kind of mistake the fix addressed, for product words it
+doesn't cover yet. Ready-made foods are also most of the remaining wrong
+matches ("Macaroni & Cheese" becomes cheese).
 
 ### Test 2: are the swaps any good?
 
@@ -156,12 +163,21 @@ one was on hand.
 
 ### How much to trust these numbers
 
-- **One marker.** Every answer key was written by Claude, the AI that built
-  the eval, following written rules. Unclear cases are flagged for a human to
-  check (34 ingredient lines, 10 swap cases).
-- **Small samples.** "80%" rests on 20 recipes, so the true value could be
-  anywhere from about 60% to 90%. Read it as "clearly better", not as an exact
-  figure.
+- **Two markers, checked against each other.** Test 1's answer keys were
+  written twice, independently: once by Claude, which built the eval, and once
+  by a different AI (Codex) that saw only the questions and the rules, never
+  the other answers or the app. They gave compatible answers for 93% of
+  ingredient lines and the same verdict for 88% of the first 108 recipes, then
+  for all 60 recipes of the three newer kitchens. Where they disagreed, a human
+  made the call, usually by settling a rule. The biggest one: a recipe asking
+  for garlic powder counts as cookable if you have fresh garlic. Decided the
+  other way, the unseen kitchen would score 70% instead of 80%, so the number
+  depends on that definition. Test 2's keys have one marker so far (10 cases
+  flagged unsure).
+- **Small samples.** The current engine's 81% rests on 80 recipes, so the true
+  value is likely between about 71% and 88%. The before/after comparison rests
+  on one kitchen of 20 recipes: read "65% → 80%" as "clearly better", not as
+  an exact gain.
 - **Everything is public:** every example, answer key, script and remaining
   error is in [`eval/`](eval/), with the full write-ups in
   [`eval/RESULTS.md`](eval/RESULTS.md) (test 1) and

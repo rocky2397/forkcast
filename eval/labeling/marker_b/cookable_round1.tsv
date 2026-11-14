@@ -1,0 +1,109 @@
+# kitchen	recipe_id	cookable	missing	unsure	note  (second marker: Codex, GPT-6 Astra, blind)
+baking	4643	yes			
+baking	22775	no	confectioners sugar		
+baking	24352	yes			
+baking	24391	yes		unsure	Provisionally allowing chocolate chips for bittersweet chocolate; chip sweetness is unspecified and the guide does not address cocoa-content differences.
+baking	24454	yes			
+baking	24512	no	confectioners sugar		
+baking	24748	no	powdered sugar		
+baking	24961	no	confectioners sugar		
+baking	25096	no	confectioners sugar		
+baking	25097	no	confectioners sugar		
+baking	25141	yes			
+baking	25197	no	banana extract		
+baking	25265	yes			
+baking	36469	yes			
+baking	38457	no	unsweetened chocolate	unsure	The kitchen has chocolate chips and cocoa powder, not unsweetened chocolate; the form rule does not settle chocolate sweetness variants.
+baking	46111	yes		unsure	Provisionally treating the unspecified chocolate chips as suitable dark chips; the guide does not establish their chocolate type.
+baking	49874	yes			
+baking	49958	yes			
+baking	49966	yes			
+baking	57366	no	confectioners sugar		
+baking	57848	yes			
+baking	57958	yes			
+baking	57965	yes			
+baking	58037	yes			
+baking	58092	yes			
+baking	81248	yes			
+baking	81249	yes			
+baking	81250	yes			
+mediterranean	421	yes			
+mediterranean	1388	yes			
+mediterranean	2444	yes			
+mediterranean	5381	no	chicken stock		
+mediterranean	5395	yes			
+mediterranean	13878	yes			
+mediterranean	18319	no	albacore tuna in water		
+mediterranean	19429	yes			
+mediterranean	21529	no	garlic salt	unsure	Treating garlic salt as a separate seasoning product; whether fresh garlic plus pantry salt satisfies it is not settled.
+mediterranean	26677	no	garlic powder	unsure	Provisionally applying the separate-powder rule; it is unclear whether garlic powder instead falls under the ground-spice exception.
+mediterranean	26780	yes			
+mediterranean	31076	yes			
+mediterranean	43103	yes			
+mediterranean	46494	yes			
+mediterranean	49644	yes			
+mediterranean	50160	no	garlic powder	unsure	Provisionally applying the separate-powder rule; it is unclear whether garlic powder instead falls under the ground-spice exception.
+mediterranean	50870	no	chicken stock		
+mediterranean	52032	no	chicken stock	unsure	Counting pimiento as a sweet-pepper variety available from bell pepper; if it means a prepared jarred product, that would also be missing.
+mediterranean	52440	no	seasoning salt; garlic powder	unsure	Seasoning-salt composition is unspecified. Garlic powder is provisionally separate under the powder rule, but may fall under the ground-spice exception.
+mediterranean	54206	no	garlic salt	unsure	Treating garlic salt as a separate seasoning product; whether fresh garlic plus pantry salt satisfies it is not settled.
+mediterranean	54512	no	basil pesto		
+mediterranean	54965	no	basil pesto		
+mediterranean	55094	yes			
+mediterranean	67296	yes			
+mediterranean	72564	no	garlic powder	unsure	Provisionally applying the separate-powder rule; it is unclear whether garlic powder instead falls under the ground-spice exception.
+mediterranean	72665	no	garlic salt	unsure	Treating garlic salt as a separate seasoning product; whether fresh garlic plus pantry salt satisfies it is not settled.
+mediterranean	72937	no	instant potato flakes; garlic salt	unsure	Potato flakes are a separate processed product. Whether garlic plus salt also satisfies garlic salt is unclear.
+mediterranean	84461	yes			
+stirfry	5963	yes			
+stirfry	9263	yes			
+stirfry	9296	yes			
+stirfry	9325	yes			
+stirfry	10496	no	condensed cream of mushroom soup		
+stirfry	10743	no	peas		
+stirfry	11452	yes			
+stirfry	22713	no	Frenchs French fried onions		
+stirfry	23513	yes			
+stirfry	23953	yes			
+stirfry	23959	yes			
+stirfry	30432	yes			
+stirfry	31104	no	peas		
+stirfry	37238	no	chicken bouillon powder		
+stirfry	50266	no	garlic powder	unsure	Onion flakes are a dried form of onion. Garlic powder is provisionally separate, but its status as a ground spice is unclear.
+stirfry	50378	no	chicken bouillon cubes		
+stirfry	51606	no	garlic powder	unsure	Ground ginger is explicitly covered by the form rule. Garlic powder is provisionally separate, but its status as a ground spice is unclear.
+stirfry	52258	yes			
+stirfry	52571	yes		unsure	Interpreting cornflour as cornstarch in this chicken-coating context; the term can also mean finely milled corn flour, which is absent.
+stirfry	53611	no	chicken sausage		
+stirfry	56403	no	chicken stock; peas		
+stirfry	63986	yes			
+stirfry	73621	yes			
+stirfry	82777	yes			
+student	55	no	Prego spaghetti sauce		
+student	361	no	chicken stock		
+student	376	yes			
+student	414	no	tomato paste		
+student	449	yes			
+student	943	yes			
+student	3406	yes			
+student	10743	yes			
+student	18040	yes			
+student	20193	yes			
+student	22592	yes			
+student	22713	no	Frenchs French fried onions		
+student	23736	yes			
+student	28760	no	garlic salt	unsure	Treating garlic salt as a separate seasoning product; whether fresh garlic plus pantry salt satisfies it is not settled.
+student	29721	yes			
+student	29723	yes			
+student	43895	yes			
+student	46687	no	sweet pepper; tomato soup; green onion		
+student	47759	no	onion powder; garlic powder	unsure	Provisionally treating these powders as separate products; the guide does not settle whether fresh onions/garlic qualify under the ground-spice exception.
+student	47762	no	garlic salt	unsure	Treating garlic salt as a separate seasoning product; whether fresh garlic plus pantry salt satisfies it is not settled.
+student	48038	no	beef bouillon cube		
+student	48376	yes			
+student	50911	yes			
+student	70203	no	chicken bouillon powder		
+student	72254	no	tomato paste; chicken gumbo soup		
+student	72757	no	potato chips		
+student	84267	no	beef bouillon; corn		
+student	85858	no	garlic powder; garlic salt; onion salt; onion powder	unsure	The guide does not settle whether fresh garlic/onion plus salt satisfy their powders and seasoned salts; provisionally treating them as separate products.

@@ -1,0 +1,61 @@
+# kitchen	recipe_id	cookable	missing	unsure	note  (second marker: Codex, GPT-6 Astra, blind)
+grill	1388	yes			
+grill	1441	yes			
+grill	4757	yes			
+grill	5587	yes			
+grill	5661	yes			
+grill	10474	yes			
+grill	11497	no	pork and beans		
+grill	11891	yes			
+grill	11893	yes			
+grill	22561	no	creamed corn	unsure	Provisionally treating creamed corn as a separate prepared product; the guide does not explicitly settle whether corn on the cob satisfies this form.
+grill	27338	no	beef flavored rice-a-roni		
+grill	38263	yes			
+grill	49624	yes			
+grill	49647	yes			
+grill	54203	yes		unsure	Allowing the kitchen mustard, presumed prepared, for dry mustard in this barbecue sauce; the dried-form decision does not explicitly cover prepared condiment versus dry spice.
+grill	54217	yes			
+grill	71157	no	tomato juice		
+grill	72775	no	corn flake crumbs		
+grill	72961	yes			
+grill	84142	yes			
+italian	1377	yes			
+italian	4829	yes			
+italian	13781	no	red bell pepper	unsure	In chicken cacciatore, red pepper most likely means a bell pepper, which is absent; the kitchen has only red pepper flakes.
+italian	14428	yes			
+italian	14625	yes			
+italian	15118	no	sweet green pepper		
+italian	19464	yes			
+italian	19575	yes			
+italian	21986	yes			
+italian	35385	yes			
+italian	45591	yes			
+italian	52157	yes			
+italian	52221	yes			
+italian	52639	yes			
+italian	53605	no	chicken sausage	unsure	Unspecified Italian sausage does not establish chicken sausage. Counting garlic seasoning under the seasoned-form decision, though its blend is unspecified.
+italian	54399	yes			
+italian	65717	yes			
+italian	71227	yes			
+italian	85913	yes			
+italian	87418	yes			
+vegetarian	98	yes		unsure	Greek yogurt can make the smoothie, but its vanilla flavor, fat content and sweetener are unspecified. The rules do not explicitly settle these yogurt variants.
+vegetarian	376	yes			
+vegetarian	2777	yes			
+vegetarian	3406	yes			
+vegetarian	5432	yes			
+vegetarian	11352	yes			
+vegetarian	14099	yes			
+vegetarian	14507	yes			
+vegetarian	20603	yes			
+vegetarian	24608	yes			
+vegetarian	24764	yes			
+vegetarian	32319	no	mild green chilies	unsure	The kitchen has chili powder, which may be a blend, rather than mild green chilies. The dried-spice equivalence does not clearly settle that substitution.
+vegetarian	32400	yes			
+vegetarian	33083	no	tomato juice		
+vegetarian	34993	yes			
+vegetarian	37346	yes			
+vegetarian	37621	yes			
+vegetarian	37730	yes			
+vegetarian	44747	no	carrot juice; tomato juice		
+vegetarian	45018	yes			

@@ -68,6 +68,22 @@ missing ingredient.
 Reported: **precision@20** per kitchen and overall, the share of listed recipes
 that are really cookable.
 
+# Decisions from the human review (stage 1, 2026-11-14)
+
+A second marker relabelled every stage 1 item blind. Where the two markers
+disagreed because the rules above didn't settle a case, a human decided:
+
+9. **Dried and seasoned forms count.** A recipe asking for garlic powder,
+   garlic salt or onion powder is satisfied by fresh garlic or onions (plus the
+   salt staple). Matching `garlic powder` to `garlic` is correct.
+10. **A branded or prepared product with no exact entry takes the broad
+    entry** when one exists: `Quaker Life Cinnamon Cereal` → `cereal`,
+    `gumdrop` → `candy`, `chocolate syrup` → `syrup`.
+11. **Half-and-half counts as cream.**
+12. **Two reasonable entries are both correct.** When the markers chose
+    different defensible names (`vegetable bouillon`: `broth` or
+    `vegetable_stock`), the gold set holds both.
+
 # Labelling guide: substitutions (stage 2)
 
 `data/subs_cases.jsonl` (development) and `data/subs_holdout.jsonl` (held-out)
