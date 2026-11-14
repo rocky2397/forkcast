@@ -24,7 +24,7 @@ the system under test.
 
 **Stages:**
 1. Ingredient matching and "cookable now" precision: **done**, then tightened
-   with a blind second marker (Codex), a human review of every disagreement
+   with a blind second marker (GPT-6 Astra), a human review of every disagreement
    and three more held-out kitchens (see "Tightening" in
    [`RESULTS.md`](RESULTS.md)).
 2. Substitutions: **done**, fixed by D28 (see

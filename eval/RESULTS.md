@@ -87,7 +87,7 @@ lies.
 Added on 2026-11-14, after the results above, to address the two weak spots:
 one labeller, and a held-out kitchen of only 20 recipes.
 
-**A second, independent marker.** Codex (GPT-6 Astra) relabelled all 425
+**A second, independent marker.** GPT-6 Astra, run through Codex, relabelled all 425
 ingredient strings and judged all 108 recipes from scratch. It worked in a
 separate private repository that contained only the questions, the rules and
 a format checker: no first-marker labels, no app answers, and no Forkcast
@@ -134,7 +134,7 @@ That is the obvious next fix, to be judged on yet another fresh kitchen.
 ## Caveats
 
 - **Two model markers and one human decision-maker, no human marker.** The
-  labels come from Claude (Opus) and Codex (GPT-6 Astra) working blind and
+  labels come from Claude Opus 5.5 and GPT-6 Astra working blind and
   apart; a human only decided the policy questions where they disagreed.
 - **Small samples.** The before/after comparison still rests on the stir-fry
   kitchen alone (n = 20, 95% interval roughly 58–92% around 80%), so read

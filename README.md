@@ -164,9 +164,9 @@ one was on hand.
 ### How much to trust these numbers
 
 - **Two markers, checked against each other.** Test 1's answer keys were
-  written twice, independently: once by Claude, which built the eval, and once
-  by a different AI (Codex) that saw only the questions and the rules, never
-  the other answers or the app. They gave compatible answers for 93% of
+  written twice, independently: once by Claude Opus 5.5, which built the eval,
+  and once by a different model, GPT-6 Astra, that saw only the questions and
+  the rules, never the other answers or the app. They gave compatible answers for 93% of
   ingredient lines and the same verdict for 88% of the first 108 recipes, then
   for all 60 recipes of the three newer kitchens. Where they disagreed, a human
   made the call, usually by settling a rule. The biggest one: a recipe asking

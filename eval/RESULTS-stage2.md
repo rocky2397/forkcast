@@ -128,7 +128,7 @@ candidate. Clearing the label affects both engines the same way.
 
 ## Caveats
 
-- **One labeller.** All labels are by Claude (Opus), following the written
+- **One labeller.** All labels are by Claude Opus 5.5, following the written
   rules. 10 cases are flagged unsure. "Ok" is a judgement call (is oregano ok
   for parsley in chili?), and the strict row shows how much rides on it.
 - **Single swaps only.** A stand-in that only works combined with another
