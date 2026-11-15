@@ -10,13 +10,14 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from . import auth, embeddings, goals, nutrition, recipes, shopping, substitutions, taste
+from . import auth, demo, embeddings, goals, nutrition, recipes, shopping, substitutions, taste
 from .food_classes import NAME_TO_CLASS
-from .db import connect
+from .db import connect, current_db
 from .normalize import Normalizer
 
 normalizer: Normalizer | None = None
@@ -26,6 +27,10 @@ normalizer: Normalizer | None = None
 async def lifespan(app: FastAPI):
     global normalizer
     normalizer = Normalizer(embeddings.vocabulary())  # also warms the cooc model
+    if demo.enabled():
+        unknown = demo.build_template(normalizer.match)
+        if unknown:
+            raise RuntimeError(f"demo kitchen items not recognised: {unknown}")
     yield
 
 
@@ -45,6 +50,21 @@ async def require_session(request: Request, call_next):
         if not auth.valid_token(request.cookies.get(auth.COOKIE)):
             return JSONResponse({"detail": "not authenticated"}, status_code=401)
     return await call_next(request)
+
+
+@app.middleware("http")
+async def demo_kitchen(request: Request, call_next):
+    """Public demo (D32): run each API request against the visitor's own kitchen."""
+    if not demo.enabled() or not request.url.path.startswith("/api/"):
+        return await call_next(request)
+    kitchen_id, path = await run_in_threadpool(demo.kitchen, request.headers.get(demo.HEADER))
+    token = current_db.set(path)
+    try:
+        response = await call_next(request)
+    finally:
+        current_db.reset(token)
+    response.headers[demo.HEADER] = kitchen_id
+    return response
 
 
 # Added after the gate so it wraps it: CORS headers must be present on the
@@ -77,6 +97,7 @@ class Login(BaseModel):
 def session(request: Request):
     """Whether a password is configured, and whether this caller has passed it."""
     return {
+        "demo": demo.enabled(),
         "required": auth.required(),
         "authenticated": not auth.required()
         or auth.valid_token(request.cookies.get(auth.COOKIE)),
@@ -425,6 +446,8 @@ async def _read_photo(photo: UploadFile) -> bytes:
 @app.post("/api/vision/scan")
 async def vision_scan(photo: UploadFile = File(...)):
     """Groceries photo -> proposed items (nothing committed; client confirms)."""
+    if demo.enabled():
+        raise HTTPException(403, demo.SCAN_OFF)
     from . import vision
 
     raw = await _read_photo(photo)
@@ -580,6 +603,8 @@ async def nutrition_scan(photo: UploadFile = File(...)):
     resolvable barcode makes Open Food Facts authoritative (and caches the
     product), otherwise the label values are returned as proposals.
     """
+    if demo.enabled():
+        raise HTTPException(403, demo.SCAN_OFF)
     from . import vision
 
     raw = await _read_photo(photo)

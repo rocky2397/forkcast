@@ -14,6 +14,7 @@ split, so an existing dev database keeps working untouched.
 
 import os
 import sqlite3
+from contextvars import ContextVar
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[2]
@@ -23,6 +24,10 @@ _REPO = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(os.environ.get("FORKCAST_DATA_DIR") or _REPO / "data")
 DB_PATH = DATA_DIR / "forkcast.db"
 CORPUS_PATH = Path(os.environ.get("FORKCAST_CORPUS_DB") or _REPO / "data" / "corpus.db")
+
+# The public demo (D32) gives every visitor their own user DB; the request's
+# middleware points this at it, and connect() follows. Unset everywhere else.
+current_db: ContextVar[Path | None] = ContextVar("current_db", default=None)
 
 CORPUS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS recipes (
@@ -116,8 +121,10 @@ def _migrate(con: sqlite3.Connection) -> None:
     con.commit()
 
 
-def connect(path: Path = DB_PATH, attach_corpus: bool = True) -> sqlite3.Connection:
+def connect(path: Path | None = None, attach_corpus: bool = True) -> sqlite3.Connection:
     """A connection with both halves visible.
+
+    With no path: this request's demo kitchen if there is one, else DB_PATH.
 
     The corpus is attached read-only; SQLite resolves an unqualified `recipes`
     against main first and then attached databases, so every existing query
@@ -126,6 +133,7 @@ def connect(path: Path = DB_PATH, attach_corpus: bool = True) -> sqlite3.Connect
     attach_corpus=False forces the legacy single-file shape — that is what the
     import pipeline needs, since it writes the recipe tables.
     """
+    path = path or current_db.get() or DB_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(path, uri=True)
     con.row_factory = sqlite3.Row

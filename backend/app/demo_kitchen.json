@@ -1,0 +1,12 @@
+{
+  "_note": "The demo kitchen: README screenshots and the public demo (D32). Recipe ids belong to corpus release corpus-20261114-d29.",
+  "kitchen": [
+    "basil", "bell pepper", "carrots", "chicken breasts", "chickpeas", "cumin", "eggs",
+    "feta", "garlic", "ginger", "honey", "lemons", "milk", "oats", "paprika", "parmesan",
+    "pasta", "potatoes", "red onion", "rice", "soy sauce", "spinach", "tomatoes",
+    "greek yogurt", "zucchini"
+  ],
+  "profile": {"sex": "f", "age": 29, "height_cm": 168, "weight_kg": 63, "activity": "moderate", "goal": "maintain"},
+  "cooked_and_liked": [49644, 21529],
+  "typed_meal": {"name": "Oats with yogurt and honey", "calories": 420, "protein_g": 18, "carbs_g": 64, "fat_g": 9}
+}
