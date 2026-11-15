@@ -5,6 +5,10 @@ Counts what visitors do, per day, and nothing about who they are:
 - **Kept:** daily totals of a fixed list of events (EVENTS), which of
   Forkcast's 1,790 ingredient names were added, which recipe ids were opened
   or cooked, and how many visitors reached each step of the funnel (FUNNEL).
+- **How it runs:** per API route (its template, e.g. "GET /api/recipes/{id}",
+  never the address asked for), a histogram of response times (TIME_BUCKETS),
+  server errors (5xx) and not-found answers (404); and how long each start of
+  the app took until it was ready.
 - **Never kept:** IP addresses, browser details, times finer than the day,
   anything typed (meal names, unrecognised ingredients), profile values, or
   anything per visitor. The funnel is worked out from each visitor's random
@@ -43,6 +47,10 @@ EVENTS = frozenset({
 # Events whose item is worth counting, and what kind of item it must be.
 ITEMS = {"ingredient_added": str, "recipe_opened": int, "recipe_cooked": int}
 _MAX_TRACKED = 5000  # kitchens remembered for the funnel before forgetting
+# Response-time histogram edges in ms; the last bucket is "slower than 5 s".
+TIME_BUCKETS = (10, 25, 50, 100, 250, 500, 1000, 2500, 5000)
+_MAX_ROUTES = 60  # the app has about 25; anything beyond is counted as "other"
+_MAX_STARTS = 100  # start durations kept per day
 
 # Set by the demo middleware for each request: the visitor's random kitchen id.
 current_kitchen: ContextVar[str | None] = ContextVar("current_kitchen", default=None)
@@ -74,6 +82,9 @@ def _empty(day: str) -> dict:
         "events": {},
         "funnel": {s: 0 for s in FUNNEL},
         "items": {name: {} for name in ITEMS},
+        "timing": {},  # route -> {"buckets": [...], "count": n, "total_ms": x}
+        "errors": {"server": {}, "not_found": {}},  # route -> count
+        "starts": [],  # seconds from the app starting to being ready
     }
 
 
@@ -105,6 +116,20 @@ def _merge(into: dict, other: dict) -> None:
             bucket = into["items"][name]
             for item, v in counts.items():
                 bucket[item] = bucket.get(item, 0) + int(v)
+    for route, t in other.get("timing", {}).items():
+        mine = into["timing"].setdefault(route, _new_timing())
+        for i, v in enumerate(t.get("buckets", [])[: len(TIME_BUCKETS) + 1]):
+            mine["buckets"][i] += int(v)
+        mine["count"] += int(t.get("count", 0))
+        mine["total_ms"] += float(t.get("total_ms", 0))
+    for kind in ("server", "not_found"):
+        for route, v in other.get("errors", {}).get(kind, {}).items():
+            into["errors"][kind][route] = into["errors"][kind].get(route, 0) + int(v)
+    into["starts"] = (into["starts"] + [float(x) for x in other.get("starts", [])])[:_MAX_STARTS]
+
+
+def _new_timing() -> dict:
+    return {"buckets": [0] * (len(TIME_BUCKETS) + 1), "count": 0, "total_ms": 0.0}
 
 
 def start(vocabulary) -> None:
@@ -159,6 +184,65 @@ def event(name: str, item: str | int | None = None, stage: str | None = None) ->
         if stage in FUNNEL:
             _reach(current_kitchen.get(), stage, day)
         _dirty.add(day)
+
+
+def request_done(route: str | None, status: int, ms: float) -> None:
+    """Time and outcome of one API request, by route template."""
+    if not enabled():
+        return
+    with _lock:
+        day = today()
+        data = _day(day)
+        label = route if route and (route in data["timing"] or len(data["timing"]) < _MAX_ROUTES) else "other"
+        t = data["timing"].setdefault(label, _new_timing())
+        t["buckets"][next((i for i, edge in enumerate(TIME_BUCKETS) if ms <= edge), len(TIME_BUCKETS))] += 1
+        t["count"] += 1
+        t["total_ms"] += round(ms, 1)
+        kind = "server" if status >= 500 else "not_found" if status == 404 else None
+        if kind:
+            data["errors"][kind][label] = data["errors"][kind].get(label, 0) + 1
+        _dirty.add(day)
+
+
+def started(seconds: float) -> None:
+    """One start of the app: seconds until it was ready to answer."""
+    if not enabled():
+        return
+    with _lock:
+        day = today()
+        data = _day(day)
+        if len(data["starts"]) < _MAX_STARTS:
+            data["starts"].append(round(seconds, 1))
+        _dirty.add(day)
+
+
+def seconds_since_process_start(fallback_start: float) -> float:
+    """Wall time since this process began, including Python's own startup.
+
+    Read from /proc on Linux (where the demo runs); elsewhere, time since
+    fallback_start (a time.monotonic() taken early in the app).
+    """
+    try:
+        ticks = int(Path("/proc/self/stat").read_text().rsplit(")", 1)[1].split()[19])
+        uptime = float(Path("/proc/uptime").read_text().split()[0])
+        return max(0.0, uptime - ticks / os.sysconf("SC_CLK_TCK"))
+    except (OSError, ValueError, IndexError):
+        import time
+
+        return time.monotonic() - fallback_start
+
+
+def _percentile_ms(buckets: list[int], share: float) -> int | None:
+    """Upper edge of the bucket holding the given share of requests (None: >5 s)."""
+    total = sum(buckets)
+    if not total:
+        return None
+    seen = 0
+    for i, n in enumerate(buckets):
+        seen += n
+        if seen >= share * total:
+            return TIME_BUCKETS[i] if i < len(TIME_BUCKETS) else None
+    return None
 
 
 def flush() -> None:
@@ -225,6 +309,40 @@ def summary(recipe_names) -> dict:
     def top(name: str, n: int = 10) -> list[tuple[str, int]]:
         return sorted(items[name].items(), key=lambda kv: (-kv[1], kv[0]))[:n]
 
+    timing: dict[str, dict] = {}
+    errors = {"server": {}, "not_found": {}}
+    starts: list[dict] = []
+    for d in days:
+        for route, t in d["timing"].items():
+            mine = timing.setdefault(route, _new_timing())
+            mine["buckets"] = [a + b for a, b in zip(mine["buckets"], t["buckets"])]
+            mine["count"] += t["count"]
+            mine["total_ms"] += t["total_ms"]
+        for kind in errors:
+            for route, v in d["errors"][kind].items():
+                errors[kind][route] = errors[kind].get(route, 0) + v
+        starts += [{"day": d["day"], "seconds": s} for s in d["starts"]]
+    speed = sorted(
+        (
+            {
+                "route": route,
+                "requests": t["count"],
+                "average_ms": round(t["total_ms"] / t["count"]) if t["count"] else None,
+                "typical_under_ms": _percentile_ms(t["buckets"], 0.5),
+                "p95_under_ms": _percentile_ms(t["buckets"], 0.95),
+                "server_errors": errors["server"].get(route, 0),
+                "not_found": errors["not_found"].get(route, 0),
+            }
+            for route, t in timing.items()
+        ),
+        key=lambda r: -r["requests"],
+    )
+    per_day_errors = [
+        {"day": d["day"], "server": sum(d["errors"]["server"].values()), "not_found": sum(d["errors"]["not_found"].values()),
+         "requests": sum(t["count"] for t in d["timing"].values())}
+        for d in days[-14:]
+    ]
+
     opened = top("recipe_opened")
     names = recipe_names([int(k) for k, _ in opened])
     return {
@@ -235,6 +353,9 @@ def summary(recipe_names) -> dict:
         "events": dict(sorted(events.items())),
         "top_ingredients_added": [{"ingredient": k, "times": v} for k, v in top("ingredient_added")],
         "top_recipes_opened": [{"id": int(k), "name": names.get(int(k)), "times": v} for k, v in opened],
+        "speed": speed,
+        "errors_per_day": per_day_errors,
+        "starts": starts[-20:],
     }
 
 

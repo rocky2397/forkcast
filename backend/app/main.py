@@ -5,6 +5,7 @@ Run from the repo root:
 """
 
 import asyncio
+import time
 from contextlib import asynccontextmanager, suppress
 from datetime import date as _date
 from pathlib import Path
@@ -22,6 +23,7 @@ from .db import connect, current_db
 from .normalize import Normalizer
 
 normalizer: Normalizer | None = None
+_LOADED_AT = time.monotonic()  # for how long a start takes (D33)
 
 
 @asynccontextmanager
@@ -35,6 +37,7 @@ async def lifespan(app: FastAPI):
     flusher = None
     if stats.enabled():  # anonymous usage totals (D33)
         stats.start(embeddings.vocabulary())
+        stats.started(stats.seconds_since_process_start(_LOADED_AT))
         flusher = asyncio.create_task(_flush_stats())
     yield
     if flusher is not None:
@@ -76,11 +79,20 @@ async def demo_kitchen(request: Request, call_next):
     kitchen_id, path, created = await run_in_threadpool(demo.kitchen, request.headers.get(demo.HEADER))
     token = current_db.set(path)
     kitchen_token = stats.current_kitchen.set(kitchen_id)
+    began = time.perf_counter()
+    status = 500  # unless a response comes back
     try:
         if created:
             stats.visit()
         response = await call_next(request)
+        status = response.status_code
     finally:
+        route = request.scope.get("route")
+        stats.request_done(
+            f"{request.method} {route.path}" if route else None,
+            status,
+            (time.perf_counter() - began) * 1000,
+        )
         stats.current_kitchen.reset(kitchen_token)
         current_db.reset(token)
     response.headers[demo.HEADER] = kitchen_id

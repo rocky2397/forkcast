@@ -27,6 +27,30 @@ ACTIONS = {
     "barcode_lookup": "Barcode lookups",
 }
 
+ROUTES = {
+    "GET /api/session": "Open the app",
+    "GET /api/recipes/cookable": "Recipe list",
+    "GET /api/recipes/{recipe_id:int}": "Open a recipe",
+    "POST /api/recipes/{recipe_id:int}/cooked": "I cooked this",
+    "GET /api/shopping": "Worth buying",
+    "GET /api/inventory": "Load the kitchen",
+    "POST /api/inventory": "Add ingredients",
+    "DELETE /api/inventory/{name}": "Remove an ingredient",
+    "GET /api/day": "Today screen",
+    "GET /api/profile": "Load the profile",
+    "PUT /api/profile": "Save the profile",
+    "POST /api/meals": "Type in a meal",
+    "POST /api/meals/{meal_id:int}/rate": "Rate a dish",
+    "DELETE /api/meals/{meal_id:int}": "Remove a meal",
+    "GET /api/taste": "Taste summary",
+    "GET /api/nutrition/barcode/{code}": "Barcode lookup",
+    "POST /api/vision/scan": "Photo scan (off)",
+    "POST /api/nutrition/scan": "Label scan (off)",
+    "GET /api/normalize": "Match an ingredient name",
+    "GET /api/ingredients/{name}/neighbors": "Similar ingredients",
+    "other": "Unknown addresses",
+}
+
 _CSS = """
 :root{--bg:#f6f1e8;--surface:#fbf8f2;--ink:#1e1a16;--ink-2:#5c534b;--line:#e2d9cb;--accent:#b23a24;--herb:#3f5f2e;--herb-soft:#e3ead8}
 @media (prefers-color-scheme:dark){:root{--bg:#171411;--surface:#1f1b17;--ink:#f1eae0;--ink-2:#cfc5b8;--line:#342e27;--accent:#ec8a6f;--herb:#a6c486;--herb-soft:#253020}}
@@ -47,6 +71,11 @@ a{color:var(--accent)}
 table{width:100%;border-collapse:collapse}
 td{padding:8px 0;border-bottom:1px solid var(--line)}
 td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.wide{overflow-x:auto}
+.wide table{min-width:520px}
+th{text-align:left;font-weight:600;padding:8px 0;border-bottom:1px solid var(--line);color:var(--ink-2);font-size:14px}
+.wide td,.wide th{padding-right:12px}
+.wide td:not(:first-child),.wide th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
 .note{font-size:14px}
 @media (max-width:480px){.row{grid-template-columns:1fr 3.5rem}.row .bar{grid-column:1/-1;grid-row:2}}
 """
@@ -70,6 +99,50 @@ def _table(rows: list[tuple[str, int]]) -> str:
         return "<p>Nothing yet.</p>"
     body = "".join(f"<tr><td>{escape(k)}</td><td>{v:,}</td></tr>" for k, v in rows)
     return f"<table><tbody>{body}</tbody></table>"
+
+
+def _ms(v: int | None) -> str:
+    if v is None:
+        return "over 5 s"
+    return f"under {v / 1000:g} s" if v >= 1000 else f"under {v} ms"
+
+
+def _speed(s: dict) -> str:
+    rows = [r for r in s.get("speed", []) if r["requests"]]
+    if not rows:
+        return "<p>Nothing yet.</p>"
+    body = "".join(
+        f"<tr><td>{escape(ROUTES.get(r['route'], r['route']))}</td><td>{r['requests']:,}</td>"
+        f"<td>{escape(_ms(r['typical_under_ms']))}</td><td>{escape(_ms(r['p95_under_ms']))}</td>"
+        f"<td>{r['server_errors']:,}</td></tr>"
+        for r in rows
+    )
+    return (
+        '<div class="wide"><table><thead><tr><th>Action</th><th>Requests</th><th>Typical</th>'
+        "<th>19 in 20</th><th>Errors</th></tr></thead><tbody>" + body + "</tbody></table></div>"
+    )
+
+
+def _health(s: dict) -> str:
+    days = s.get("errors_per_day", [])
+    requests = sum(d["requests"] for d in days)
+    server = sum(d["server"] for d in days)
+    not_found = sum(d["not_found"] for d in days)
+    starts = s.get("starts", [])
+    if starts:
+        secs = sorted(x["seconds"] for x in starts)
+        start_text = (
+            f"{len(starts)} start{'s' if len(starts) != 1 else ''} recorded; "
+            f"usually ready in {secs[len(secs) // 2]:g} s, slowest {secs[-1]:g} s "
+            "(after Hugging Face has started the container)."
+        )
+    else:
+        start_text = "No starts recorded yet."
+    return (
+        f"<p>Last 14 days: {requests:,} requests, {server:,} failed on the server, "
+        f"{not_found:,} asked for something that doesn't exist.</p>"
+        f"<p>{escape(start_text)}</p>"
+    )
 
 
 def render(s: dict) -> str:
@@ -119,9 +192,15 @@ def render(s: dict) -> str:
 <h2>Recipes opened most</h2>
 {recipes}
 
+<h2>How it runs</h2>
+{_health(s)}
+<p>Time each action took on the server, by type of action. "19 in 20" means 95% of requests were faster than that.</p>
+{_speed(s)}
+
 <h2>How this is counted</h2>
 <p class="note">A visitor is a new demo kitchen. Someone who clears their browser or switches device counts twice,
-and a server restart can count a step twice. Days are UTC.</p>
+and a server restart can count a step twice. Days are UTC. Times are grouped by type of action,
+never by the address asked for, and measured on the server, so they leave out the network.</p>
 <p class="note">Nothing personal is stored: no IP addresses, no browser details, no times finer than the day,
 nothing anyone typed, no profile values and nothing per visitor. Only these totals, one small file per day.</p>
 </main></body></html>"""
