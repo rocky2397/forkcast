@@ -94,7 +94,7 @@ courgette, beetroot, kiwi fruit, satsuma, mandarin), and flavoured milk is
 milk rather than its flavour. Checks that it breaks nothing: the 575
 labelled ingredient strings from stages 1 and 2 (one better, none worse),
 and the whole recipe corpus (25 strings in 511 of 794,000 recipe rows move,
-all to the right name; they reach the recipes at the next corpus release).
+all to the right name; published in corpus release `corpus-20261115-d35`).
 
 ## What this does and doesn't measure
 

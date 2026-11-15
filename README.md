@@ -85,28 +85,38 @@ still missing today. When you are short on protein, high-protein dishes move up.
 
 ## Evaluation
 
-The app makes promises you act on. Three are tested:
+The app makes promises you act on. Five are tested, each on data from outside
+the app, and every fix is judged on cases it wasn't designed on:
 
 1. **"You can cook this now."** Is a listed recipe really cookable from your
    kitchen?
 2. **"Try this instead."** Would a cook actually use the suggested swap?
 3. **"Suits your taste."** Does the taste ranking know what a real person
    likes? (Your kind of food, yes; your favourites, no. See test 3.)
+4. **"This is what's in your photo."** Does photo scanning name your groceries?
+5. **"These are the label's macros."** Does it read a nutrition label right?
 
-**Tested in part:** photo scanning. On phone photos from a public grocery
-dataset, the app first proposed the right ingredient for 65%. A third of the
-misses were the ingredient matcher, not the camera: "orange juice" became
-*orange* and "yoghurt" nothing. After fixing that (D35), judged on photos not
-used to design the fix, 76%: vegetables 85%, fruit 76%, cartons 69%. Photos of
-a whole shopping haul are not tested yet ([details](eval/RESULTS-stage4.md)).
+| Test | Before | After the fix | Judged on |
+|---|---|---|---|
+| 1. Listed recipes really cookable | 65% | **92%** | 3 new kitchens |
+| 2. Suggested swaps that work | 33% | **95%** | new cases |
+| 3. Picks what people cook next (50 = coin flip) | 55 | **61** | 2,710 real food.com users |
+| 4. Photo scan proposes the right ingredient | 71% | **76%** | 289 unseen store photos |
+| 5. Label read with the right calories | 78% | **83%** | 150 fresh products |
 
-**Tested:** reading nutrition labels. On 150 popular products from Open Food
-Facts, the label reader got calories, protein, carbs and fat all right for an
-estimated two in three (database disagreements checked by eye). Its mistakes
-are systematic: kilojoules taken for kcal, "1,2 g" read as 12, a value from
-the neighbouring row. The app now warns when the values read don't add up
-(D36), which catches most of them; readings that pass are off by 11 kcal per
-100 g on average ([details](eval/RESULTS-stage5.md)).
+**Test 4, photo scanning,** on phone photos from a public grocery dataset. A
+third of the misses were the ingredient matcher, not the camera: "orange
+juice" became *orange* and "yoghurt" nothing. After that fix (D35):
+vegetables 85%, fruit 76%, cartons 69%. Photos of a whole shopping haul are
+not tested yet ([details](eval/RESULTS-stage4.md)).
+
+**Test 5, nutrition labels,** on products from Open Food Facts, with database
+disagreements checked by eye. The reader got all four values right for about
+two in three products; its mistakes were kilojoules taken for kcal, "1,2 g"
+read as 12 and a value from the neighbouring row. Two fixes: the app warns
+when the values don't add up (D36), and a new prompt has the reader write out
+the table first (D37), which cut the average calorie error on fresh products
+from 6.7 to 4.0 kcal per 100 g ([details](eval/RESULTS-stage5.md)).
 
 ### How the tests work
 
@@ -330,7 +340,7 @@ cd frontend && npm ci && npm run build && cd ..
 
 # Recipe corpus (~130 MB, read-only), published separately:
 mkdir -p data && curl -L -o data/corpus.db \
-  https://github.com/rocky2397/forkcast-corpus/releases/download/corpus-20261114-d29/corpus.db
+  https://github.com/rocky2397/forkcast-corpus/releases/download/corpus-20261115-d35/corpus.db
 
 export FORKCAST_DATA_DIR=$PWD/data FORKCAST_CORPUS_DB=$PWD/data/corpus.db
 export ANTHROPIC_API_KEY=...   # only needed for photo and label scanning
