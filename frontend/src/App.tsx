@@ -120,7 +120,7 @@ export default function App() {
             )}
             {keepsStats() && (
               <>
-                Only <a href="/stats">anonymous usage totals</a> are kept.{" "}
+                <a href="/stats">Usage totals</a> are anonymous.{" "}
               </>
             )}
             <a href="https://github.com/rocky2397/forkcast">Code on GitHub</a>

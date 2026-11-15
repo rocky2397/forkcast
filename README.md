@@ -8,9 +8,10 @@ tells you what to buy to unlock more.
 **[Try the demo](https://rockyyyy2397-forkcast.hf.space)**: you get your own
 copy of a demo kitchen, private to you and saved for your browser, so it is
 still there when you come back. It is deleted 30 days after your last visit,
-or at once with "Delete my data". Photo scanning is off there. After two days without visitors the server sleeps,
-and the next visit takes about a minute while it wakes up. The demo keeps only
-[anonymous usage totals](https://rockyyyy2397-forkcast.hf.space/stats).
+or at once with "Delete my data". Photo scanning is off there. After two days
+without visitors the server sleeps, and the next visit takes about a minute
+while it wakes up. Usage is counted only as
+[anonymous totals](https://rockyyyy2397-forkcast.hf.space/stats).
 
 <p align="center"><img src="docs/screenshots/demo.gif" width="300" alt="A 30-second walkthrough on a phone: the three-step welcome, adding avocado and lime to the kitchen, the recipe list naming the cooked dish each recipe is like, its help panel explaining the coloured dots, a recipe one ingredient away that suggests red onion for the missing shallot, cook mode one step at a time, and the Today screen with calories and macros left"></p>
 
