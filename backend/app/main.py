@@ -35,6 +35,7 @@ async def lifespan(app: FastAPI):
         if unknown:
             raise RuntimeError(f"demo kitchen items not recognised: {unknown}")
         await asyncio.to_thread(_warm_up)
+    saver = asyncio.create_task(_save_kitchens()) if demo.saved_dir() else None
     flusher = None
     if stats.enabled():  # anonymous usage totals (D33)
         stats.start(embeddings.vocabulary())
@@ -46,6 +47,11 @@ async def lifespan(app: FastAPI):
         with suppress(asyncio.CancelledError):
             await flusher
         stats.flush()
+    if saver is not None:
+        saver.cancel()
+        with suppress(asyncio.CancelledError):
+            await saver
+        demo.save_pending()  # nobody's changes are lost to a restart
 
 
 def _warm_up() -> None:
@@ -62,6 +68,13 @@ def _warm_up() -> None:
         cookable_recipes(max_missing=1, assume_staples=True, limit=20, min_missing=1)
     finally:
         current_db.reset(token)
+
+
+async def _save_kitchens():
+    """Copy changed demo kitchens to the saved folder (D34)."""
+    while True:
+        await asyncio.sleep(demo.SAVE_SECONDS)
+        await asyncio.to_thread(demo.save_pending)
 
 
 async def _flush_stats():
@@ -95,6 +108,7 @@ async def demo_kitchen(request: Request, call_next):
         return await call_next(request)
     kitchen_id, path, created = await run_in_threadpool(demo.kitchen, request.headers.get(demo.HEADER))
     token = current_db.set(path)
+    id_token = demo.current_id.set(kitchen_id)
     kitchen_token = stats.current_kitchen.set(kitchen_id)
     began = time.perf_counter()
     status = 500  # unless a response comes back
@@ -111,7 +125,12 @@ async def demo_kitchen(request: Request, call_next):
             (time.perf_counter() - began) * 1000,
         )
         stats.current_kitchen.reset(kitchen_token)
+        demo.current_id.reset(id_token)
         current_db.reset(token)
+    if not path.is_file():
+        return response  # deleted by its visitor: the next request starts afresh
+    if request.method not in ("GET", "HEAD") and status < 400:
+        demo.changed(kitchen_id)
     response.headers[demo.HEADER] = kitchen_id
     return response
 
@@ -147,11 +166,22 @@ def session(request: Request):
     """Whether a password is configured, and whether this caller has passed it."""
     return {
         "demo": demo.enabled(),
+        "saved": demo.saved_dir() is not None,
         "stats": stats.enabled(),
         "required": auth.required(),
         "authenticated": not auth.required()
         or auth.valid_token(request.cookies.get(auth.COOKIE)),
     }
+
+
+@app.delete("/api/demo/kitchen")
+def delete_my_kitchen():
+    """Public demo (D34): delete this visitor's kitchen, live and saved."""
+    kitchen_id = demo.current_id.get()
+    if not demo.enabled() or kitchen_id is None:
+        raise HTTPException(404, "only the public demo keeps visitor kitchens")
+    demo.delete(kitchen_id)
+    return {"deleted": True}
 
 
 @app.post("/api/login")

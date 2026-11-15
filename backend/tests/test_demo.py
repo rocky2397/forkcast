@@ -123,3 +123,129 @@ def test_startup_warms_the_feed_on_the_demo_kitchen(demo_app, monkeypatch):
     main._warm_up()
     assert calls == [(demo.template_path(), 0), (demo.template_path(), 1)]
     assert db.current_db.get() is None  # no kitchen left set for later requests
+
+
+# --- saved kitchens (D34): surviving restarts, 30 days, delete my data ---
+
+
+@pytest.fixture
+def saved_app(demo_app, tmp_path, monkeypatch):
+    saved = tmp_path / "saved"
+    monkeypatch.setenv("FORKCAST_KITCHENS_DIR", str(saved))
+    monkeypatch.setattr(demo, "_dirty", set())
+    monkeypatch.setattr(demo, "_saved_on", {})
+    monkeypatch.setattr(demo, "_swept_saved_at", 0.0)
+    return demo_app, saved
+
+
+def _restart():
+    """What a restart of the Space does: every live kitchen is gone."""
+    for f in demo.kitchens_dir().glob("*.db"):
+        f.unlink()
+    demo._dirty.clear()
+    demo._saved_on.clear()
+
+
+def test_a_change_survives_a_restart(saved_app):
+    client, saved = saved_app
+    a, _ = _visit(client)
+    client.post("/api/inventory", json={"items": ["saffron"]}, headers={H: a})
+    assert demo.save_pending() == 1
+    assert (saved / f"{a}.db").is_file()
+    _restart()
+    again, items = _visit(client, a)
+    assert again == a
+    assert "saffron" in items
+
+
+def test_an_untouched_kitchen_is_not_saved(saved_app):
+    client, saved = saved_app
+    _visit(client)
+    assert demo.save_pending() == 0
+    assert not saved.exists() or not list(saved.glob("*.db"))
+
+
+def test_the_session_says_kitchens_are_saved(saved_app):
+    client, _ = saved_app
+    assert client.get("/api/session").json()["saved"] is True
+
+
+def test_without_a_saved_folder_kitchens_are_not_saved(demo_app):
+    a, _ = _visit(demo_app)
+    demo_app.post("/api/inventory", json={"items": ["saffron"]}, headers={H: a})
+    assert demo.save_pending() == 0
+    assert demo_app.get("/api/session").json()["saved"] is False
+
+
+def test_a_visit_refreshes_the_saved_copy_once_a_day(saved_app, monkeypatch):
+    client, saved = saved_app
+    a, _ = _visit(client)
+    client.post("/api/inventory", json={"items": ["saffron"]}, headers={H: a})
+    demo.save_pending()
+    _visit(client, a)
+    assert demo.save_pending() == 0  # already saved today
+    monkeypatch.setattr(demo, "_today", lambda: "2099-01-01")
+    _visit(client, a)
+    assert demo.save_pending() == 1  # next day: the 30 days start again
+
+
+def test_saved_kitchens_expire_after_30_days(saved_app):
+    client, saved = saved_app
+    a, _ = _visit(client)
+    client.post("/api/inventory", json={"items": ["saffron"]}, headers={H: a})
+    demo.save_pending()
+    old = time.time() - demo.KEEP_SECONDS - 60
+    os.utime(saved / f"{a}.db", (old, old))
+    demo._swept_saved_at = 0.0
+    demo.save_pending()
+    assert not (saved / f"{a}.db").exists()
+
+
+def test_saved_kitchens_are_capped(saved_app, monkeypatch):
+    client, saved = saved_app
+    monkeypatch.setattr(demo, "MAX_SAVED", 2)
+    ids = []
+    for age in (30, 20, 10):
+        k, _ = _visit(client)
+        client.post("/api/inventory", json={"items": ["saffron"]}, headers={H: k})
+        demo._swept_saved_at = time.time()  # no sweep yet
+        demo.save_pending()
+        t = time.time() - age
+        os.utime(saved / f"{k}.db", (t, t))
+        ids.append(k)
+    demo._swept_saved_at = 0.0
+    demo.save_pending()
+    assert {f.stem for f in saved.glob("*.db")} == set(ids[1:])
+
+
+def test_delete_my_data_removes_both_copies(saved_app):
+    client, saved = saved_app
+    a, _ = _visit(client)
+    client.post("/api/inventory", json={"items": ["saffron"]}, headers={H: a})
+    demo.save_pending()
+    r = client.delete("/api/demo/kitchen", headers={H: a})
+    assert r.status_code == 200
+    assert H not in r.headers  # nothing for the browser to remember
+    assert not (demo.kitchens_dir() / f"{a}.db").exists()
+    assert not (saved / f"{a}.db").exists()
+    assert demo.save_pending() == 0
+    fresh, items = _visit(client, a)
+    assert fresh != a
+    assert "saffron" not in items
+
+
+def test_unsaved_changes_are_not_swept_away(saved_app):
+    client, saved = saved_app
+    a, _ = _visit(client)
+    client.post("/api/inventory", json={"items": ["saffron"]}, headers={H: a})
+    stale = time.time() - demo.IDLE_SECONDS - 60
+    os.utime(demo.kitchens_dir() / f"{a}.db", (stale, stale))
+    _visit(client)  # a newcomer triggers the idle sweep
+    assert (demo.kitchens_dir() / f"{a}.db").exists()
+    demo.save_pending()
+    assert (saved / f"{a}.db").is_file()
+
+
+def test_delete_is_only_for_the_demo(db, monkeypatch):
+    monkeypatch.delenv("FORKCAST_DEMO", raising=False)
+    assert TestClient(main.app).delete("/api/demo/kitchen").status_code == 404

@@ -29,9 +29,10 @@ RUN npm ci && npm run build
 FROM python:3.12-slim
 
 # Spaces run the container as user 1000 and send traffic to port 7860.
-# Visitors' kitchens are throwaway, so they live in /tmp. Anonymous usage
-# totals (D33) go to /data, where a private storage bucket is mounted so they
-# survive restarts; without one they still work but reset on restart.
+# Visitors' live kitchens are in /tmp. Two things go to /data, where a private
+# storage bucket is mounted so they survive restarts: saved copies of changed
+# kitchens (D34, deleted 30 days after the last visit) and anonymous usage
+# totals (D33). Without a bucket both still work but reset on restart.
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     HF_HOME=/opt/hf \
@@ -39,6 +40,7 @@ ENV PYTHONUNBUFFERED=1 \
     FORKCAST_DATA_DIR=/tmp/forkcast \
     FORKCAST_CORPUS_DB=/opt/forkcast/corpus.db \
     FORKCAST_STATS_DIR=/data/forkcast-stats \
+    FORKCAST_KITCHENS_DIR=/data/forkcast-kitchens \
     PORT=7860
 
 WORKDIR /app

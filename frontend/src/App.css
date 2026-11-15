@@ -785,3 +785,13 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
   color: var(--herb);
 }
 .demo-banner a { color: inherit; font-weight: 600; }
+.demo-banner .link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
