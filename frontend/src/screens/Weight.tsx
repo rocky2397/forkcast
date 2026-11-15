@@ -5,8 +5,13 @@ import { api, type WeightSummary } from "../api";
 
 const kg = (n: number) => `${n.toLocaleString("en", { maximumFractionDigits: 1 })} kg`;
 
-function longDate(iso: string) {
-  return new Date(`${iso}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long" });
+/** "late March": a projection from a few weeks of noisy weigh-ins isn't good
+ *  to the day, and a day-exact date jumps with every weigh-in. */
+function roughDate(iso: string) {
+  const d = new Date(`${iso}T12:00:00`);
+  const part = d.getDate() <= 10 ? "early" : d.getDate() <= 20 ? "mid" : "late";
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return `${part} ${d.toLocaleDateString("en-GB", { month: "long", ...(sameYear ? {} : { year: "numeric" }) })}`;
 }
 
 function statusText(w: WeightSummary): string | null {
@@ -57,7 +62,7 @@ function Chart({ w }: { w: WeightSummary }) {
   const last = entries[entries.length - 1];
   const label =
     `Weight chart: ${entries.length} weigh-ins, trend ${w.trend_kg} kg` +
-    (goal != null ? `, goal ${goal} kg${w.projection?.plan_date ? ` by about ${longDate(w.projection.plan_date)}` : ""}` : "");
+    (goal != null ? `, goal ${goal} kg${w.projection?.plan_date ? ` by ${roughDate(w.projection.plan_date)}` : ""}` : "");
   return (
     <svg className="weight-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label}>
       {goal != null && (
@@ -134,10 +139,10 @@ export function WeightCard({ initial, onChange }: { initial: WeightSummary; onCh
         <p className="weight-dates">
           {p.actual_date && (
             <>
-              At this pace: <strong>{kg(p.goal_kg)} around {longDate(p.actual_date)}</strong>.{" "}
+              At this pace: <strong>{kg(p.goal_kg)} around {roughDate(p.actual_date)}</strong>.{" "}
             </>
           )}
-          {p.plan_date && <>The plan says about {longDate(p.plan_date)}.</>}
+          {p.plan_date && <>The plan says {roughDate(p.plan_date)}.</>}
         </p>
       )}
       {w.too_fast && (
