@@ -62,7 +62,7 @@ from huggingface_hub import snapshot_download; \
  && chmod -R a+rwX /opt/hf
 
 # The public recipe corpus (~130 MB, read-only), from its GitHub release.
-ARG CORPUS_URL=https://github.com/rocky2397/forkcast-corpus/releases/download/corpus-20261114-d29/corpus.db
+ARG CORPUS_URL=https://github.com/rocky2397/forkcast-corpus/releases/download/corpus-20261115-d35/corpus.db
 RUN mkdir -p /opt/forkcast \
  && curl -fsSL --retry 3 -o /opt/forkcast/corpus.db "$CORPUS_URL" \
  && python -c "\
