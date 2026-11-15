@@ -1,0 +1,20 @@
+{"code": "20474478", "verdict": "database_wrong_or_other_version", "note": "reader right; database is another version (653/23.1/12/55.6 vs label 658/22.8/13.1/56.1)"}
+{"code": "80042563", "verdict": "reader_wrong", "note": "reader wrong: protein 0.5 and fat 0.1 taken from the wrong rows (label: protein 1.6, fat <0.5)"}
+{"code": "20267605", "verdict": "reader_wrong", "note": "reader wrong: saturated fat 9.0 read as protein, protein 20.5 as fat (label fat 47.6)"}
+{"code": "6410500090014", "verdict": "reader_wrong", "note": "reader wrong: per-slice column (21 kcal) instead of per 100 g (350 kcal)"}
+{"code": "20416690", "verdict": "reader_wrong", "note": "reader wrong: salt 0.13 read as protein (label protein 6.0)"}
+{"code": "5900951311321", "verdict": "reader_wrong", "note": "reader wrong: rows shifted, fat 16 read as protein, saturated fat 7.4 as fat"}
+{"code": "6111255771196", "verdict": "database_wrong_or_other_version", "note": "reader right (542/3.1/58.4/32.9); database is another version"}
+{"code": "4056489424918", "verdict": "database_wrong_or_other_version", "note": "reader right (623/24.7/15.2/49.6); database is another version"}
+{"code": "3036810201280", "verdict": "reader_wrong", "note": "reader wrong: fat 10 read as protein, saturated fat 0.7 as fat (label protein 7.6)"}
+{"code": "4012200032947", "verdict": "database_wrong_or_other_version", "note": "reader right (carbs 44 on a misaligned table); database has 40"}
+{"code": "20150907", "verdict": "reader_wrong", "note": "reader wrong on a misaligned table: 388 kcal (label 328), fibre 6.4 as protein, sugars as carbs"}
+{"code": "7394376616501", "verdict": "reader_wrong", "note": "reader wrong: kJ read as kcal (257 vs 61)"}
+{"code": "20171841", "verdict": "reader_wrong", "note": "reader wrong: kJ as kcal (1345 vs 319) and fat 1,5 read as 15"}
+{"code": "8076809573252", "verdict": "reader_wrong", "note": "reader wrong: saturated fat 5.0 read as fat (label fat 26)"}
+{"code": "4056489620938", "verdict": "database_wrong_or_other_version", "note": "reader right (655/27/5.6/56.5, Spanish label); database wrong (103 kcal, per-portion-like)"}
+{"code": "4056489254683", "verdict": "database_wrong_or_other_version", "note": "reader right (109/26/0/0.5); database is another version (protein 25, fat 1.0)"}
+{"code": "20005733", "verdict": "reader_wrong", "note": "reader wrong: carbs 3,7 read as 37"}
+{"code": "8410076481597", "verdict": "database_wrong_or_other_version", "note": "reader right (500/6.2/56.4/26.7); database is another version"}
+{"code": "4001724039143", "verdict": "reader_wrong", "note": "reader wrong on a misaligned table: fibre 2.0 read as protein (label 6.7)"}
+{"code": "5411188116592", "verdict": "reader_wrong", "note": "reader wrong: kJ read as kcal (85 vs 20)"}
