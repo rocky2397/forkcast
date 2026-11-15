@@ -123,8 +123,44 @@ export function setUnauthorizedHandler(fn: () => void) {
   onUnauthorized = fn;
 }
 
+// Public demo (D32): the server gives each visitor their own kitchen and names
+// it in this header. Sending it back keeps every request in that kitchen. Kept
+// in memory too, so a browser that refuses localStorage still has one kitchen
+// per visit.
+const KITCHEN_HEADER = "X-Forkcast-Kitchen";
+const KITCHEN_KEY = "forkcast.demo.kitchen";
+let kitchenId: string | null = (() => {
+  try {
+    return localStorage.getItem(KITCHEN_KEY);
+  } catch {
+    return null;
+  }
+})();
+let demo = false;
+/** True on the public demo; known once api.session() has answered. */
+export const isDemo = () => demo;
+
+function withKitchen(init?: RequestInit): RequestInit | undefined {
+  if (!kitchenId) return init;
+  const headers = new Headers(init?.headers);
+  headers.set(KITCHEN_HEADER, kitchenId);
+  return { ...init, headers };
+}
+
+function rememberKitchen(res: Response) {
+  const id = res.headers.get(KITCHEN_HEADER);
+  if (!id || id === kitchenId) return;
+  kitchenId = id;
+  try {
+    localStorage.setItem(KITCHEN_KEY, id);
+  } catch {
+    // Memory only: the kitchen lasts as long as this tab.
+  }
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, init);
+  const res = await fetch(path, withKitchen(init));
+  rememberKitchen(res);
   if (res.status === 401) {
     onUnauthorized?.();
     throw new Error("session expired");
@@ -137,7 +173,11 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  session: () => req<{ required: boolean; authenticated: boolean }>("/api/session"),
+  session: async () => {
+    const s = await req<{ demo?: boolean; required: boolean; authenticated: boolean }>("/api/session");
+    demo = Boolean(s.demo);
+    return s;
+  },
   // Deliberately not routed through req(): a wrong password is also a 401, and
   // it must not trip the session-expired handler.
   login: async (password: string) => {

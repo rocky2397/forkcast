@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, pretty, type InventoryItem, type ScanProposal } from "../api";
+import { api, isDemo, pretty, type InventoryItem, type ScanProposal } from "../api";
 import { ScanConfirm } from "./ScanConfirm";
 import { foodColor, kitchenGroup, KITCHEN_GROUPS } from "../format";
 import { Guide, HelpButton } from "../Guide";
@@ -131,10 +131,20 @@ export function Inventory() {
           hidden
           onChange={(e) => onPhoto(e.target.files?.[0])}
         />
-        <button className="btn scan-primary" onClick={() => fileRef.current?.click()} disabled={scanning}>
+        <button
+          className="btn scan-primary"
+          onClick={() => fileRef.current?.click()}
+          disabled={scanning || isDemo()}
+          aria-describedby={isDemo() ? "scan-off" : undefined}
+        >
           <ScanIcon size={20} />
           {scanning ? "Reading your photo…" : "Scan groceries"}
         </button>
+        {isDemo() && (
+          <p id="scan-off" className="feedback">
+            Photo scanning is off in this demo, because it calls a paid AI model. Add ingredients by name instead.
+          </p>
+        )}
         <form
           className="add-form"
           onSubmit={(e) => {

@@ -60,7 +60,10 @@ def _space(con: sqlite3.Connection) -> tuple[dict[str, float], np.ndarray]:
 
     Built once per corpus and cached; the key changes if recipes are added.
     """
-    files = tuple(r[2] for r in con.execute("PRAGMA database_list"))
+    # Keyed on the recipe data, not the user DB: the demo opens a different
+    # user file per visitor, and that must not rebuild the space each time.
+    dbs = [(r[1], r[2]) for r in con.execute("PRAGMA database_list")]
+    files = tuple(f for name, f in dbs if name == "corpus") or tuple(f for _, f in dbs)
     n, top = con.execute("SELECT COUNT(*), COALESCE(MAX(id), 0) FROM recipes").fetchone()
     key = (files, n, top)
     if key not in _space_cache:

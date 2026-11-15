@@ -154,7 +154,7 @@ def test_logging_in_opens_the_api_and_logging_out_closes_it(client, monkeypatch)
 
     assert client.post("/api/login", json={"password": "hunter2"}).status_code == 200
     assert client.get("/api/recipes/cookable").status_code == 200
-    assert client.get("/api/session").json() == {"required": True, "authenticated": True}
+    assert client.get("/api/session").json() == {"demo": False, "required": True, "authenticated": True}
 
     client.post("/api/logout")
     assert client.get("/api/recipes/cookable").status_code == 401

@@ -28,6 +28,26 @@ The corpus/user split is what makes this cheap: a 1 GB disk holds a few KB.
 
 ---
 
+## Public demo mode (D32)
+
+For a link anyone can open, set `FORKCAST_DEMO=1` and no password:
+
+- Every visitor gets a private copy of the demo kitchen (the README screenshots'
+  kitchen), so nobody sees or breaks anyone else's changes.
+- A kitchen unused for a day is deleted, and at most 300 exist at once.
+- Photo and label scanning are off, so **don't set `ANTHROPIC_AUTH_TOKEN`**:
+  the demo needs no secret at all. Barcode lookup still works.
+- No persistent disk is needed: kitchens are throwaway. A free host works.
+
+Try it locally:
+
+```bash
+FORKCAST_DEMO=1 FORKCAST_DATA_DIR=$(mktemp -d) \
+  .venv/bin/uvicorn app.main:app --app-dir backend --port 8000
+```
+
+---
+
 ## One-time setup
 
 ### 1. Build and publish the corpus

@@ -18,16 +18,13 @@ const [base = "http://localhost:8799", outDir = "../docs/screenshots", videoDir]
 const require = createRequire(import.meta.url);
 const AXE = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
-// The demo kitchen. Recipe ids belong to corpus release corpus-20261114-d29.
-const KITCHEN = [
-  "basil", "bell pepper", "carrots", "chicken breasts", "chickpeas", "cumin", "eggs",
-  "feta", "garlic", "ginger", "honey", "lemons", "milk", "oats", "paprika", "parmesan",
-  "pasta", "potatoes", "red onion", "rice", "soy sauce", "spinach", "tomatoes",
-  "greek yogurt", "zucchini",
-];
-const PROFILE = { sex: "f", age: 29, height_cm: 168, weight_kg: 63, activity: "moderate", goal: "maintain" };
-const COOKED = [49644, 21529]; // Cherry Tomato Pasta, Foil Chicken Casserole for One: both liked
-const TYPED_MEAL = { name: "Oats with yogurt and honey", calories: 420, protein_g: 18, carbs_g: 64, fat_g: 9 };
+// The demo kitchen, shared with the public demo (D32). Recipe ids belong to
+// corpus release corpus-20261114-d29.
+const DEMO = JSON.parse(readFileSync(new URL("../../backend/app/demo_kitchen.json", import.meta.url), "utf8"));
+const KITCHEN = DEMO.kitchen;
+const PROFILE = DEMO.profile;
+const COOKED = DEMO.cooked_and_liked; // Cherry Tomato Pasta, Foil Chicken Casserole for One
+const TYPED_MEAL = DEMO.typed_meal;
 
 async function api(path, body, method = body ? "POST" : "GET") {
   const res = await fetch(base + path, {

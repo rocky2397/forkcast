@@ -4,7 +4,7 @@ import { Inventory } from "./screens/Inventory";
 import { Recipes } from "./screens/Recipes";
 import { Login } from "./screens/Login";
 import { Intro } from "./screens/Intro";
-import { api, setUnauthorizedHandler } from "./api";
+import { api, isDemo, setUnauthorizedHandler } from "./api";
 import { KitchenIcon, RecipesIcon, TodayIcon } from "./Icons";
 import "./App.css";
 
@@ -91,6 +91,12 @@ export default function App() {
             ))}
           </nav>
         </div>
+        {isDemo() && (
+          <p className="demo-banner">
+            Demo: your changes are private to you and reset after a day.{" "}
+            <a href="https://github.com/rocky2397/forkcast">Code on GitHub</a>
+          </p>
+        )}
       </header>
       <main className="main">
         {tab === "today" ? <Today /> : tab === "inventory" ? <Inventory /> : <Recipes />}

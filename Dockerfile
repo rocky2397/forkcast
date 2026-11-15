@@ -63,6 +63,9 @@ COPY --from=frontend /build/dist ./frontend/dist
 # Mount point for the persistent disk holding forkcast.db. Created here so the
 # image also runs without a disk attached (data is then ephemeral).
 RUN mkdir -p /var/data
+# Hosts like Hugging Face Spaces run the container as an unprivileged user: let
+# it write the data dir and the model cache's lock files.
+RUN chmod -R a+rwX /var/data /opt/hf
 
 # Render supplies $PORT; default matches the local dev port.
 ENV PORT=8000

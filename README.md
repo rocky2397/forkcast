@@ -251,7 +251,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 214 pytest tests in under a second, offline and without the corpus (48 of
+- **Tests:** 226 pytest tests in under a second, offline and without the corpus (48 of
   them need the Epicure weights and skip without them), plus frontend lint and
   build, all in CI.
 
@@ -279,7 +279,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 31 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 32 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
