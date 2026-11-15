@@ -5,6 +5,11 @@ have, finds which of 87,861 recipes you can cook with it right now, puts the
 ones that suit your taste and today's calorie and protein budget first, and
 tells you what to buy to unlock more.
 
+**[Try the demo](https://rockyyyy2397-forkcast.hf.space)**: you get your own
+copy of a demo kitchen, private to you and deleted after a day without visits.
+Photo scanning is off there. After two days without visitors the server sleeps,
+and the next visit takes about a minute while it wakes up.
+
 <p align="center"><img src="docs/screenshots/demo.gif" width="300" alt="A 30-second walkthrough on a phone: the three-step welcome, adding avocado and lime to the kitchen, the recipe list naming the cooked dish each recipe is like, its help panel explaining the coloured dots, a recipe one ingredient away that suggests red onion for the missing shallot, cook mode one step at a time, and the Today screen with calories and macros left"></p>
 
 <img src="docs/screenshots/desktop.jpg" alt="Forkcast on a laptop: the recipe feed on the left with coloured ingredient dots and the dish each recipe is like, the open recipe on the right with its ingredients ticked against the kitchen">

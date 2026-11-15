@@ -1,9 +1,10 @@
 # Deploying Forkcast
 
-> **Status:** optional, and not currently deployed. No Render service exists;
-> day-to-day use runs locally and on the phone through Tailscale (D18). This
-> guide and `render.yaml` are kept as a ready deployment path. The Dockerfile
-> itself is host-neutral.
+> **Status:** the public demo (D32) runs on Hugging Face Spaces at
+> https://rockyyyy2397-forkcast.hf.space, built from `deploy/huggingface/`.
+> No password-protected Render service exists; day-to-day use runs locally and
+> on the phone through Tailscale (D18). This guide and `render.yaml` are kept
+> as a ready deployment path. The Dockerfile itself is host-neutral.
 
 Puts Forkcast on a permanent public URL behind a shared password (D15), so it
 can be shared without the owner's Mac staying awake — the limitation of the
