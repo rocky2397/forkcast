@@ -7,7 +7,7 @@
 #
 # To put a newer Forkcast online, change FORKCAST_COMMIT to a commit on main.
 
-ARG FORKCAST_COMMIT=a5874edd74487fd25fca1c04bae1978c7a01ea1f
+ARG FORKCAST_COMMIT=7434fe5c5a52ffa7473f0d951575249cb51a85c2
 
 # ---- 1. Source at the pinned commit -----------------------------------------
 FROM python:3.12-slim AS source
@@ -29,20 +29,24 @@ RUN npm ci && npm run build
 FROM python:3.12-slim
 
 # Spaces run the container as user 1000 and send traffic to port 7860.
-# Visitors' kitchens are throwaway, so they live in /tmp.
+# Visitors' kitchens are throwaway, so they live in /tmp. Anonymous usage
+# totals (D33) go to /data, where a private storage bucket is mounted so they
+# survive restarts; without one they still work but reset on restart.
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     HF_HOME=/opt/hf \
     FORKCAST_DEMO=1 \
     FORKCAST_DATA_DIR=/tmp/forkcast \
     FORKCAST_CORPUS_DB=/opt/forkcast/corpus.db \
+    FORKCAST_STATS_DIR=/data/forkcast-stats \
     PORT=7860
 
 WORKDIR /app
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl ca-certificates \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && mkdir -p /data && chmod a+rwx /data
 
 COPY --from=source /src/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
@@ -70,4 +74,6 @@ COPY --from=frontend /build/dist ./frontend/dist
 ENV HF_HUB_OFFLINE=1
 
 EXPOSE 7860
-CMD ["sh", "-c", "uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port ${PORT} --proxy-headers --forwarded-allow-ips='*'"]
+# --no-proxy-headers: the request log shows Hugging Face's proxy, never a
+# visitor's IP address (D33). The demo has no login to rate-limit per visitor.
+CMD ["sh", "-c", "uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port ${PORT} --no-proxy-headers"]
