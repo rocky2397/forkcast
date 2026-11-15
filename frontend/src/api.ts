@@ -72,6 +72,8 @@ export interface WeightPlan {
   calories: number;
   change: number;
   kg_per_week: number;
+  /** D44: the pace as a share of body weight per week (0.0075 = 0.75%). */
+  pace_share?: number;
   weeks: number | null;
   limited: string | null;
 }

@@ -1,5 +1,7 @@
 """Targets (D12) and macro fit (D20) — pure functions, no DB, no embeddings."""
 
+import pytest
+
 from app import goals
 
 PROFILE = {"sex": "m", "age": 30, "height_cm": 175, "weight_kg": 80, "activity": "light", "goal": "cut"}
@@ -82,21 +84,38 @@ MAN = dict(sex="m", age=30, height_cm=180, weight_kg=80, activity="moderate", go
 
 
 def test_a_goal_weight_below_sets_a_deficit_from_the_pace():
+    # D44: steady is 0.75% of 80 kg a week, 0.6 kg: 660 kcal a day.
     p = goals.plan(MAN | {"goal_weight_kg": 72, "pace": "steady"})
-    assert p["direction"] == "lose"
-    assert p["burn"] == 2759 and p["change"] == 550 and p["calories"] == 2209
-    assert p["kg_per_week"] == 0.5 and p["weeks"] == 16 and p["limited"] is None
-    assert goals.targets(MAN | {"goal_weight_kg": 72, "pace": "steady"})["calories"] == 2209
+    assert p["direction"] == "lose" and p["pace_share"] == 0.0075
+    assert p["burn"] == 2759 and p["change"] == 660 and p["calories"] == 2099
+    assert p["kg_per_week"] == 0.6 and p["limited"] is None
+    assert goals.targets(MAN | {"goal_weight_kg": 72, "pace": "steady"})["calories"] == 2099
 
 
-def test_the_gentle_pace_halves_the_deficit():
+def test_the_timeline_allows_for_the_pace_shrinking():
+    # 0.75% of a falling weight: 14 weeks, not 8 / 0.6 = 13.3.
+    assert goals.plan(MAN | {"goal_weight_kg": 72, "pace": "steady"})["weeks"] == 14
+
+
+def test_the_gentle_pace_is_two_thirds_of_steady_when_losing():
     p = goals.plan(MAN | {"goal_weight_kg": 72, "pace": "gentle"})
-    assert p["change"] == 275 and p["weeks"] == 32
+    assert p["pace_share"] == 0.005 and p["change"] == 440 and p["weeks"] == 22
+
+
+def test_the_pace_scales_with_body_weight():
+    # The same pace asks less of a lighter person: 0.5% is 0.3 kg at 60 kg, 0.5 kg at 100.
+    light = goals.plan(MAN | {"weight_kg": 60, "height_cm": 165, "goal_weight_kg": 57, "pace": "gentle"})
+    heavy = goals.plan(MAN | {"weight_kg": 100, "goal_weight_kg": 90, "pace": "gentle"})
+    assert light["kg_per_week"] == 0.3 and heavy["kg_per_week"] == 0.5
+    assert light["limited"] is None and heavy["limited"] is None
 
 
 def test_a_goal_weight_above_sets_a_surplus():
     p = goals.plan(MAN | {"weight_kg": 60, "goal_weight_kg": 66, "pace": "gentle"})
-    assert p["direction"] == "gain" and p["calories"] == p["burn"] + 275 and p["weeks"] == 24
+    assert p["direction"] == "gain" and p["pace_share"] == 0.0025
+    assert p["calories"] == p["burn"] + 165 and p["weeks"] == 39
+    steady = goals.plan(MAN | {"weight_kg": 60, "goal_weight_kg": 66, "pace": "steady"})
+    assert steady["pace_share"] == 0.005 and steady["kg_per_week"] == 0.3
 
 
 def test_close_to_the_goal_keeps_weight():
@@ -119,10 +138,12 @@ def test_the_deficit_never_goes_below_the_safe_minimum():
 
 
 def test_the_deficit_is_capped_at_a_quarter_of_the_burn():
-    woman = dict(sex="f", age=29, height_cm=168, weight_kg=63, activity="moderate", goal="maintain",
-                 goal_weight_kg=58, pace="steady")
-    p = goals.plan(woman)
+    # 0.75% of 120 kg would be 0.9 kg a week; a quarter of the burn allows less.
+    big = dict(sex="m", age=40, height_cm=180, weight_kg=120, activity="light", goal="maintain",
+               goal_weight_kg=95, pace="steady")
+    p = goals.plan(big)
     assert p["change"] == round(0.25 * p["burn"]) and "a quarter" in p["limited"]
+    assert p["weeks"] == round(25 / p["kg_per_week"] + 0.5)  # held back: a straight line
 
 
 def test_no_deficit_when_the_burn_is_already_at_the_minimum():
@@ -144,3 +165,12 @@ def test_weight_loss_goals_are_for_adults():
 
 def test_the_healthy_range_follows_height():
     assert goals.healthy_range_kg(180) == (60.0, 81.0)
+
+
+def test_weeks_to_goal_bends_with_a_share_and_runs_straight_without():
+    # 0.75% of 80 kg is 0.6 kg a week: a straight line says 13.3 weeks, the
+    # shrinking pace about 13.9; gaining, the growing pace gets there sooner.
+    assert goals.weeks_to_goal(80, 72, 0.6, None) == pytest.approx(13.33, abs=0.01)
+    assert goals.weeks_to_goal(80, 72, 0.6, 0.0075) == pytest.approx(13.9, abs=0.1)
+    assert goals.weeks_to_goal(60, 66, 0.3, 0.005) < 6 / 0.3
+    assert goals.weeks_to_goal(80, 72, 0.0, 0.0075) is None

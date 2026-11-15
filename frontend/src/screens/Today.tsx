@@ -68,7 +68,8 @@ function PlanLine({ plan }: { plan: WeightPlan }) {
     const more = plan.direction === "lose" ? "less" : "more";
     text =
       `To reach ${goal}: about ${fmt(plan.calories)} kcal a day, ${fmt(plan.change)} ${more} than you burn. ` +
-      `At about ${plan.kg_per_week} kg a week, that's roughly ${plan.weeks} weeks.`;
+      `At about ${plan.kg_per_week} kg a week${plan.pace_share && !plan.limited ? ` (${+(plan.pace_share * 100).toFixed(2)}% of your weight)` : ""}, ` +
+      `that's roughly ${plan.weeks} weeks.`;
   }
   return (
     <p className="plan-line">

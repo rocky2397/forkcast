@@ -10,7 +10,8 @@ RATE_WINDOW_DAYS, once they span at least MIN_SPAN_DAYS: the fit evens out
 the noise, and unlike the trend's slope it doesn't lag (the trend trails a
 steady loss, which made people look behind when they weren't). It is compared with the
 plan's pace (D39): ahead, on track, behind or stalled, and turned into a goal
-date at the actual pace next to the plan's. Losing faster than 1% of body
+date at the actual pace next to the plan's (the plan's date allows for its
+pace shrinking with the weight, D44). Losing faster than 1% of body
 weight a week is flagged: faster isn't better.
 
 Every weigh-in also sets the profile weight to the trend, so the daily target
@@ -109,7 +110,9 @@ def summary(con: sqlite3.Connection, profile: Mapping | None, tz_minutes: int = 
     planned = plan["kg_per_week"]
     plan_date = None
     if plan["direction"] != "keep" and planned > 0:
-        plan_date = today + timedelta(weeks=abs(remaining) / planned)
+        share = None if plan["limited"] else plan["pace_share"]
+        left = goals.weeks_to_goal(now_kg, goal, planned, share)
+        plan_date = today + timedelta(weeks=left) if left is not None else None
     actual_date = None
     if plan["direction"] == "keep" or abs(remaining) < 0.5:
         status = "at_goal" if abs(remaining) <= KEEP_BAND_KG else "drifting"

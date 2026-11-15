@@ -93,7 +93,9 @@ Daily targets come from a standard formula (Mifflin-St Jeor) using your body,
 activity level and goal (lose, keep or gain weight). Or set a goal weight and a
 pace: Forkcast works out how much less or more than you burn to eat, and
 roughly how long it takes, within safety limits (no goal below a healthy
-weight, a calorie floor, a cap on the deficit).
+weight, a calorie floor, a cap on the deficit). The pace is a share of your
+weight, not fixed kilos: losing 0.75% a week is 0.6 kg at 80 kg but 0.45 kg
+at 60, and it slows as you get closer, which the timeline allows for.
 
 Today also keeps score: a streak of days on target, the last two weeks as
 dots for deficit, maintenance and surplus days, and a weekly recap of meals
@@ -335,7 +337,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 43 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 44 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

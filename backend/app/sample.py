@@ -6,10 +6,11 @@ day it is generated:
 
   lose  a woman losing weight at the steady pace: mostly days on target in a
         deficit, two weekend surpluses, one maintenance day, one forgotten day,
-        weight falling about 0.42 kg a week (the plan says 0.5: on track)
-  gain  a man gaining at the gentle pace: mostly days on target in a surplus,
+        weight falling about 0.42 kg a week (the plan, 0.75% of her weight,
+        says about 0.53: on track)
+  gain  a man gaining at the steady pace: mostly days on target in a surplus,
         one big day over target, one forgotten day, weight rising about
-        0.25 kg a week
+        0.25 kg a week (the plan, 0.5% of his weight, says about 0.34: on track)
 
 Each persona's seed is one whose measured pace (D41) lands within 0.06 kg a
 week of the true one: with half a kilo of daily swing, three weeks of a slow
@@ -38,7 +39,7 @@ PERSONAS = {
     },
     "gain": {
         "profile": {"sex": "m", "age": 24, "height_cm": 182, "activity": "active",
-                    "goal": "bulk", "goal_weight_kg": 72.0, "pace": "gentle"},
+                    "goal": "bulk", "goal_weight_kg": 72.0, "pace": "steady"},
         "start_kg": 66.0, "kg_per_week": 0.25,
         "surplus_days": (), "maintenance_days": (10,), "forgotten_days": (7,), "over_days": (12,),
         "seed": 20,
