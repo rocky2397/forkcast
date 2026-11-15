@@ -706,6 +706,24 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .progress-totals { font-size: 14px; color: var(--ink-2); line-height: 1.5; margin: 0 0 8px; }
 .recap { margin-top: 18px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .recap-title { margin: 0 0 8px; font-size: 15px; }
+/* D41/D42: weight card and the day check */
+.link-button { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+.weight-card { margin-top: 32px; }
+.weight-now { font-family: var(--font-ui); font-size: 15px; font-weight: 500; color: var(--ink-2); }
+.weight-chart { width: 100%; height: auto; display: block; margin: 6px 0 10px; }
+.weight-chart .weigh-in { fill: var(--ink-3); opacity: 0.6; }
+.weight-chart .trend-line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.weight-chart .plan-line-svg { stroke: var(--herb); stroke-width: 2; stroke-dasharray: 5 4; }
+.weight-chart .goal-line { stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 2 3; }
+.weight-chart .goal-label { fill: var(--ink-3); font-size: 11px; font-family: var(--font-ui); }
+.weight-status, .weight-dates { font-size: 14px; color: var(--ink-2); line-height: 1.5; margin: 0 0 8px; }
+.weigh-in-form { display: flex; gap: 10px; margin: 12px 0 4px; }
+.weigh-in-form label { flex: 1; }
+.weigh-in-form input { width: 100%; }
+.day-check { margin-top: 20px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.day-check p { margin: 0 0 10px; font-size: 14px; color: var(--ink-2); }
+.day-check-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.day-check-done { margin: 16px 0 0; font-size: 13px; color: var(--ink-3); }
 .recap-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; font-size: 14px; color: var(--ink-2); }
 
 .macros { display: flex; flex-direction: column; gap: 14px; width: 100%; }

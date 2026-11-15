@@ -15,7 +15,13 @@ eating far too little can't build a streak. A not-logged day neither breaks
 nor extends it, and today only counts once it is on target.
 
 Days are local days: the client sends its UTC offset. Past days are judged
-against the current profile, since weight history isn't kept.
+against the current profile.
+
+D42: the user can say a day's log is complete or not ("Done for today?"). A
+confirmed day is never "not logged", however little is in it; a day marked
+incomplete always is. Without an answer the half-the-target rule decides.
+The recap adds the week's average energy balance (eaten minus burned, over
+logged days only) next to the plan's, with a rough kg estimate.
 """
 
 from collections.abc import Mapping
@@ -37,8 +43,8 @@ def local_today(tz_minutes: int) -> date:
     return (datetime.now(timezone.utc) + timedelta(minutes=tz_minutes)).date()
 
 
-def day_status(calories: float, target: float, burn: float, minimum: float) -> str:
-    if calories < NOT_LOGGED_SHARE * target:
+def day_status(calories: float, target: float, burn: float, minimum: float, check: int | None = None) -> str:
+    if check == 0 or (check is None and calories < NOT_LOGGED_SHARE * target):
         return "not_logged"
     if calories < minimum:
         return "below_minimum"
@@ -71,6 +77,23 @@ def _daily_rows(con: sqlite3.Connection, start: date, tz_minutes: int) -> dict[s
     return {r["day"]: dict(r) for r in rows}
 
 
+def _checks(con: sqlite3.Connection, start: date) -> dict[str, int]:
+    rows = con.execute("SELECT day, complete FROM day_check WHERE day >= ?", (start.isoformat(),)).fetchall()
+    return {r["day"]: int(r["complete"]) for r in rows}
+
+
+def set_check(con: sqlite3.Connection, day: str, complete: bool | None) -> None:
+    """Record the user's answer to "Done for today?" (None clears it)."""
+    if complete is None:
+        con.execute("DELETE FROM day_check WHERE day = ?", (day,))
+    else:
+        con.execute(
+            "INSERT INTO day_check (day, complete) VALUES (?, ?) ON CONFLICT(day) DO UPDATE SET complete = excluded.complete",
+            (day, int(complete)),
+        )
+    con.commit()
+
+
 def _new_recipes(con: sqlite3.Connection, start: date, tz_minutes: int) -> int:
     """Recipes cooked for the first time ever on or after start."""
     shift = f"{int(tz_minutes):+d} minutes"
@@ -92,16 +115,21 @@ def summary(con: sqlite3.Connection, profile: Mapping, tz_minutes: int = 0) -> d
     minimum = goals.minimum_calories(profile)
     first = today - timedelta(days=TOTAL_DAYS)
     rows = _daily_rows(con, first, tz_minutes)
+    checks = _checks(con, first)
 
     def day(d: date) -> dict:
         r = rows.get(d.isoformat())
         kcal = float(r["calories"]) if r else 0.0
-        status = day_status(kcal, target, burn, minimum)
+        check = checks.get(d.isoformat()) if r else None  # an empty day can't be "complete"
+        status = day_status(kcal, target, burn, minimum, check)
+        in_progress = d == today and check is None and not on_target(kcal, target, status)
         return {
             "date": d.isoformat(),
             "calories": round(kcal),
             "protein_g": round(float(r["protein_g"])) if r else 0,
-            "status": "today" if d == today and not on_target(kcal, target, status) else status,
+            "meals": int(r["meals"]) if r else 0,
+            "confirmed": None if check is None else bool(check),
+            "status": "today" if in_progress else status,
             "on_target": on_target(kcal, target, status),
         }
 
@@ -136,6 +164,20 @@ def summary(con: sqlite3.Connection, profile: Mapping, tz_minutes: int = 0) -> d
         "days_on_target": sum(1 for x in week_days if x["on_target"]),
         "protein_days": sum(1 for x in logged if x["protein_g"] >= PROTEIN_MET_SHARE * protein_target),
     }
+    # D42: the week's energy balance, eaten minus burned, over logged days only.
+    balance_days = [x for x in logged if x["status"] not in ("not_logged", "today")]
+    plan = goals.plan(profile)
+    planned = (target - burn) if plan is None else (plan["calories"] - plan["burn"])
+    if balance_days:
+        avg = sum(x["calories"] - burn for x in balance_days) / len(balance_days)
+        recap["balance"] = {
+            "days": len(balance_days),
+            "avg_per_day": round(avg),
+            "planned_per_day": round(planned),
+            "est_kg": round(avg * len(balance_days) / goals.KCAL_PER_KG, 2),
+        }
+    else:
+        recap["balance"] = None
     return {
         "today": today.isoformat(),
         "target": round(target),

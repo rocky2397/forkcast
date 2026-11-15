@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from . import auth, demo, embeddings, goals, nutrition, progress, recipes, shopping, stats, stats_page, substitutions, taste
+from . import auth, demo, embeddings, goals, nutrition, progress, recipes, shopping, stats, stats_page, substitutions, taste, weight
 from .food_classes import NAME_TO_CLASS
 from .db import connect, current_db
 from .normalize import Normalizer, packaged
@@ -712,6 +712,50 @@ def progress_summary(tz: int = Query(0, ge=-840, le=840)):
         if profile is None:
             return {"progress": None}
         return {"progress": progress.summary(con, profile, tz)}
+
+
+class DayCheck(BaseModel):
+    complete: bool | None  # None clears the answer
+
+
+@app.put("/api/days/{day}/check")
+def check_day(day: str, body: DayCheck):
+    """D42: the user's answer to "Done for today?" for one local day."""
+    try:
+        _date.fromisoformat(day)
+    except ValueError:
+        raise HTTPException(422, "day must be YYYY-MM-DD")
+    with connect() as con:
+        progress.set_check(con, day, body.complete)
+    return {"day": day, "complete": body.complete}
+
+
+class WeighIn(BaseModel):
+    weight_kg: float = Field(ge=35, le=250)
+
+
+@app.get("/api/weight")
+def weight_summary(tz: int = Query(0, ge=-840, le=840)):
+    """D41: weigh-ins, the trend and the projection to the goal weight."""
+    with connect() as con:
+        profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+        return weight.summary(con, profile, tz)
+
+
+@app.post("/api/weight")
+def log_weight(body: WeighIn, tz: int = Query(0, ge=-840, le=840)):
+    with connect() as con:
+        weight.log(con, body.weight_kg)
+        profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+        return weight.summary(con, profile, tz)
+
+
+@app.delete("/api/weight/{entry_id}")
+def delete_weight(entry_id: int, tz: int = Query(0, ge=-840, le=840)):
+    with connect() as con:
+        weight.remove(con, entry_id)
+        profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+        return weight.summary(con, profile, tz)
 
 
 @app.get("/api/nutrition/barcode/{code}")
