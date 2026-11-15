@@ -140,6 +140,7 @@ let kitchenId: string | null = (() => {
 })();
 let demo = false;
 let savedKitchens = false;
+let demoScans = false;
 let usageStats = false;
 /** True on the public demo; known once api.session() has answered. */
 export const isDemo = () => demo;
@@ -147,6 +148,8 @@ export const isDemo = () => demo;
 export const keepsStats = () => usageStats;
 /** True when the demo saves kitchens for 30 days after the last visit (D34). */
 export const savesKitchens = () => savedKitchens;
+/** True when the demo has photo and label scanning on (D38). */
+export const scansOn = () => !demo || demoScans;
 
 function withKitchen(init?: RequestInit): RequestInit | undefined {
   if (!kitchenId) return init;
@@ -185,12 +188,14 @@ export const api = {
     const s = await req<{
       demo?: boolean;
       saved?: boolean;
+      scans?: boolean;
       stats?: boolean;
       required: boolean;
       authenticated: boolean;
     }>("/api/session");
     demo = Boolean(s.demo);
     savedKitchens = Boolean(s.saved);
+    demoScans = Boolean(s.scans);
     usageStats = Boolean(s.stats);
     return s;
   },

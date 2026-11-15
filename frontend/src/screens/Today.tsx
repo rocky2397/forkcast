@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, type DayMeal, type DaySummary, type Product, type Profile, type Targets } from "../api";
+import { api, isDemo, scansOn, type DayMeal, type DaySummary, type Product, type Profile, type Targets } from "../api";
 import { ProfileForm } from "./ProfileForm";
 import { detectBarcode } from "../barcode";
 import { displayName } from "../format";
@@ -317,6 +317,11 @@ export function Today() {
                 {scanBusy ? "Reading the product…" : "Scan a barcode or nutrition label"}
               </button>
               <p className="field-hint">Or type it in. Packaged food fills in by itself from the barcode.</p>
+              {isDemo() && scansOn() && (
+                <p className="field-hint">
+                  A label without a barcode is read by Anthropic's Claude; Forkcast doesn't keep the photo.
+                </p>
+              )}
               {scanError && <p className="feedback error">{scanError}</p>}
               {product && (
                 <div className="product-card">

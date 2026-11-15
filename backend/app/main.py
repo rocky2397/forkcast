@@ -167,6 +167,7 @@ def session(request: Request):
     return {
         "demo": demo.enabled(),
         "saved": demo.saved_dir() is not None,
+        "scans": demo.scanning(),  # D38
         "stats": stats.enabled(),
         "required": auth.required(),
         "authenticated": not auth.required()
@@ -533,7 +534,11 @@ async def vision_scan(photo: UploadFile = File(...)):
     """Groceries photo -> proposed items (nothing committed; client confirms)."""
     if demo.enabled():
         stats.event("photo_scan_tried")
-        raise HTTPException(403, demo.SCAN_OFF)
+        if not demo.scanning():
+            raise HTTPException(403, demo.SCAN_OFF)
+        refused = demo.take_scan(demo.current_id.get())  # D38: caps
+        if refused:
+            raise HTTPException(429, refused)
     from . import vision
 
     raw = await _read_photo(photo)
@@ -695,7 +700,11 @@ async def nutrition_scan(photo: UploadFile = File(...)):
     """
     if demo.enabled():
         stats.event("label_scan_tried")
-        raise HTTPException(403, demo.SCAN_OFF)
+        if not demo.scanning():
+            raise HTTPException(403, demo.SCAN_OFF)
+        refused = demo.take_scan(demo.current_id.get())  # D38: caps
+        if refused:
+            raise HTTPException(429, refused)
     from . import vision
 
     raw = await _read_photo(photo)

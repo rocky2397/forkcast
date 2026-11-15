@@ -21,8 +21,11 @@ read-only recipe corpus:
   gets the saved one back. A saved kitchen is deleted KEEP_SECONDS after the
   last visit, at most MAX_SAVED are kept, and the visitor can delete theirs at
   any time (delete()).
-- Photo and label scanning are off: they call a paid model, and the demo ships
-  without any API key.
+- Photo and label scanning are off unless the host sets ANTHROPIC_API_KEY
+  (D38): they call a paid model. With a key, each visitor gets SCANS_PER_VISITOR
+  scans a UTC day and the whole demo SCANS_PER_DAY, counted in memory (a restart
+  resets them; the key's own spending limit in the Anthropic Console is the
+  hard stop).
 
 Nothing here runs unless FORKCAST_DEMO is set.
 """
@@ -48,6 +51,10 @@ KEEP_SECONDS = 30 * 24 * 3600
 MAX_SAVED = 5000
 SAVE_SECONDS = 30
 SWEEP_SAVED_SECONDS = 3600
+SCANS_PER_VISITOR = 10
+SCANS_PER_DAY = 200
+SCAN_LIMIT_VISITOR = "That's 10 scans for today in this demo. Add ingredients by name, or come back tomorrow."
+SCAN_LIMIT_DAY = "The demo has used all its scans for today. Add ingredients by name, or come back tomorrow."
 SCAN_OFF = (
     "Photo scanning is switched off in this demo, because it calls a paid AI model. "
     "The walkthrough in the README shows it."
@@ -56,6 +63,9 @@ SCAN_OFF = (
 _SEED = Path(__file__).with_name("demo_kitchen.json")
 _ID = re.compile(r"^[A-Za-z0-9_-]{22}$")  # secrets.token_urlsafe(16)
 _lock = threading.Lock()
+_scans: dict[str, int] = {}  # kitchen id -> scans today (D38)
+_scans_total = 0
+_scans_day = ""
 _save_lock = threading.Lock()  # one save pass at a time
 _dirty: set[str] = set()  # kitchens with changes not yet saved
 _saved_on: dict[str, str] = {}  # kitchen id -> UTC day its saved copy was last written
@@ -71,6 +81,30 @@ def enabled() -> bool:
 
 def _root() -> Path:
     return db.DATA_DIR / "demo"
+
+
+def scanning() -> bool:
+    """Photo and label scanning on in the demo (D38): only with an API key."""
+    return enabled() and bool(os.environ.get("ANTHROPIC_API_KEY"))
+
+
+def take_scan(kitchen_id: str | None) -> str | None:
+    """Count one scan; the reason it is refused, or None if it may go ahead."""
+    global _scans_total, _scans_day
+    with _lock:
+        today = _today()
+        if _scans_day != today:
+            _scans.clear()
+            _scans_total = 0
+            _scans_day = today
+        if _scans_total >= SCANS_PER_DAY:
+            return SCAN_LIMIT_DAY
+        key = kitchen_id or ""
+        if _scans.get(key, 0) >= SCANS_PER_VISITOR:
+            return SCAN_LIMIT_VISITOR
+        _scans[key] = _scans.get(key, 0) + 1
+        _scans_total += 1
+        return None
 
 
 def saved_dir() -> Path | None:

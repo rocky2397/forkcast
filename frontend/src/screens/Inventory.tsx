@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, isDemo, pretty, type InventoryItem, type ScanProposal } from "../api";
+import { api, isDemo, pretty, scansOn, type InventoryItem, type ScanProposal } from "../api";
 import { ScanConfirm } from "./ScanConfirm";
 import { foodColor, kitchenGroup, KITCHEN_GROUPS } from "../format";
 import { Guide, HelpButton } from "../Guide";
@@ -134,15 +134,21 @@ export function Inventory() {
         <button
           className="btn scan-primary"
           onClick={() => fileRef.current?.click()}
-          disabled={scanning || isDemo()}
-          aria-describedby={isDemo() ? "scan-off" : undefined}
+          disabled={scanning || !scansOn()}
+          aria-describedby={isDemo() ? "scan-note" : undefined}
         >
           <ScanIcon size={20} />
           {scanning ? "Reading your photo…" : "Scan groceries"}
         </button>
-        {isDemo() && (
-          <p id="scan-off" className="feedback">
+        {isDemo() && !scansOn() && (
+          <p id="scan-note" className="feedback">
             Photo scanning is off in this demo, because it calls a paid AI model. Add ingredients by name instead.
+          </p>
+        )}
+        {isDemo() && scansOn() && (
+          <p id="scan-note" className="feedback">
+            Your photo is sent to Anthropic's Claude to be read; Forkcast doesn't keep it. Up to 10 scans a day in
+            this demo.
           </p>
         )}
         <form
