@@ -10,8 +10,10 @@ import {
   type Progress,
   type Targets,
   type WeightPlan,
+  type WeightSummary,
 } from "../api";
-import { ProgressCard } from "./Progress";
+import { DayCheck, ProgressCard } from "./Progress";
+import { WeightCard } from "./Weight";
 import { ProfileForm } from "./ProfileForm";
 import { detectBarcode } from "../barcode";
 import { displayName } from "../format";
@@ -108,6 +110,7 @@ function mealTime(m: DayMeal): string {
 export function Today() {
   const [day, setDay] = useState<DaySummary | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
+  const [weight, setWeight] = useState<WeightSummary | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -124,10 +127,11 @@ export function Today() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const refresh = () =>
-    Promise.all([api.day(), api.profile(), api.progress()])
-      .then(([d, p, g]) => {
+    Promise.all([api.day(), api.profile(), api.progress(), api.weight()])
+      .then(([d, p, g, w]) => {
         setDay(d);
         setProgress(g.progress);
+        setWeight(w);
         setProfile(p.profile);
         setLoadError(null);
         setLoaded(true);
@@ -273,6 +277,14 @@ export function Today() {
             {
               term: "Liked · Not for me",
               text: "Rate the recipes you cook. Recipes close to the dishes you cook move up the feed; ones you mark Not for me stop counting.",
+            },
+            {
+              term: "Weight",
+              text: "Log your weight now and then, ideally in the morning. The line is a smoothed trend, so one day's water or salt doesn't count for much. With a goal weight, Forkcast compares your pace over the last three weeks with the plan and says when you'd reach the goal at that pace. Your daily target follows the trend.",
+            },
+            {
+              term: "Done for today?",
+              text: "Tell Forkcast when a day's log is complete. Confirmed days always count; days you mark incomplete never do. Without an answer, a day with less than half your target logged counts as not logged.",
             },
             {
               term: "Your days",
@@ -449,6 +461,10 @@ export function Today() {
             </button>
           )}
         </section>
+        {progress && <DayCheck progress={progress} onChange={refresh} />}
+        {weight && profile && (
+          <WeightCard key={`${weight.entries.length}:${weight.trend_kg}`} initial={weight} onChange={refresh} />
+        )}
         {progress && <ProgressCard progress={progress} />}
         </div>
       </div>

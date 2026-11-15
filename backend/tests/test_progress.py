@@ -112,3 +112,48 @@ def test_days_are_local_days(db, log):
     assert berlin[(late + timedelta(hours=1)).date().isoformat()] == round(TARGET)
 
 
+
+
+# --- D42: the user's word on whether a day is complete ----------------------
+
+
+def test_a_confirmed_day_counts_even_when_small(db, log):
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).date().isoformat()
+    log(1, 900)  # under half the target: would be "not logged"
+    assert progress.summary(db, PROFILE)["strip"][-2]["status"] == "not_logged"
+    progress.set_check(db, yesterday, True)
+    day = progress.summary(db, PROFILE)["strip"][-2]
+    assert day["status"] == "below_minimum" and day["confirmed"] is True
+
+
+def test_a_day_marked_incomplete_never_counts(db, log):
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).date().isoformat()
+    log(1, TARGET)
+    progress.set_check(db, yesterday, False)
+    s = progress.summary(db, PROFILE)
+    assert s["strip"][-2]["status"] == "not_logged" and s["streak"] == 0
+    progress.set_check(db, yesterday, None)  # cleared
+    assert progress.summary(db, PROFILE)["streak"] == 1
+
+
+def test_confirming_today_makes_it_a_full_day(db, log):
+    today = datetime.now(timezone.utc).date().isoformat()
+    log(0, 2300)
+    assert progress.summary(db, PROFILE)["strip"][-1]["status"] == "today"
+    progress.set_check(db, today, True)
+    assert progress.summary(db, PROFILE)["strip"][-1]["status"] == "deficit"
+
+
+def test_the_weekly_balance(db, log):
+    log(1, BURN - 500)
+    log(2, BURN - 300)
+    log(3, 400)  # forgotten: left out of the average
+    b = progress.summary(db, PROFILE)["recap"]["balance"]
+    assert b["days"] == 2 and b["avg_per_day"] == -400
+    assert b["planned_per_day"] == 0 and b["est_kg"] == pytest.approx(-800 / 7700, abs=0.01)
+
+
+def test_confirming_an_empty_day_changes_nothing(db, log):
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).date().isoformat()
+    progress.set_check(db, yesterday, True)
+    assert progress.summary(db, PROFILE)["strip"][-2]["status"] == "not_logged"

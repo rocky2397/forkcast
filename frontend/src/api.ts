@@ -85,7 +85,16 @@ export interface Progress {
   burn: number;
   minimum: number;
   streak: number;
-  strip: { date: string; calories: number; protein_g: number; status: DayClass; on_target: boolean }[];
+  strip: {
+    date: string;
+    calories: number;
+    protein_g: number;
+    meals: number;
+    /** D42: the user's answer to "Done for today?" (null: not asked). */
+    confirmed: boolean | null;
+    status: DayClass;
+    on_target: boolean;
+  }[];
   totals: {
     deficit: number;
     maintenance: number;
@@ -104,7 +113,26 @@ export interface Progress {
     days_logged: number;
     days_on_target: number;
     protein_days: number;
+    /** D42: eaten minus burned, averaged over logged days. */
+    balance: { days: number; avg_per_day: number; planned_per_day: number; est_kg: number } | null;
   };
+}
+
+/** D41: weigh-ins, the trend and the projection to the goal weight. */
+export interface WeightSummary {
+  today: string;
+  entries: { id: number; date: string; weight_kg: number; trend_kg: number }[];
+  trend_kg: number | null;
+  rate_kg_per_week: number | null;
+  status: "ahead" | "on_track" | "behind" | "stalled" | "not_enough_data" | "at_goal" | "drifting" | null;
+  too_fast?: boolean;
+  projection: {
+    goal_kg: number;
+    remaining_kg: number;
+    planned_kg_per_week: number;
+    plan_date: string | null;
+    actual_date: string | null;
+  } | null;
 }
 
 /** The browser's offset from UTC in minutes, east positive (D40: local days). */
@@ -331,6 +359,20 @@ export const api = {
   day: (date?: string) =>
     req<DaySummary>(date ? `/api/day?date=${date}&tz=${tzMinutes()}` : `/api/day?tz=${tzMinutes()}`),
   progress: () => req<{ progress: Progress | null }>(`/api/progress?tz=${tzMinutes()}`),
+  weight: () => req<WeightSummary>(`/api/weight?tz=${tzMinutes()}`),
+  logWeight: (weight_kg: number) =>
+    req<WeightSummary>(`/api/weight?tz=${tzMinutes()}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ weight_kg }),
+    }),
+  deleteWeight: (id: number) => req<WeightSummary>(`/api/weight/${id}?tz=${tzMinutes()}`, { method: "DELETE" }),
+  checkDay: (day: string, complete: boolean | null) =>
+    req<{ day: string; complete: boolean | null }>(`/api/days/${day}/check`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ complete }),
+    }),
   addMeal: (meal: { name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number }) =>
     req<{ logged: boolean; meal_log_id: number }>("/api/meals", {
       method: "POST",

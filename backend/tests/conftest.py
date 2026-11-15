@@ -54,6 +54,7 @@ def db():
     con.executescript(
         "DELETE FROM recipe_ingredients; DELETE FROM recipes;"
         "DELETE FROM inventory; DELETE FROM meal_log; DELETE FROM profile;"
+        "DELETE FROM weight_log; DELETE FROM day_check;"
     )
     for rid, name, kcal, p, c, f, ings in _RECIPES:
         con.execute(

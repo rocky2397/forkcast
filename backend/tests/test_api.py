@@ -292,3 +292,22 @@ def test_progress_needs_a_profile_then_reports(client):
 def test_the_day_follows_the_clients_time_zone(client):
     r = client.get("/api/day?tz=-300")
     assert r.status_code == 200 and "date" in r.json()
+
+
+def test_the_day_check_endpoint(client):
+    assert client.put("/api/days/2026-11-14/check", json={"complete": True}).status_code == 200
+    assert client.put("/api/days/yesterday/check", json={"complete": True}).status_code == 422
+
+
+
+def test_the_weight_endpoints(client):
+    client.put("/api/profile", json={"sex": "m", "age": 30, "height_cm": 180, "weight_kg": 82,
+                                     "activity": "moderate", "goal": "maintain", "goal_weight_kg": 75})
+    assert client.get("/api/weight").json()["entries"] == []
+    s = client.post("/api/weight?tz=60", json={"weight_kg": 81.4}).json()
+    assert s["trend_kg"] == 81.4 and s["status"] == "not_enough_data"
+    assert client.get("/api/profile").json()["profile"]["weight_kg"] == 81.4
+    assert client.post("/api/weight", json={"weight_kg": 20}).status_code == 422
+    s = client.delete(f"/api/weight/{s['entries'][0]['id']}").json()
+    assert s["entries"] == []
+

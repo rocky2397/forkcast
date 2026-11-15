@@ -99,6 +99,19 @@ CREATE TABLE IF NOT EXISTS profile (
     goal_weight_kg REAL,          -- D39, optional
     pace       TEXT               -- D39: gentle | steady
 );
+
+-- D41: weigh-ins, for the trend and the projection to the goal weight.
+CREATE TABLE IF NOT EXISTS weight_log (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    logged_at TEXT NOT NULL DEFAULT (datetime('now')),
+    weight_kg REAL NOT NULL
+);
+
+-- D42: the user's own word on whether a day's log is complete.
+CREATE TABLE IF NOT EXISTS day_check (
+    day      TEXT PRIMARY KEY,    -- local date, YYYY-MM-DD
+    complete INTEGER NOT NULL     -- 1 complete, 0 incomplete
+);
 """
 
 # Kept for the split script and anything wanting the whole shape at once.

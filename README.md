@@ -87,7 +87,13 @@ weight, a calorie floor, a cap on the deficit).
 Today also keeps score: a streak of days on target, the last two weeks as
 dots for deficit, maintenance and surplus days, and a weekly recap of meals
 cooked and new recipes tried. Forgotten days don't count as a deficit, and
-eating under your minimum never counts towards the streak. Each recipe gets a score
+eating under your minimum never counts towards the streak. You can confirm a
+day as complete ("Done for today?"), and the week's average deficit or surplus
+is shown next to the plan's.
+
+Log your weight now and then and Forkcast draws a smoothed trend, compares
+your actual pace over the last three weeks with the plan, and tells you when
+you'd reach your goal at that pace. Your daily target follows the trend. Each recipe gets a score
 from 0 to 1 for how well its mix of protein, carbs and fat matches what is
 still missing today. When you are short on protein, high-protein dishes move up.
 
@@ -318,7 +324,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 40 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 42 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
