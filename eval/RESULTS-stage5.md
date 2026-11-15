@@ -125,6 +125,39 @@ they move in steps of a few grams.
 **Cost and speed:** about 2,100 tokens in and 60 out per photo, about
 $0.0024 at Haiku 4.5 list prices, 1.6 seconds (median).
 
+## A better prompt (D37)
+
+The prompt now names the mistakes above, and the reader first writes out
+every row of the table (its name and its 100 g value as printed) before
+filling in the four values, so each value is matched to its row by name.
+Judged on **150 fresh products** (Open Food Facts ranks 601 to about 1,000,
+[`data/labels_fresh150.json`](data/labels_fresh150.json)) that played no part
+in writing it, with the old and new prompt reading the same photos:
+
+| 150 fresh products | Old prompt | **New prompt** |
+|---|---|---|
+| all four right | 61% (53 to 69) | **64%** (56 to 71) |
+| kcal right | 78% | **83%** |
+| kcal more than 10% off | 8 products | **5** |
+| kJ taken for kcal | 2 | **0** |
+| average kcal error per 100 g | 6.7 kcal | **4.0 kcal** |
+| cost per scan, time | $0.0023, 1.5 s | $0.0041, 2.8 s |
+
+Product by product, the new prompt fixed 6 readings and broke 2 (a protein
+of 8.1 for 8.4, and "<0,5 g" left empty), so the overall gain is within
+chance; the calorie gain is the clear part. The fresh products are easier
+than the first 150 (the old prompt already gets 61% there), probably because
+less popular products have cleaner close-up photos.
+
+On the 150 products the prompt was written on, it went from 49% to 59% all
+four right (kcal more than 10% off: 21 → 9), a figure that flatters it. A
+cheaper version with the rules but without writing out the table reached 55%
+there, at $0.0004 more per scan than the old prompt; it was not run on the
+fresh products. The full version was chosen for its calorie accuracy.
+
+Runs: `labeling/labels/haiku-4-5_off150*.jsonl` (first 150: old,
+`_d37rules`, `_d37`) and `labeling/labels/fresh150_{old,d37}.jsonl`.
+
 ## What this does and doesn't measure
 
 - Contributors' photos, often of foreign-language or multi-language packs.
@@ -138,8 +171,6 @@ $0.0024 at Haiku 4.5 list prices, 1.6 seconds (median).
 ## What to do next
 
 1. ~~**The sum check on the "add from label" screen.**~~ Done (D36).
-2. **The prompt:** name the three mistakes (kcal not kJ, keep decimal
-   commas, fat is the "Fett" row and not "davon gesättigte"), then measure
-   again on a fresh sample.
+2. ~~**The prompt.**~~ Done (D37), see above.
 3. **Prefer the barcode:** when a barcode is in Open Food Facts, its values
    win; scanning the barcode first avoids reading the table at all.
