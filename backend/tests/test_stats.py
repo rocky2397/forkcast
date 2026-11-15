@@ -154,6 +154,8 @@ def test_off_without_a_stats_dir(app, monkeypatch, tmp_path):
 
 def test_times_are_grouped_by_action_not_address(app, tmp_path):
     a = _new_visitor(app)
+    # Saffron first: nothing missing, so no swap lookup needing the Epicure weights (CI has none).
+    app.post("/api/inventory", json={"items": ["saffron"]}, headers={H: a})
     app.get("/api/recipes/7", headers={H: a})
     app.get("/api/recipes/8", headers={H: a})  # no such recipe: a 404
     app.get("/api/no-such-thing", headers={H: a})
