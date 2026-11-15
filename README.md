@@ -79,7 +79,10 @@ map. Recipes, matching and all the app logic are built here.
 ### Calories and macros
 
 Daily targets come from a standard formula (Mifflin-St Jeor) using your body,
-activity level and goal (lose, keep or gain weight). Each recipe gets a score
+activity level and goal (lose, keep or gain weight). Or set a goal weight and a
+pace: Forkcast works out how much less or more than you burn to eat, and
+roughly how long it takes, within safety limits (no goal below a healthy
+weight, a calorie floor, a cap on the deficit). Each recipe gets a score
 from 0 to 1 for how well its mix of protein, carbs and fat matches what is
 still missing today. When you are short on protein, high-protein dishes move up.
 
@@ -300,7 +303,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 38 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 39 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

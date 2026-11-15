@@ -95,7 +95,9 @@ CREATE TABLE IF NOT EXISTS profile (
     weight_kg  REAL NOT NULL,
     activity   TEXT NOT NULL,
     goal       TEXT NOT NULL,
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    goal_weight_kg REAL,          -- D39, optional
+    pace       TEXT               -- D39: gentle | steady
 );
 """
 
@@ -113,11 +115,16 @@ _MEAL_LOG_ADDED = {
 }
 
 
+# D39: a goal weight and the pace to reach it.
+_PROFILE_ADDED = {"goal_weight_kg": "REAL", "pace": "TEXT"}
+
+
 def _migrate(con: sqlite3.Connection) -> None:
-    have = {row["name"] for row in con.execute("PRAGMA table_info(meal_log)")}
-    for col, typ in _MEAL_LOG_ADDED.items():
-        if col not in have:
-            con.execute(f"ALTER TABLE meal_log ADD COLUMN {col} {typ}")
+    for table, added in (("meal_log", _MEAL_LOG_ADDED), ("profile", _PROFILE_ADDED)):
+        have = {row["name"] for row in con.execute(f"PRAGMA table_info({table})")}
+        for col, typ in added.items():
+            if col not in have:
+                con.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
     con.commit()
 
 

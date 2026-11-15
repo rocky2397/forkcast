@@ -58,6 +58,22 @@ export interface Profile {
   weight_kg: number;
   activity: "sedentary" | "light" | "moderate" | "active" | "very_active";
   goal: "cut" | "maintain" | "bulk";
+  /** D39: optional goal weight and the pace to reach it. */
+  goal_weight_kg?: number | null;
+  pace?: "gentle" | "steady" | null;
+}
+
+/** D39: how to reach the goal weight. */
+export interface WeightPlan {
+  goal_weight_kg: number;
+  burn: number;
+  healthy_range_kg: [number, number];
+  direction: "lose" | "gain" | "keep";
+  calories: number;
+  change: number;
+  kg_per_week: number;
+  weeks: number | null;
+  limited: string | null;
 }
 
 export interface Targets {
@@ -84,6 +100,7 @@ export interface DaySummary {
   meals: DayMeal[];
   totals: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
   targets: Targets | null;
+  plan?: WeightPlan | null;
 }
 
 export interface Product {
@@ -169,6 +186,20 @@ function rememberKitchen(res: Response) {
   }
 }
 
+/** A readable message from an API error: a plain string, or FastAPI's list of
+ *  validation problems ("weight_kg: Input should be less than or equal to 250"). */
+function errorText(detail: unknown): string | null {
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    const parts = detail.map((d) => {
+      const field = Array.isArray(d?.loc) ? d.loc[d.loc.length - 1] : null;
+      return field ? `${String(field).replace(/_/g, " ")}: ${d?.msg ?? "invalid"}` : String(d?.msg ?? d);
+    });
+    return parts.join("; ") || null;
+  }
+  return null;
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, withKitchen(init));
   rememberKitchen(res);
@@ -178,7 +209,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail ?? `${res.status} ${res.statusText}`);
+    throw new Error(errorText(body.detail) ?? `${res.status} ${res.statusText}`);
   }
   return res.json();
 }

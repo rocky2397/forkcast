@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { api, isDemo, scansOn, type DayMeal, type DaySummary, type Product, type Profile, type Targets } from "../api";
+import {
+  api,
+  isDemo,
+  scansOn,
+  type DayMeal,
+  type DaySummary,
+  type Product,
+  type Profile,
+  type Targets,
+  type WeightPlan,
+} from "../api";
 import { ProfileForm } from "./ProfileForm";
 import { detectBarcode } from "../barcode";
 import { displayName } from "../format";
@@ -39,6 +49,28 @@ function CalorieRing({ eaten, target }: { eaten: number; target: number }) {
         <span className="ring-label">{left >= 0 ? "kcal left" : "kcal over"}</span>
       </figcaption>
     </figure>
+  );
+}
+
+/** D39: the goal-weight plan in one or two plain sentences. */
+function PlanLine({ plan }: { plan: WeightPlan }) {
+  const goal = `${plan.goal_weight_kg} kg`; // not rounded: 72.5 stays 72.5
+  let text: string;
+  if (plan.direction === "keep") {
+    text = `You're at your goal of ${goal}: about ${fmt(plan.calories)} kcal a day keeps you there.`;
+  } else if (plan.weeks == null) {
+    text = `Goal: ${goal}.`;
+  } else {
+    const more = plan.direction === "lose" ? "less" : "more";
+    text =
+      `To reach ${goal}: about ${fmt(plan.calories)} kcal a day, ${fmt(plan.change)} ${more} than you burn. ` +
+      `At about ${plan.kg_per_week} kg a week, that's roughly ${plan.weeks} weeks.`;
+  }
+  return (
+    <p className="plan-line">
+      {text}
+      {plan.limited && <span className="plan-limited"> {plan.limited}</span>}
+    </p>
   );
 }
 
@@ -232,7 +264,7 @@ export function Today() {
             },
             {
               term: "Your targets",
-              text: "Worked out from your profile: a standard formula (Mifflin-St Jeor) for your body, then your activity level and goal. Change them under Edit profile.",
+              text: "Worked out from your profile: a standard formula (Mifflin-St Jeor) for your body, then your activity level and goal. With a goal weight, the line under the ring says how much less or more than you burn to eat, and roughly how long it takes. Change them under Edit profile.",
             },
             {
               term: "Liked · Not for me",
@@ -249,6 +281,7 @@ export function Today() {
             <p className="ring-caption">
               {fmt(totals.calories)} of {fmt(t.calories)} kcal eaten
             </p>
+            {day?.plan && <PlanLine plan={day.plan} />}
             <div className="macros">
               <MacroBar label="Protein" value={totals.protein_g} target={t.protein_g} />
               <MacroBar label="Carbs" value={totals.carbs_g} target={t.carbs_g} />
