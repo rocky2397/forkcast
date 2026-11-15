@@ -46,6 +46,16 @@ Forkcast from this repo at one pinned commit. Create a public Docker Space,
 add those two files, and it builds. To update the demo, change
 `FORKCAST_COMMIT` in the Space's Dockerfile.
 
+**Usage totals (D33).** With `FORKCAST_STATS_DIR` also set, the demo keeps
+anonymous daily totals there (one JSON file per UTC day, written every 5
+minutes) and shows them at `/stats`: visitors, what they did, how far they
+get, and how the app runs (response times and errors per action, start times). Nothing personal is stored: no IPs,
+browser details, typed text, profile values or per-visitor records. On
+Hugging Face, attach a **private storage bucket** to the Space at `/data`
+(Space settings, Volumes); the Dockerfile points `FORKCAST_STATS_DIR` at
+`/data/forkcast-stats`. Without a bucket the totals still work but reset on
+every restart.
+
 Try it locally:
 
 ```bash

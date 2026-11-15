@@ -24,6 +24,9 @@ changes are private to you and are deleted after a day without visits.
 Photo scanning is switched off here, because it calls a paid AI model; the
 walkthrough in the project README shows it.
 
+Only anonymous usage totals are kept (no IP addresses, nothing typed, nothing
+per visitor). They are public at `/stats` on the app.
+
 Code, evaluation and design notes: https://github.com/rocky2397/forkcast
 
 The code is MIT-licensed. The recipes come from the public food.com dataset

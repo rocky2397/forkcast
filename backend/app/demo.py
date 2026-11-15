@@ -118,8 +118,10 @@ def _sweep(now: float) -> None:
         f.unlink(missing_ok=True)
 
 
-def kitchen(requested: str | None) -> tuple[str, Path]:
-    """(kitchen id, user DB path) for a request: the visitor's own, or a new one.
+def kitchen(requested: str | None) -> tuple[str, Path, bool]:
+    """(kitchen id, user DB path, newly created) for a request.
+
+    The visitor's own kitchen, or a new one.
 
     Anything that isn't a live kitchen id, including a malformed header, gets a
     fresh kitchen; the id is never used in a path unless it matches _ID.
@@ -129,7 +131,7 @@ def kitchen(requested: str | None) -> tuple[str, Path]:
             path = kitchens_dir() / f"{requested}.db"
             if path.is_file():
                 os.utime(path)  # last use, for the idle sweep
-                return requested, path
+                return requested, path, False
         now = time.time()
         kitchens_dir().mkdir(parents=True, exist_ok=True)
         _sweep(now)
@@ -141,4 +143,4 @@ def kitchen(requested: str | None) -> tuple[str, Path]:
         con.execute("UPDATE meal_log SET logged_at = datetime('now')")
         con.commit()
         con.close()
-        return new, path
+        return new, path, True
