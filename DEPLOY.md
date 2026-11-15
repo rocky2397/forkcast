@@ -39,6 +39,8 @@ For a link anyone can open, set `FORKCAST_DEMO=1` and no password:
 - Photo and label scanning are off, so **don't set `ANTHROPIC_AUTH_TOKEN`**:
   the demo needs no secret at all. Barcode lookup still works.
 - No persistent disk is needed: kitchens are throwaway. A free host works.
+- The app runs the recipe feed once on the demo kitchen while it starts, so
+  the first visitor after a wake-up doesn't pay for its one-off preparation.
 
 On Hugging Face Spaces: [`deploy/huggingface/`](deploy/huggingface/) holds
 the whole Space, a `README.md` (Space settings) and a `Dockerfile` that builds

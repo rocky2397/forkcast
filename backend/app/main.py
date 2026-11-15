@@ -34,6 +34,7 @@ async def lifespan(app: FastAPI):
         unknown = demo.build_template(normalizer.match)
         if unknown:
             raise RuntimeError(f"demo kitchen items not recognised: {unknown}")
+        await asyncio.to_thread(_warm_up)
     flusher = None
     if stats.enabled():  # anonymous usage totals (D33)
         stats.start(embeddings.vocabulary())
@@ -45,6 +46,22 @@ async def lifespan(app: FastAPI):
         with suppress(asyncio.CancelledError):
             await flusher
         stats.flush()
+
+
+def _warm_up() -> None:
+    """Do the recipe feed's one-off work at startup, not for the first visitor.
+
+    The first feed builds the taste "dish space" and reads the corpus from
+    disk: about 0.6 s on a laptop, 2.5 s on the demo's host, every time the
+    demo wakes up. Running the feed once against the demo's starting kitchen
+    moves that into the start.
+    """
+    token = current_db.set(demo.template_path())
+    try:
+        cookable_recipes(max_missing=0, assume_staples=True, limit=20, min_missing=0)
+        cookable_recipes(max_missing=1, assume_staples=True, limit=20, min_missing=1)
+    finally:
+        current_db.reset(token)
 
 
 async def _flush_stats():
