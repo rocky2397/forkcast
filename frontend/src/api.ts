@@ -76,6 +76,40 @@ export interface WeightPlan {
   limited: string | null;
 }
 
+/** D40: one day in the strip. */
+export type DayClass = "deficit" | "maintenance" | "surplus" | "below_minimum" | "not_logged" | "today";
+
+export interface Progress {
+  today: string;
+  target: number;
+  burn: number;
+  minimum: number;
+  streak: number;
+  strip: { date: string; calories: number; protein_g: number; status: DayClass; on_target: boolean }[];
+  totals: {
+    deficit: number;
+    maintenance: number;
+    surplus: number;
+    below_minimum: number;
+    not_logged: number;
+    on_target: number;
+    days: number;
+  };
+  recap: {
+    days: number;
+    cooked: number;
+    typed: number;
+    new_recipes: number;
+    liked: number;
+    days_logged: number;
+    days_on_target: number;
+    protein_days: number;
+  };
+}
+
+/** The browser's offset from UTC in minutes, east positive (D40: local days). */
+const tzMinutes = () => -new Date().getTimezoneOffset();
+
 export interface Targets {
   calories: number;
   protein_g: number;
@@ -294,7 +328,9 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(p),
     }),
-  day: (date?: string) => req<DaySummary>(date ? `/api/day?date=${date}` : "/api/day"),
+  day: (date?: string) =>
+    req<DaySummary>(date ? `/api/day?date=${date}&tz=${tzMinutes()}` : `/api/day?tz=${tzMinutes()}`),
+  progress: () => req<{ progress: Progress | null }>(`/api/progress?tz=${tzMinutes()}`),
   addMeal: (meal: { name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number }) =>
     req<{ logged: boolean; meal_log_id: number }>("/api/meals", {
       method: "POST",

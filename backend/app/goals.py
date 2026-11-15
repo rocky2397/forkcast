@@ -61,6 +61,12 @@ def burn(profile: Mapping) -> float:
     return b * ACTIVITY_FACTORS[profile["activity"]]
 
 
+def minimum_calories(profile: Mapping) -> float:
+    """The daily minimum (D39): resting burn, and never under 1,200 / 1,500 kcal."""
+    resting = bmr(profile["sex"], profile["age"], profile["height_cm"], profile["weight_kg"])
+    return max(resting, KCAL_FLOOR[profile["sex"]])
+
+
 def healthy_range_kg(height_cm: float) -> tuple[float, float]:
     """Weights for BMI 18.5 to 25 at this height, rounded to 0.5 kg."""
     m2 = (height_cm / 100.0) ** 2
@@ -96,9 +102,7 @@ def plan(profile: Mapping) -> dict | None:
     wanted = PACE_KG_PER_WEEK[pace] * KCAL_PER_KG / 7.0
     limited = None
     if diff < 0:
-        floor = max(bmr(profile["sex"], profile["age"], profile["height_cm"], profile["weight_kg"]),
-                    KCAL_FLOOR[profile["sex"]])
-        room = max(daily_burn - floor, 0.0)
+        room = max(daily_burn - minimum_calories(profile), 0.0)
         cap = MAX_DEFICIT_SHARE * daily_burn
         change = min(wanted, cap, room)
         if change <= 0:

@@ -7,9 +7,11 @@ import {
   type DaySummary,
   type Product,
   type Profile,
+  type Progress,
   type Targets,
   type WeightPlan,
 } from "../api";
+import { ProgressCard } from "./Progress";
 import { ProfileForm } from "./ProfileForm";
 import { detectBarcode } from "../barcode";
 import { displayName } from "../format";
@@ -105,6 +107,7 @@ function mealTime(m: DayMeal): string {
 
 export function Today() {
   const [day, setDay] = useState<DaySummary | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -121,9 +124,10 @@ export function Today() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const refresh = () =>
-    Promise.all([api.day(), api.profile()])
-      .then(([d, p]) => {
+    Promise.all([api.day(), api.profile(), api.progress()])
+      .then(([d, p, g]) => {
         setDay(d);
+        setProgress(g.progress);
         setProfile(p.profile);
         setLoadError(null);
         setLoaded(true);
@@ -270,6 +274,10 @@ export function Today() {
               term: "Liked · Not for me",
               text: "Rate the recipes you cook. Recipes close to the dishes you cook move up the feed; ones you mark Not for me stop counting.",
             },
+            {
+              term: "Your days",
+              text: "Below your meals: one dot per day for the last two weeks, coloured by whether you ate less than you burn, about the same, or more. The streak counts days within 10% of your target. Days logged under half the target count as not logged, and days under your minimum never count.",
+            },
           ]}
         />
       )}
@@ -290,6 +298,7 @@ export function Today() {
           </section>
         )}
 
+        <div className="today-main">
         <section aria-labelledby="meals-title">
           <h2 id="meals-title" className="section-title">Today's meals</h2>
           {meals.length === 0 && (
@@ -440,6 +449,8 @@ export function Today() {
             </button>
           )}
         </section>
+        {progress && <ProgressCard progress={progress} />}
+        </div>
       </div>
     </div>
   );
