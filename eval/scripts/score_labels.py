@@ -20,6 +20,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
+
 FIELDS = ("calories", "protein_g", "carbs_g", "fat_g")
 LABEL = {"calories": "kcal", "protein_g": "protein", "carbs_g": "carbs", "fat_g": "fat"}
 
@@ -58,6 +60,38 @@ def kind(r: dict) -> str:
     return "other"
 
 
+def adds_up(read: dict) -> bool:
+    """The app's own calorie sum check (D36, app/nutrition.py label_check)."""
+    from app.nutrition import label_check
+
+    return label_check(*(read[x] for x in FIELDS)) is None
+
+
+def _dev_table(rows: list[dict], title: str) -> None:
+    print(f"\n  how far off, {title} ({len(rows)} products; reader minus database, per 100 g):")
+    print(f"    {'':8} {'typical':>9} {'average':>9} {'worst 10%':>10} {'within 5%':>10} {'within 10%':>11} {'within 20%':>11}")
+    for f in FIELDS:
+        pairs = [(r["read"][f], r["truth"][f]) for r in rows if r["read"][f] is not None]
+        if not pairs:
+            continue
+        err = sorted(abs(a - b) for a, b in pairs)
+        unit = "kcal" if f == "calories" else "g"
+        floor = 1.0 if f == "calories" else 0.2  # rounding on labels
+        within = [sum(1 for a, b in pairs if abs(a - b) <= max(floor, x * b)) / len(pairs) for x in (0.05, 0.10, 0.20)]
+        p90 = err[min(len(err) - 1, int(0.9 * len(err)))]
+        print(f"    {LABEL[f]:8} {statistics.median(err):>6.1f} {unit:<3}{statistics.mean(err):>6.1f} {unit:<3}"
+              f"{p90:>7.1f} {unit:<3}{100 * within[0]:>9.0f}%{100 * within[1]:>10.0f}%{100 * within[2]:>10.0f}%")
+    missing = sum(1 for r in rows for f in FIELDS if r["read"][f] is None)
+    if missing:
+        print(f"    (values not read at all: {missing})")
+
+
+def deviation(ok: list[dict]) -> None:
+    _dev_table(ok, "all readings")
+    passed = [r for r in ok if adds_up(r["read"])]
+    _dev_table(passed, "readings that pass the sum check")
+
+
 def main() -> None:
     path = Path(sys.argv[1])
     details = "--details" in sys.argv
@@ -84,6 +118,7 @@ def main() -> None:
         cost = (statistics.mean(tin) * 1.0 + statistics.mean(tout) * 5.0) / 1e6  # Haiku 4.5 list price
         print(f"  tokens {statistics.mean(tin):.0f} in, {statistics.mean(tout):.0f} out; "
               f"about ${cost:.4f} per scan; median {statistics.median(r['seconds'] for r in ok):.1f} s")
+    deviation(ok)
     if details:
         print("\n  wrong products (read vs database):")
         for r in wrong:

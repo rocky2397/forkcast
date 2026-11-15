@@ -104,8 +104,9 @@ a whole shopping haul are not tested yet ([details](eval/RESULTS-stage4.md)).
 Facts, the label reader got calories, protein, carbs and fat all right for an
 estimated two in three (database disagreements checked by eye). Its mistakes
 are systematic: kilojoules taken for kcal, "1,2 g" read as 12, a value from
-the neighbouring row. A simple calorie sum check catches most of them
-([details](eval/RESULTS-stage5.md)).
+the neighbouring row. The app now warns when the values read don't add up
+(D36), which catches most of them; readings that pass are off by 11 kcal per
+100 g on average ([details](eval/RESULTS-stage5.md)).
 
 ### How the tests work
 
@@ -299,7 +300,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 35 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 36 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
