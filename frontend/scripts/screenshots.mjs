@@ -9,6 +9,7 @@
 // (playwright-core, channel "chrome"; no browser download), saves the
 // screenshots, and runs axe-core on every screen it visits. Exits non-zero
 // on any serious or critical WCAG 2.1 AA violation.
+import { execFileSync } from "node:child_process";
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
@@ -25,6 +26,16 @@ const KITCHEN = DEMO.kitchen;
 const PROFILE = DEMO.profile;
 const COOKED = DEMO.cooked_and_liked; // Cherry Tomato Pasta, Foil Chicken Casserole for One
 const TYPED_MEAL = DEMO.typed_meal;
+
+// D43: the progress screens need six weeks of history, which the API can't
+// backdate, so a sample person is written straight into the database.
+const SHOT_DB = process.env.FORKCAST_SHOT_DB;
+const SHOT_PY = process.env.FORKCAST_SHOT_PY || "python3";
+function persona(name) {
+  if (!SHOT_DB) throw new Error("FORKCAST_SHOT_DB not set (run ops/screenshots.sh)");
+  const script = new URL("../../backend/scripts/sample_history.py", import.meta.url).pathname;
+  console.log("  " + execFileSync(SHOT_PY, [script, SHOT_DB, name], { encoding: "utf8" }).trim());
+}
 
 async function api(path, body, method = body ? "POST" : "GET") {
   const res = await fetch(base + path, {
@@ -127,6 +138,32 @@ async function glide(page, y, ms = 900) {
 
 const yOf = (locator) => locator.evaluate((el) => el.getBoundingClientRect().top + scrollY - 90);
 
+/** Chrome's screencast: a frame whenever the screen changes. Returns stop(dir). */
+async function capture(ctx, page) {
+  const frames = [];
+  const cdp = await ctx.newCDPSession(page);
+  cdp.on("Page.screencastFrame", ({ data, metadata, sessionId }) => {
+    frames.push({ data, t: metadata.timestamp });
+    cdp.send("Page.screencastFrameAck", { sessionId }).catch(() => {});
+  });
+  await cdp.send("Page.startScreencast", { format: "jpeg", quality: 90, maxWidth: 780, maxHeight: 1688 });
+  return async (dir, label) => {
+    await cdp.send("Page.stopScreencast");
+    // Each frame stays up until the next one; the last holds for a second.
+    mkdirSync(dir, { recursive: true });
+    const list = [];
+    frames.forEach((f, i) => {
+      const name = `f${String(i).padStart(5, "0")}.jpg`;
+      writeFileSync(join(dir, name), Buffer.from(f.data, "base64"));
+      const hold = i + 1 < frames.length ? frames[i + 1].t - f.t : 1;
+      list.push(`file '${name}'`, `duration ${hold.toFixed(3)}`);
+    });
+    list.push(list.at(-2)); // concat ignores the last duration unless the file repeats
+    writeFileSync(join(dir, "frames.txt"), list.join("\n") + "\n");
+    console.log(`  ${label}: ${frames.length} frames, ${(frames.at(-1).t - frames[0].t + 1).toFixed(1)} s`);
+  };
+}
+
 /**
  * The README walkthrough: a first visit on a phone, about 30 seconds.
  * Chrome's own screencast (DevTools protocol) streams a frame whenever the
@@ -153,13 +190,7 @@ async function recordDemo(browser, videoDir) {
   await page.getByRole("button", { name: "Get started" }).waitFor();
   await pause(300); // fonts settle before the first frame
 
-  const frames = [];
-  const cdp = await ctx.newCDPSession(page);
-  cdp.on("Page.screencastFrame", ({ data, metadata, sessionId }) => {
-    frames.push({ data, t: metadata.timestamp });
-    cdp.send("Page.screencastFrameAck", { sessionId }).catch(() => {});
-  });
-  await cdp.send("Page.startScreencast", { format: "jpeg", quality: 90, maxWidth: 780, maxHeight: 1688 });
+  const stop = await capture(ctx, page);
   await pause(3200);
   await page.getByRole("button", { name: "Get started" }).click();
   await page.locator(".ring").waitFor();
@@ -214,27 +245,94 @@ async function recordDemo(browser, videoDir) {
   await page.locator(".ring").waitFor();
   await pause(2600);
 
-  await cdp.send("Page.stopScreencast");
+  await stop(join(videoDir, "demo"), "demo walkthrough");
   await ctx.close();
+}
 
-  // Each frame stays up until the next one; the last holds for a second.
-  mkdirSync(videoDir, { recursive: true });
-  const list = [];
-  frames.forEach((f, i) => {
-    const name = `f${String(i).padStart(5, "0")}.jpg`;
-    writeFileSync(join(videoDir, name), Buffer.from(f.data, "base64"));
-    const hold = i + 1 < frames.length ? frames[i + 1].t - f.t : 1;
-    list.push(`file '${name}'`, `duration ${hold.toFixed(3)}`);
+/**
+ * D43: the progress walkthrough, about 20 seconds, with the sample person
+ * losing weight: the plan under the ring, "Done for today", a weigh-in and
+ * the trend, then the streak, the day strip and the weekly recap.
+ */
+async function recordProgress(browser, videoDir) {
+  const ctx = await context(browser, { width: 390, height: 844 }, 2);
+  await ctx.addInitScript(showTaps);
+  const page = await ctx.newPage();
+  const pause = (ms) => page.waitForTimeout(ms);
+  await page.goto(base);
+  await tab(page, "Today").click();
+  await page.locator(".weight-card").waitFor();
+  await pause(400);
+  const stop = await capture(ctx, page);
+
+  await pause(2600); // the ring and the plan line
+
+  // Log a small dinner that brings the day to its target, then call it done:
+  // the streak goes up by one. (Confirming the sample's 1,429 kcal as
+  // complete would rightly count as a day under her minimum.)
+  const left = (await api("/api/progress")).progress.target - (await api("/api/day")).totals.calories;
+  await glide(page, (await yOf(page.getByRole("button", { name: "Log a meal" }))) - 320, 1100);
+  await pause(500);
+  await page.getByRole("button", { name: "Log a meal" }).click();
+  await pause(600);
+  await page.getByPlaceholder("e.g. Skyr with berries").pressSequentially("Chickpea salad", { delay: 70 });
+  await page.getByRole("spinbutton", { name: "kcal", exact: true }).pressSequentially(String(Math.round(left / 10) * 10), { delay: 110 });
+  await page.getByRole("spinbutton", { name: "Protein g" }).pressSequentially("16", { delay: 90 });
+  await page.getByRole("spinbutton", { name: "Carbs g" }).pressSequentially("34", { delay: 90 });
+  await page.getByRole("spinbutton", { name: "Fat g" }).pressSequentially("9", { delay: 90 });
+  await pause(500);
+  await page.getByRole("button", { name: "Log meal" }).click();
+  await pause(1400);
+  await glide(page, (await yOf(page.locator(".day-check"))) - 180, 900);
+  await pause(800);
+  await page.getByRole("button", { name: "Done for today" }).click();
+  await pause(1400);
+  await glide(page, (await yOf(page.locator(".weight-card"))) + 10, 1300);
+  await pause(1800);
+  const field = page.getByPlaceholder("Today's weight, kg");
+  // Carry on from the recent weigh-ins (not the trend, which lags a loss).
+  const entries = (await api("/api/weight")).entries;
+  const kg = (entries.at(-1).weight_kg - 0.2).toFixed(1);
+  await field.click();
+  await field.pressSequentially(kg, { delay: 120 });
+  await pause(400);
+  await page.getByRole("button", { name: "Log weight" }).click();
+  await pause(2600);
+  await glide(page, (await yOf(page.locator(".progress-card"))) + 10, 1300);
+  await pause(2400);
+  await glide(page, (await yOf(page.locator(".recap"))) - 260, 1000);
+  await pause(2800);
+
+  await stop(join(videoDir, "progress"), "progress walkthrough");
+  await ctx.close();
+}
+
+/** D43: the Weight card and the day strip, from the card's top to the legend. */
+async function progressShot(page, name, label) {
+  await page.reload();
+  await tab(page, "Today").click();
+  await page.locator(".weight-card .weight-chart").waitFor();
+  await page.waitForTimeout(500);
+  const box = await page.evaluate(() => {
+    const top = document.querySelector(".weight-card").getBoundingClientRect().top + scrollY;
+    const bottom = document.querySelector(".day-legend").getBoundingClientRect().bottom + scrollY;
+    return { top, bottom };
   });
-  list.push(list.at(-2)); // concat ignores the last duration unless the file repeats
-  writeFileSync(join(videoDir, "frames.txt"), list.join("\n") + "\n");
-  const secs = frames.at(-1).t - frames[0].t + 1;
-  console.log(`  demo walkthrough: ${frames.length} frames, ${secs.toFixed(1)} s`);
+  await page.screenshot({
+    path: join(outDir, `${name}.jpg`),
+    type: "jpeg",
+    quality: 86,
+    fullPage: true,
+    clip: { x: 0, y: box.top - 12, width: 390, height: box.bottom - box.top + 28 },
+  });
+  await audit(page, label);
+  console.log(`  ${name}.jpg`);
 }
 
 async function main() {
   mkdirSync(outDir, { recursive: true });
   await seed();
+  persona("lose");
   const browser = await chromium.launch({ channel: "chrome", headless: true });
   try {
     // Phone: 390x844 at 2x, like a current iPhone.
@@ -273,7 +371,18 @@ async function main() {
     await desk.locator(".detail-pane h1").waitFor();
     await shot(desk, "desktop", "feed (desktop)");
 
-    if (videoDir) await recordDemo(browser, videoDir);
+    // D43: the progress card for both sample people, side by side in the README.
+    const prog = await (await context(browser, { width: 390, height: 844 }, 2)).newPage();
+    await prog.goto(base);
+    await progressShot(prog, "progress-lose", "progress, losing (phone)");
+    persona("gain");
+    await progressShot(prog, "progress-gain", "progress, gaining (phone)");
+    persona("lose");
+
+    if (videoDir) {
+      await recordDemo(browser, videoDir);
+      await recordProgress(browser, videoDir);
+    }
   } finally {
     await browser.close();
   }

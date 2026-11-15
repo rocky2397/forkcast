@@ -22,7 +22,18 @@ next visit takes about a minute while it wakes up. Usage is counted only as
 | <img src="docs/screenshots/recipes.jpg" width="160" alt="Recipe feed on a phone: tabs for cookable now, one away and two away; each recipe shows coloured dots for its main ingredients, how many you have, which cooked dish it is like ("Like your Cherry Tomato Pasta") and whether it fits what's left today"> | <img src="docs/screenshots/recipe.jpg" width="160" alt="Recipe page: title, a three-line author's note with Read more, calories and macros, and the ingredients you already have"> | <img src="docs/screenshots/shopping.jpg" width="160" alt="Worth buying: yeast unlocks 255 recipes, then baking powder 140 more, then onion 99 more, each with example dishes"> | <img src="docs/screenshots/today.jpg" width="160" alt="Today: a ring with calories left, protein, carbs and fat bars with grams to go, and today's meals"> | <img src="docs/screenshots/kitchen.jpg" width="160" alt="Kitchen: a scan button, an add-by-name field and the ingredients grouped by kind"> |
 | What you can cook, best first | What you have is ticked | Three buys that unlock the most | Calories and macros left | What Forkcast matches against |
 
-Screenshots come from a demo kitchen with a sample profile, not real data.
+### Goals and progress
+
+<p align="center"><img src="docs/screenshots/progress.gif" width="300" alt="A 20-second walkthrough on a phone of someone losing weight: the plan under the calorie ring, logging a chickpea salad that brings the day to its target, Done for today and the streak rising to 8 days, logging a weight that nudges the trend line down, then the 14-day strip of deficit days and the weekly recap"></p>
+
+| Losing weight | Gaining weight |
+|---|---|
+| <img src="docs/screenshots/progress-lose.jpg" width="300" alt="Weight card for someone losing weight: a falling trend line through noisy weigh-ins, a dashed path to the 64 kg goal, On track at minus 0.4 kg a week against a plan of minus 0.5, 64 kg around late March; below it 7 days in a row on target and two weeks of dots, mostly green deficit days, two blue surplus days and one forgotten day"> | <img src="docs/screenshots/progress-gain.jpg" width="300" alt="Weight card for someone gaining weight: a rising trend line, a dashed path up to the 72 kg goal, On track at plus 0.3 kg a week; below it 8 days in a row on target and two weeks of mostly blue surplus days, one maintenance day and one forgotten day"> |
+| Deficit days on target, weight falling about 0.4 kg a week | Surplus days on target, weight rising about 0.25 kg a week |
+
+Screenshots come from a demo kitchen with a sample profile, not real data. The
+two people above are made up too: six weeks of generated weigh-ins and days
+(`backend/app/sample.py`, fixed seed, D43), used only for these images.
 
 ## How it works
 
@@ -324,7 +335,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 42 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 43 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
