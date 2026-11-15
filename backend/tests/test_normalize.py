@@ -142,3 +142,58 @@ def test_a_negated_ingredient_is_not_the_ingredient(n, raw, expected):
 def test_a_name_that_is_itself_negated_survives(n):
     """"gluten free flour" is its own ingredient; stripping leaves plain flour."""
     assert n.match("gluten-free flour") == "gluten_free_flour"
+
+
+# --- D35: names read off European packaging, and scanned juice -------------
+
+D35_VOCAB = [
+    "yogurt", "soy_yogurt", "milk", "soy_milk", "oat_milk", "coconut_milk",
+    "almond_milk", "buttermilk", "milk_chocolate", "chocolate", "strawberry",
+    "vanilla", "eggplant", "zucchini", "beet", "kiwi", "fruit", "tangerine",
+    "orange", "lemon", "grapefruit", "apple", "fruit_juice", "mandarin_fish",
+]
+
+
+@pytest.fixture
+def d35():
+    return Normalizer(D35_VOCAB)
+
+
+@pytest.mark.parametrize("raw, expected", [
+    ("natural yoghurt", "yogurt"),          # British spelling
+    ("vanilla yoghurt", "yogurt"),          # flavoured dairy is the dairy
+    ("apricot yoghurt", "yogurt"),
+    ("soy yoghurt", "soy_yogurt"),
+    ("soya milk", "soy_milk"),              # was plain milk
+    ("aubergines", "eggplant"),
+    ("courgette", "zucchini"),
+    ("beetroot", "beet"),
+    ("kiwi fruit", "kiwi"),                 # was "fruit"
+    ("satsumas", "tangerine"),
+    ("mandarin oranges", "tangerine"),
+    ("mandarin fish", "mandarin_fish"),     # a longer name still wins
+    ("strawberry milk", "milk"),            # not strawberries
+    ("chocolate milk", "milk"),
+    ("coconut milk", "coconut_milk"),       # plant milks keep their names
+    ("almond milk", "almond_milk"),
+    ("coconut milk vanilla yogurt", "yogurt"),
+    ("buttermilk", "buttermilk"),
+    ("milk chocolate", "milk_chocolate"),
+    ("orange juice", "orange"),             # in a recipe, citrus juice is the fruit
+])
+def test_d35_european_names_and_flavoured_dairy(d35, raw, expected):
+    assert d35.match(raw) == expected
+
+
+@pytest.mark.parametrize("raw, expected", [
+    ("orange juice", "fruit_juice"),        # a scanned carton is not oranges
+    ("red grapefruit juice", "fruit_juice"),
+    ("juice", "fruit_juice"),
+    ("apple juice", "fruit_juice"),
+    ("orange", "orange"),                   # the fruit itself is unchanged
+    ("natural yoghurt", "yogurt"),
+])
+def test_d35_scanned_products(d35, raw, expected):
+    from app.normalize import packaged
+
+    assert packaged(d35, raw) == expected

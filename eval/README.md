@@ -41,8 +41,9 @@ as the system under test.
    average of everything you cooked, barely beat a coin flip; comparing with
    your nearest dishes (D31) raised "what they cook next" from 55 to 61 but
    still doesn't pick favourites.
-4. Photo scanning: **first half done.** 405 store photos from a public
-   dataset through the app's scanner and matcher: the right ingredient for
-   65% (see [`RESULTS-stage4.md`](RESULTS-stage4.md)). A third of the misses
-   are the matcher, mostly "orange juice" becoming *orange*. Still to do: a
-   matcher fix judged on fresh photos, and real shopping photos.
+4. Photo scanning: **first half done.** Store photos from a public
+   dataset through the app's scanner and matcher (see
+   [`RESULTS-stage4.md`](RESULTS-stage4.md)): 65% at first, a third of the
+   misses the matcher's. The matcher fix (D35), judged on 289 validation
+   photos it wasn't designed on, raised it from 71% to 76%. Still to do: real
+   shopping photos.

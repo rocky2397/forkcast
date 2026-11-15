@@ -93,11 +93,12 @@ The app makes promises you act on. Three are tested:
 3. **"Suits your taste."** Does the taste ranking know what a real person
    likes? (Your kind of food, yes; your favourites, no. See test 3.)
 
-**Tested in part:** photo scanning. On 405 phone photos from a public grocery
-dataset, the app proposed the right ingredient for 65%: vegetables 85%, fruit
-65%, cartons 52%. A third of the misses were the ingredient matcher, not the
-camera: "orange juice" became *orange*. Photos of a whole shopping haul are
-not tested yet ([details](eval/RESULTS-stage4.md)).
+**Tested in part:** photo scanning. On phone photos from a public grocery
+dataset, the app first proposed the right ingredient for 65%. A third of the
+misses were the ingredient matcher, not the camera: "orange juice" became
+*orange* and "yoghurt" nothing. After fixing that (D35), judged on photos not
+used to design the fix, 76%: vegetables 85%, fruit 76%, cartons 69%. Photos of
+a whole shopping haul are not tested yet ([details](eval/RESULTS-stage4.md)).
 
 ### How the tests work
 
@@ -291,7 +292,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 34 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 35 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

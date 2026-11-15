@@ -3,13 +3,15 @@
 **Question:** you photograph your groceries. Does Forkcast end up proposing
 the right ingredient?
 
-**Short answer:** for 65% of photos (95% interval 61 to 70%). Vegetables
-work well (85%), fruit and cartons less so (65% and 52%). About a third of
-the misses are not the camera's fault: the model named the item correctly
-and Forkcast's ingredient matcher then turned it into the wrong ingredient,
-most often "orange juice" into *orange*. Nothing is saved without you
-ticking it on the confirm screen, but that screen shows the matched
-ingredient, so a wrong match looks just like a right one.
+**Short answer:** at first for 65% of photos (95% interval 61 to 70%).
+About a third of the misses were not the camera's fault: the model named the
+item correctly and Forkcast's ingredient matcher then turned it into the
+wrong ingredient, most often "orange juice" into *orange*. After fixing the
+matcher (D35), on 289 photos not used to design the fix: **76%** (71 to 81),
+with vegetables at 85%, fruit 76% and cartons 69%. What is left is mostly the
+camera: similar-looking fruit and look-alike cartons. Nothing is saved
+without you ticking it on the confirm screen, but that screen shows the
+matched ingredient, so a wrong match still looks just like a right one.
 
 ## What was tested
 
@@ -31,8 +33,11 @@ ingredient, so a wrong match looks just like a right one.
   proposals (2.0 per photo on average) are not counted against it.
 
 Scripts: [`scripts/run_vision.py`](scripts/run_vision.py),
-[`scripts/score_vision.py`](scripts/score_vision.py); every proposal is in
-`labeling/vision/haiku-4-5_test5.jsonl`.
+[`scripts/score_vision.py`](scripts/score_vision.py),
+[`scripts/rematch_vision.py`](scripts/rematch_vision.py) (re-match a run's
+answers with the current matcher). Every proposal is in `labeling/vision/`:
+`haiku-4-5_test5.jsonl` as run, `_test5_d35` re-matched, and the validation
+run `_val5_before` / `_val5_d35`.
 
 ## Results
 
@@ -60,6 +65,37 @@ small photos (348 × 348 pixels, about 700 tokens in, 50 out). A full-size
 phone photo is resized by the API to roughly 1,600 image tokens, so a real
 scan costs nearer $0.002: about $2 per 1,000 scans.
 
+## After the matcher fix (D35)
+
+The fix changes only how names are matched, so it can be judged on the
+model's existing answers. To keep it honest it was judged on photos it was
+not designed on: 289 from the dataset's separate validation split (5 per
+product where there are 5), run through the scanner once and then scored
+with the old and the new matcher.
+
+| Validation photos (289) | Old matcher | **New matcher** |
+|---|---|---|
+| **All** | 71% (65 to 76) | **76%** (71 to 81) |
+| Vegetables | 85% | 85% |
+| Fruit | 74% | 76% |
+| Cartons | 55% | **69%** |
+| Named right, matched wrong | 25 photos | 9 photos |
+
+The 9 left are camera mistakes the word check can't tell apart: soy and oat
+yoghurt cartons read as "soy milk" or "oat milk". On the test photos the fix
+was designed on, 65% became 75%; that number flatters it, so it isn't the
+headline.
+
+What changed: a carton read as "orange juice" (or any citrus juice, or just
+"juice") is now *fruit juice* rather than the fruit. A recipe's "juice of 2
+oranges" is still orange, because there the juice does come from the fruit.
+British and European names now match (yoghurt, soya milk, aubergine,
+courgette, beetroot, kiwi fruit, satsuma, mandarin), and flavoured milk is
+milk rather than its flavour. Checks that it breaks nothing: the 575
+labelled ingredient strings from stages 1 and 2 (one better, none worse),
+and the whole recipe corpus (25 strings in 511 of 794,000 recipe rows move,
+all to the right name; they reach the recipes at the next corpus release).
+
 ## What this does and doesn't measure
 
 - **Harder than your kitchen in some ways:** small, low-resolution photos
@@ -76,11 +112,7 @@ scan costs nearer $0.002: about $2 per 1,000 scans.
 
 ## What to fix first
 
-1. **The matcher, for drinks and dairy:** "X juice" should become *fruit
-   juice*, not the fruit, and "soya milk", "oat yoghurt" and the like their
-   own ingredients. That alone would recover most of the 43 photos. Like the
-   stage 1 fixes, it has to be judged on photos it wasn't designed on: the
-   dataset's separate validation split.
+1. ~~**The matcher, for drinks and dairy.**~~ Done (D35), see above.
 2. **The confirm screen:** show what the model saw next to the matched
    ingredient ("orange juice → Orange"), so a wrong match is visible.
 3. **The real-shopping set,** before calling scanning done.

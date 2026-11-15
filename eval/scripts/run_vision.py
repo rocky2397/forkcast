@@ -33,6 +33,7 @@ REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "backend"))
 
 from app import embeddings, vision  # noqa: E402
+from app import normalize  # noqa: E402
 from app.normalize import Normalizer  # noqa: E402
 
 
@@ -73,6 +74,8 @@ def main() -> None:
     print(f"{len(rows)} photos, {len(done)} already done, {len(todo)} to run", flush=True)
 
     normalizer = Normalizer(embeddings.vocabulary())
+    # The app's own scan matching: packaged() from D35 on, plain match before.
+    match = (lambda name: normalize.packaged(normalizer, name)) if hasattr(normalize, "packaged") else normalizer.match
     options = {"output_config": {"effort": args.effort}} if args.effort != "-" else {}
 
     # Record each response's usage without changing the scanner: wrap the
@@ -100,7 +103,7 @@ def main() -> None:
             result = vision.extract_items(raw, "image/jpeg", args.model, **options)
             record["items"] = [
                 {"name": i.name, "quantity": i.quantity, "confidence": i.confidence,
-                 "canonical": normalizer.match(i.name)}
+                 "canonical": match(i.name)}
                 for i in result.items
             ]
         except Exception as e:  # recorded, scored as a failure
