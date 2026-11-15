@@ -111,3 +111,15 @@ def test_without_demo_mode_nothing_changes(db, monkeypatch):
     assert H not in r.headers
     assert {i["canonical"] for i in r.json()["items"]} == {"chicken", "rice", "onion", "carrot", "egg"}
     assert client.get("/api/session").json()["demo"] is False
+
+
+def test_startup_warms_the_feed_on_the_demo_kitchen(demo_app, monkeypatch):
+    calls = []
+
+    def feed(**kwargs):
+        calls.append((db.current_db.get(), kwargs["max_missing"]))
+
+    monkeypatch.setattr(main, "cookable_recipes", feed)
+    main._warm_up()
+    assert calls == [(demo.template_path(), 0), (demo.template_path(), 1)]
+    assert db.current_db.get() is None  # no kitchen left set for later requests
