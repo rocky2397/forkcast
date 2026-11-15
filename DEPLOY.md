@@ -39,6 +39,12 @@ For a link anyone can open, set `FORKCAST_DEMO=1` and no password:
   the demo needs no secret at all. Barcode lookup still works.
 - No persistent disk is needed: kitchens are throwaway. A free host works.
 
+On Hugging Face Spaces: [`deploy/huggingface/`](deploy/huggingface/) holds
+the whole Space, a `README.md` (Space settings) and a `Dockerfile` that builds
+Forkcast from this repo at one pinned commit. Create a public Docker Space,
+add those two files, and it builds. To update the demo, change
+`FORKCAST_COMMIT` in the Space's Dockerfile.
+
 Try it locally:
 
 ```bash
