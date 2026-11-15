@@ -20,7 +20,7 @@ from typing import Literal
 from . import auth, demo, embeddings, goals, nutrition, recipes, shopping, stats, stats_page, substitutions, taste
 from .food_classes import NAME_TO_CLASS
 from .db import connect, current_db
-from .normalize import Normalizer
+from .normalize import Normalizer, packaged
 
 normalizer: Normalizer | None = None
 _LOADED_AT = time.monotonic()  # for how long a start takes (D33)
@@ -547,7 +547,7 @@ async def vision_scan(photo: UploadFile = File(...)):
             "seen": item.name,
             "quantity": item.quantity,
             "confidence": item.confidence,
-            "canonical": normalizer.match(item.name),
+            "canonical": packaged(normalizer, item.name),  # D35: read off a product
         })
     return {"proposals": proposals}
 

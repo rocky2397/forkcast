@@ -40,10 +40,11 @@ def _client() -> anthropic.Anthropic:
     return anthropic.Anthropic()  # ANTHROPIC_AUTH_TOKEN / ANTHROPIC_API_KEY from env
 
 
-def _parse(image_bytes: bytes, media_type: str, prompt: str, output_format):
+def _parse(image_bytes: bytes, media_type: str, prompt: str, output_format, model: str = MODEL, **options):
+    """One vision call. `model` and `options` (e.g. output_config) exist for the eval."""
     data = base64.standard_b64encode(image_bytes).decode()
     response = _client().messages.parse(
-        model=MODEL,
+        model=model,
         max_tokens=2048,
         messages=[{
             "role": "user",
@@ -53,12 +54,13 @@ def _parse(image_bytes: bytes, media_type: str, prompt: str, output_format):
             ],
         }],
         output_format=output_format,
+        **options,
     )
     return response.parsed_output
 
 
-def extract_items(image_bytes: bytes, media_type: str) -> ScanResult:
-    return _parse(image_bytes, media_type, PROMPT, ScanResult)
+def extract_items(image_bytes: bytes, media_type: str, model: str = MODEL, **options) -> ScanResult:
+    return _parse(image_bytes, media_type, PROMPT, ScanResult, model, **options)
 
 
 PRODUCT_PROMPT = """This is a photo of a packaged food product (or its label).

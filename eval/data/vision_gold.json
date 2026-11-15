@@ -1,0 +1,440 @@
+{
+ "about": "Stage 4 answer key: for each of the 81 Grocery Store Dataset classes, the Forkcast ingredient names (eval/data/vocab.txt) that count as the right item. Written from the vocabulary alone, before any scanner output was seen.",
+ "classes": {
+  "Golden-Delicious": {
+   "accepted": [
+    "apple"
+   ]
+  },
+  "Granny-Smith": {
+   "accepted": [
+    "apple"
+   ]
+  },
+  "Pink-Lady": {
+   "accepted": [
+    "apple"
+   ]
+  },
+  "Red-Delicious": {
+   "accepted": [
+    "apple"
+   ]
+  },
+  "Royal-Gala": {
+   "accepted": [
+    "apple"
+   ]
+  },
+  "Avocado": {
+   "accepted": [
+    "avocado"
+   ]
+  },
+  "Banana": {
+   "accepted": [
+    "banana"
+   ]
+  },
+  "Kiwi": {
+   "accepted": [
+    "kiwi"
+   ]
+  },
+  "Lemon": {
+   "accepted": [
+    "lemon"
+   ]
+  },
+  "Lime": {
+   "accepted": [
+    "lime"
+   ]
+  },
+  "Mango": {
+   "accepted": [
+    "mango"
+   ]
+  },
+  "Nectarine": {
+   "accepted": [
+    "nectarine"
+   ]
+  },
+  "Orange": {
+   "accepted": [
+    "orange"
+   ]
+  },
+  "Papaya": {
+   "accepted": [
+    "papaya"
+   ]
+  },
+  "Passion-Fruit": {
+   "accepted": [
+    "passion_fruit"
+   ]
+  },
+  "Peach": {
+   "accepted": [
+    "peach"
+   ]
+  },
+  "Pineapple": {
+   "accepted": [
+    "pineapple"
+   ]
+  },
+  "Plum": {
+   "accepted": [
+    "plum"
+   ]
+  },
+  "Pomegranate": {
+   "accepted": [
+    "pomegranate"
+   ]
+  },
+  "Watermelon": {
+   "accepted": [
+    "watermelon"
+   ]
+  },
+  "Asparagus": {
+   "accepted": [
+    "asparagus"
+   ]
+  },
+  "Cabbage": {
+   "accepted": [
+    "cabbage"
+   ]
+  },
+  "Cucumber": {
+   "accepted": [
+    "cucumber"
+   ]
+  },
+  "Garlic": {
+   "accepted": [
+    "garlic"
+   ]
+  },
+  "Ginger": {
+   "accepted": [
+    "ginger"
+   ]
+  },
+  "Leek": {
+   "accepted": [
+    "leek"
+   ]
+  },
+  "Sweet-Potato": {
+   "accepted": [
+    "sweet_potato"
+   ]
+  },
+  "Zucchini": {
+   "accepted": [
+    "zucchini"
+   ]
+  },
+  "Cantaloupe": {
+   "accepted": [
+    "cantaloupe",
+    "melon"
+   ]
+  },
+  "Galia-Melon": {
+   "accepted": [
+    "melon",
+    "cantaloupe"
+   ],
+   "note": "Galia is a cantaloupe-type melon"
+  },
+  "Honeydew-Melon": {
+   "accepted": [
+    "honeydew_melon",
+    "melon"
+   ]
+  },
+  "Anjou": {
+   "accepted": [
+    "pear"
+   ]
+  },
+  "Conference": {
+   "accepted": [
+    "pear"
+   ]
+  },
+  "Kaiser": {
+   "accepted": [
+    "pear"
+   ]
+  },
+  "Red-Grapefruit": {
+   "accepted": [
+    "grapefruit"
+   ]
+  },
+  "Satsumas": {
+   "accepted": [
+    "tangerine",
+    "clementine"
+   ],
+   "note": "no mandarin or satsuma in the vocabulary"
+  },
+  "Bravo-Apple-Juice": {
+   "accepted": [
+    "fruit_juice"
+   ],
+   "note": "the vocabulary has no apple, orange or grapefruit juice; the fruit itself would be wrong (you don't have oranges)"
+  },
+  "God-Morgon-Apple-Juice": {
+   "accepted": [
+    "fruit_juice"
+   ],
+   "note": "the vocabulary has no apple, orange or grapefruit juice; the fruit itself would be wrong (you don't have oranges)"
+  },
+  "Tropicana-Apple-Juice": {
+   "accepted": [
+    "fruit_juice"
+   ],
+   "note": "the vocabulary has no apple, orange or grapefruit juice; the fruit itself would be wrong (you don't have oranges)"
+  },
+  "Bravo-Orange-Juice": {
+   "accepted": [
+    "fruit_juice"
+   ],
+   "note": "the vocabulary has no apple, orange or grapefruit juice; the fruit itself would be wrong (you don't have oranges)"
+  },
+  "God-Morgon-Orange-Juice": {
+   "accepted": [
+    "fruit_juice"
+   ],
+   "note": "the vocabulary has no apple, orange or grapefruit juice; the fruit itself would be wrong (you don't have oranges)"
+  },
+  "God-Morgon-Orange-Red-Grapefruit-Juice": {
+   "accepted": [
+    "fruit_juice"
+   ],
+   "note": "the vocabulary has no apple, orange or grapefruit juice; the fruit itself would be wrong (you don't have oranges)"
+  },
+  "God-Morgon-Red-Grapefruit-Juice": {
+   "accepted": [
+    "fruit_juice"
+   ],
+   "note": "the vocabulary has no apple, orange or grapefruit juice; the fruit itself would be wrong (you don't have oranges)"
+  },
+  "Tropicana-Golden-Grapefruit": {
+   "accepted": [
+    "fruit_juice"
+   ],
+   "note": "the vocabulary has no apple, orange or grapefruit juice; the fruit itself would be wrong (you don't have oranges)"
+  },
+  "Tropicana-Juice-Smooth": {
+   "accepted": [
+    "fruit_juice"
+   ],
+   "note": "the vocabulary has no apple, orange or grapefruit juice; the fruit itself would be wrong (you don't have oranges)"
+  },
+  "Tropicana-Mandarin-Morning": {
+   "accepted": [
+    "fruit_juice"
+   ],
+   "note": "the vocabulary has no apple, orange or grapefruit juice; the fruit itself would be wrong (you don't have oranges)"
+  },
+  "Arla-Ecological-Medium-Fat-Milk": {
+   "accepted": [
+    "milk"
+   ]
+  },
+  "Arla-Lactose-Medium-Fat-Milk": {
+   "accepted": [
+    "milk"
+   ]
+  },
+  "Arla-Medium-Fat-Milk": {
+   "accepted": [
+    "milk"
+   ]
+  },
+  "Arla-Standard-Milk": {
+   "accepted": [
+    "milk"
+   ]
+  },
+  "Garant-Ecological-Medium-Fat-Milk": {
+   "accepted": [
+    "milk"
+   ]
+  },
+  "Garant-Ecological-Standard-Milk": {
+   "accepted": [
+    "milk"
+   ]
+  },
+  "Oatly-Natural-Oatghurt": {
+   "accepted": [
+    "yogurt",
+    "plant_based_milk"
+   ],
+   "note": "oat-based yoghurt; no oat yogurt in the vocabulary"
+  },
+  "Oatly-Oat-Milk": {
+   "accepted": [
+    "oat_milk",
+    "plant_based_milk"
+   ]
+  },
+  "Arla-Ecological-Sour-Cream": {
+   "accepted": [
+    "sour_cream"
+   ]
+  },
+  "Arla-Sour-Cream": {
+   "accepted": [
+    "sour_cream"
+   ]
+  },
+  "Arla-Sour-Milk": {
+   "accepted": [
+    "buttermilk",
+    "kefir"
+   ],
+   "note": "Swedish filmjölk, a cultured milk like buttermilk or kefir"
+  },
+  "Alpro-Blueberry-Soyghurt": {
+   "accepted": [
+    "soy_yogurt",
+    "yogurt"
+   ]
+  },
+  "Alpro-Vanilla-Soyghurt": {
+   "accepted": [
+    "soy_yogurt",
+    "yogurt"
+   ]
+  },
+  "Alpro-Fresh-Soy-Milk": {
+   "accepted": [
+    "soy_milk",
+    "plant_based_milk"
+   ]
+  },
+  "Alpro-Shelf-Soy-Milk": {
+   "accepted": [
+    "soy_milk",
+    "plant_based_milk"
+   ]
+  },
+  "Arla-Mild-Vanilla-Yoghurt": {
+   "accepted": [
+    "yogurt"
+   ]
+  },
+  "Arla-Natural-Mild-Low-Fat-Yoghurt": {
+   "accepted": [
+    "yogurt"
+   ]
+  },
+  "Arla-Natural-Yoghurt": {
+   "accepted": [
+    "yogurt"
+   ]
+  },
+  "Valio-Vanilla-Yoghurt": {
+   "accepted": [
+    "yogurt"
+   ]
+  },
+  "Yoggi-Strawberry-Yoghurt": {
+   "accepted": [
+    "yogurt"
+   ]
+  },
+  "Yoggi-Vanilla-Yoghurt": {
+   "accepted": [
+    "yogurt"
+   ]
+  },
+  "Aubergine": {
+   "accepted": [
+    "eggplant"
+   ]
+  },
+  "Carrots": {
+   "accepted": [
+    "carrot"
+   ]
+  },
+  "Brown-Cap-Mushroom": {
+   "accepted": [
+    "mushroom"
+   ],
+   "note": "brown cap = cremini; no cremini in the vocabulary"
+  },
+  "Yellow-Onion": {
+   "accepted": [
+    "onion"
+   ]
+  },
+  "Green-Bell-Pepper": {
+   "accepted": [
+    "bell_pepper"
+   ],
+   "note": "not red_pepper: bare red pepper means chili in the matcher's data (a known matcher lead)"
+  },
+  "Orange-Bell-Pepper": {
+   "accepted": [
+    "bell_pepper"
+   ],
+   "note": "not red_pepper: bare red pepper means chili in the matcher's data (a known matcher lead)"
+  },
+  "Red-Bell-Pepper": {
+   "accepted": [
+    "bell_pepper"
+   ],
+   "note": "not red_pepper: bare red pepper means chili in the matcher's data (a known matcher lead)"
+  },
+  "Yellow-Bell-Pepper": {
+   "accepted": [
+    "bell_pepper"
+   ],
+   "note": "not red_pepper: bare red pepper means chili in the matcher's data (a known matcher lead)"
+  },
+  "Floury-Potato": {
+   "accepted": [
+    "potato"
+   ]
+  },
+  "Solid-Potato": {
+   "accepted": [
+    "potato"
+   ]
+  },
+  "Red-Beet": {
+   "accepted": [
+    "beet"
+   ]
+  },
+  "Beef-Tomato": {
+   "accepted": [
+    "tomato"
+   ]
+  },
+  "Regular-Tomato": {
+   "accepted": [
+    "tomato"
+   ]
+  },
+  "Vine-Tomato": {
+   "accepted": [
+    "tomato"
+   ]
+  }
+ }
+}

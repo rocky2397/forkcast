@@ -166,3 +166,20 @@ def test_session_cookie_is_secure_and_httponly_by_default(client, monkeypatch):
     monkeypatch.delenv("FORKCAST_INSECURE_COOKIE", raising=False)
     header = client.post("/api/login", json={"password": "hunter2"}).headers["set-cookie"]
     assert "Secure" in header and "HttpOnly" in header
+
+
+def test_a_scanned_juice_carton_is_fruit_juice_not_the_fruit(client, monkeypatch):
+    """D35: the scan endpoint matches what it reads as a product."""
+    from app import vision
+    from app.normalize import Normalizer
+
+    monkeypatch.setattr(main, "normalizer", Normalizer(["orange", "fruit_juice", "yogurt"]))
+    seen = vision.ScanResult(items=[
+        vision.SeenItem(name="orange juice", confidence=0.9),
+        vision.SeenItem(name="oranges", confidence=0.9),
+        vision.SeenItem(name="natural yoghurt", confidence=0.8),
+    ])
+    monkeypatch.setattr(vision, "extract_items", lambda raw, media_type: seen)
+    r = client.post("/api/vision/scan", files={"photo": ("p.jpg", b"\xff\xd8\xff", "image/jpeg")})
+    assert r.status_code == 200
+    assert [p["canonical"] for p in r.json()["proposals"]] == ["fruit_juice", "orange", "yogurt"]

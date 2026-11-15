@@ -102,6 +102,21 @@ ALIASES = {
     "zucchini noodle": "zucchini",
     "bread flour": "flour",
     "half half": "cream",
+    # Stage 4 (D35): British and European names, as a scanner reads them off
+    # European packaging. "yoghurt" is handled as a spelling in _clean().
+    "aubergine": "eggplant",
+    "courgette": "zucchini",
+    "beetroot": "beet",
+    "kiwifruit": "kiwi",
+    "kiwi fruit": "kiwi",
+    "satsuma": "tangerine",
+    "mandarin": "tangerine",
+    "mandarin orange": "tangerine",
+    "soya milk": "soy_milk",
+    "soya yogurt": "soy_yogurt",
+    "soya drink": "soy_milk",
+    "soy drink": "soy_milk",
+    "oat drink": "oat_milk",
     # sweet peppers are bell peppers; a bare "red pepper" stays ambiguous
     "sweet pepper": "bell_pepper",
     "yellow pepper": "bell_pepper",
@@ -119,11 +134,16 @@ DESCRIPTORS = {
 }
 
 
+# Spellings of the same word (D35): the vocabulary uses the American one.
+_SPELLINGS = {"yoghurt": "yogurt", "yoghurts": "yogurts"}
+
+
 def _clean(term: str) -> str:
     t = term.lower().strip()
     t = re.sub(r"\(.*?\)", " ", t)
     t = re.sub(r"[^a-z ]+", " ", t)
-    return re.sub(r"\s+", " ", t).strip()
+    t = re.sub(r"\s+", " ", t).strip()
+    return " ".join(_SPELLINGS.get(w, w) for w in t.split())
 
 
 def _word_variants(w: str) -> list[str]:
@@ -225,6 +245,9 @@ _PRODUCT_WORDS = frozenset({
     "juice", "nectar", "syrup", "wafer", "cookie", "cracker", "bread", "bagel",
     "roll", "tortilla", "sausage", "bologna", "pickle", "hummus", "hommus",
     "tea", "noodle", "spaghetti", "gelatin", "jell", "jello", "candy",
+    # D35: flavoured milk is milk (labelling rule 7), "strawberry milk" is
+    # not strawberries. Plant milks are their own names and match whole.
+    "milk",
     # prepared foods named after their filling
     "pizza", "nugget", "sandwich", "wrap", "snack",
 })
@@ -349,7 +372,9 @@ class Normalizer:
         """
         words = _singular_words(base)
         span = matched.split()
-        if set(_word_variants(span[-1])) & (_PRODUCT_WORDS | {"seasoning"}):
+        # A matched name that is itself a product stays ("pesto sauce"). Not
+        # for milk (D35): "coconut milk vanilla yogurt" goes on to the yogurt.
+        if set(_word_variants(span[-1])) & ((_PRODUCT_WORDS - {"milk"}) | {"seasoning"}):
             return None
         juiced = matched in _JUICED_FRUIT
         start = next(
@@ -438,3 +463,18 @@ class Normalizer:
                 if f" {compound} " in hay and f" {matched} " in f" {compound} ":
                     return target
         return None
+
+
+def packaged(normalizer: "Normalizer", name: str) -> str | None:
+    """Match a name read off a product (a photo of groceries), not a recipe line.
+
+    Labelling rule 7: juice squeezed from a fresh fruit is the fruit, but a
+    bottled juice product is fruit_juice. A recipe's "orange juice" is the
+    first kind; a carton the scanner reads as "orange juice" is the second,
+    and mapping it to orange would claim you have oranges (D35).
+    """
+    hit = normalizer.match(name)
+    words = set(_clean(name).split())
+    if words & {"juice", "juices"} and (hit is None or hit in _JUICED_FRUIT):
+        return "fruit_juice" if "fruit juice" in normalizer._canon else None
+    return hit
