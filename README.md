@@ -5,13 +5,13 @@ have, finds which of 87,861 recipes you can cook with it right now, puts the
 ones that suit your taste and today's calorie and protein budget first, and
 tells you what to buy to unlock more.
 
-<p align="center"><img src="docs/screenshots/demo.gif" width="300" alt="A 30-second walkthrough on a phone: the three-step welcome, adding avocado and lime to the kitchen, the recipe list and its help panel explaining the coloured dots, a recipe one ingredient away that suggests red onion for the missing shallot, cook mode one step at a time, and the Today screen with calories and macros left"></p>
+<p align="center"><img src="docs/screenshots/demo.gif" width="300" alt="A 30-second walkthrough on a phone: the three-step welcome, adding avocado and lime to the kitchen, the recipe list naming the cooked dish each recipe is like, its help panel explaining the coloured dots, a recipe one ingredient away that suggests red onion for the missing shallot, cook mode one step at a time, and the Today screen with calories and macros left"></p>
 
-<img src="docs/screenshots/desktop.jpg" alt="Forkcast on a laptop: the recipe feed on the left with coloured ingredient dots and taste match, the open recipe on the right with its ingredients ticked against the kitchen">
+<img src="docs/screenshots/desktop.jpg" alt="Forkcast on a laptop: the recipe feed on the left with coloured ingredient dots and the dish each recipe is like, the open recipe on the right with its ingredients ticked against the kitchen">
 
 | Recipes | Recipe | Worth buying | Today | Kitchen |
 |---|---|---|---|---|
-| <img src="docs/screenshots/recipes.jpg" width="160" alt="Recipe feed on a phone: tabs for cookable now, one away and two away; each recipe shows coloured dots for its main ingredients, how many you have, its taste match and whether it fits what's left today"> | <img src="docs/screenshots/recipe.jpg" width="160" alt="Recipe page: title, a three-line author's note with Read more, calories and macros, and the ingredients you already have"> | <img src="docs/screenshots/shopping.jpg" width="160" alt="Worth buying: yeast unlocks 255 recipes, then baking powder 140 more, then onion 99 more, each with example dishes"> | <img src="docs/screenshots/today.jpg" width="160" alt="Today: a ring with calories left, protein, carbs and fat bars with grams to go, and today's meals"> | <img src="docs/screenshots/kitchen.jpg" width="160" alt="Kitchen: a scan button, an add-by-name field and the ingredients grouped by kind"> |
+| <img src="docs/screenshots/recipes.jpg" width="160" alt="Recipe feed on a phone: tabs for cookable now, one away and two away; each recipe shows coloured dots for its main ingredients, how many you have, which cooked dish it is like ("Like your Cherry Tomato Pasta") and whether it fits what's left today"> | <img src="docs/screenshots/recipe.jpg" width="160" alt="Recipe page: title, a three-line author's note with Read more, calories and macros, and the ingredients you already have"> | <img src="docs/screenshots/shopping.jpg" width="160" alt="Worth buying: yeast unlocks 255 recipes, then baking powder 140 more, then onion 99 more, each with example dishes"> | <img src="docs/screenshots/today.jpg" width="160" alt="Today: a ring with calories left, protein, carbs and fat bars with grams to go, and today's meals"> | <img src="docs/screenshots/kitchen.jpg" width="160" alt="Kitchen: a scan button, an add-by-name field and the ingredients grouped by kind"> |
 | What you can cook, best first | What you have is ticked | Three buys that unlock the most | Calories and macros left | What Forkcast matches against |
 
 Screenshots come from a demo kitchen with a sample profile, not real data.
@@ -54,12 +54,13 @@ together, another from shared flavour compounds.) Epicure only provides the
 map. Recipes, matching and all the app logic are built here.
 
 - **Taste.** Every dish has a position on the map: the average of its
-  ingredients. Your taste is the average position of what you cooked. Recent
-  dishes and dishes you liked count more, and dishes you disliked push it
-  away. Recipes close to that point rank higher. The feed says which
-  ingredients your taste sits nearest to ("your kitchen leans garlic, parmesan,
-  tomato"), so you can see why. It works from the first logged meal and needs
-  no training. Test 3 below shows it is weak: it barely beats a coin flip.
+  ingredients, with rare ones counting more (saffron says more about a dish
+  than onion). A recipe ranks higher the closer it is to the three dishes
+  you've cooked that it most resembles; dishes you marked "Not for me" don't
+  count. The feed names the closest one ("Like your Cherry Tomato Pasta") so
+  you can see why. It works from the first logged meal and needs no training.
+  Test 3 below shows what it can and can't do: it knows your *kind* of food,
+  not which dishes you'll love.
 - **Swaps.** A swap must come from the same food family (two herbs, two
   melting cheeses, two vinegars: 47 families written by hand) and be used in
   similar recipes according to the map. Being close on the map is not enough
@@ -82,7 +83,7 @@ The app makes promises you act on. Three are tested:
    kitchen?
 2. **"Try this instead."** Would a cook actually use the suggested swap?
 3. **"Suits your taste."** Does the taste ranking know what a real person
-   likes? (It barely does; see test 3.)
+   likes? (Your kind of food, yes; your favourites, no. See test 3.)
 
 **Not tested yet:** photo scanning.
 
@@ -179,31 +180,42 @@ one was on hand.
 No hand-made answer key here: real people's ratings are the key. 2,710
 food.com users, chosen and frozen before the app scored anyone, were replayed
 through the app. The earliest 70% of each person's ratings became their
-cooking history (5 stars = liked, 3 or fewer = disliked), and the app's
-unchanged taste code ranked recipes. Then two questions about the 30% it
-never saw, each scored as "out of 100 pairs, how many in the right order"
-(50 is a coin flip):
+cooking history (5 stars = liked, 3 or fewer = "Not for me"), and the app's
+own taste code ranked recipes. Then two questions about the 30% it never saw,
+each scored as "out of 100 pairs, how many in the right order" (50 is a coin
+flip):
 
-| | Forkcast taste | Most popular | Other people's stars | Taste of the average recipe |
+| | First version | **Now (nearest dishes)** | Most popular | Other people's stars |
 |---|---|---|---|---|
-| **What they cook next**, against 100 random recipes | **55** | 78 | 49 | 49 |
-| **Which they'll love**: 5-star picks above 3-star-or-lower ones | **48** | 59 | 63 | 48 |
+| **What they cook next**, against 100 random recipes | 55 | **61** | 78 | 49 |
+| **Which they'll love**: 5-star picks above 3-star-or-lower ones | 48 | **52** | 59 | 63 |
 
-**What it means:** taste picks up a little about *what kind of food* you cook
-(55, against 49 for a version that ignores you), and nothing about *which*
-dishes you'll love (48, a coin flip). Two simple signals that ignore you,
-what's popular and what other people rated it, do much better.
+**Why the first version failed:** it averaged everything you cooked into one
+point. Someone who cooks curries and cakes ends up halfway between, close to
+neither. And on the ingredient map every dish looks a lot like every other
+one (they all share the common ingredients), so "close to your average" said
+almost nothing.
 
-**Why:** your taste is an average of ingredients, and averages blur. Someone
-who cooks curries and cakes ends up halfway between, close to neither. And two
-chicken curries share almost every ingredient even when one is great and one
-is bland; ingredients can't see quality, other people's stars can. Turning
-off the 30-day fading or ignoring dislikes changed nothing.
+**The fix (D31):** compare each recipe with your *nearest* dishes instead of
+your average, let rare ingredients count more, and subtract what all dishes
+have in common. It was chosen among about 20 variants on a separate group of 2,709
+users and then judged once on the 2,710 above. Taste now beats a coin flip for
+81% of people on the first question, up from 63%. The feed's "92% like what
+you cook" looked like a likelihood and wasn't one, so it became "Like your
+Cherry Tomato Pasta", shown only when the match is close.
 
-**Status:** measured, not fixed. The sample is large, so these gaps are real,
-not noise. A food.com rating is not a logged meal, and 72% of all ratings are
-5 stars, which makes "which will they love" hard for any method, but other
-people's stars show it can be answered better than a coin flip. Details:
+**What it still can't do:** pick favourites. 52 is barely above a coin flip,
+and its range (50 to 54) includes one. Two chicken curries share almost every
+ingredient even when one is great and one is bland: ingredients can't see
+quality, other people's stars can. And popularity still beats taste at
+guessing what someone will cook. Using other people's ratings would be the
+next step; it means shipping rating data with the recipes, so it needs a
+licence check first.
+
+**How sure:** thousands of people, so the gaps are firm (each score is within
+about a point, "which they'll love" within about two). A food.com rating is
+not a logged meal, and 72% of all ratings are 5 stars, which makes favourites
+hard for any method. Details:
 [`eval/RESULTS-stage3.md`](eval/RESULTS-stage3.md).
 
 ### How much to trust these numbers
@@ -239,7 +251,7 @@ people's stars show it can be answered better than a coin flip. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 207 pytest tests in under a second, offline and without the corpus (41 of
+- **Tests:** 214 pytest tests in under a second, offline and without the corpus (48 of
   them need the Epicure weights and skip without them), plus frontend lint and
   build, all in CI.
 
@@ -252,7 +264,7 @@ laptop, with the open recipe beside the list.
 
 The app should explain itself. A short three-step walkthrough runs on first
 open, and each main screen has a **?** button that explains what you are looking at
-in plain words (for example what the coloured dots and "% like what you cook"
+in plain words (for example what the coloured dots and "Like your …"
 mean). Labels say what they mean instead of using internal terms.
 
 It follows the system's light or dark mode, every text colour passes the WCAG
@@ -267,15 +279,15 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 30 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 31 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
 - **No trained recommender (D6).** With one user there is nobody else's
   behaviour to learn from, so taste is the average of what you cooked:
-  explainable, and works from the first meal. Test 3 shows the price: on
-  real food.com users it barely beats a coin flip, and other people's ratings
-  predict far better.
+  explainable, and works from the first meal. Test 3 showed the single
+  average barely beat a coin flip; D31 compares with your nearest dishes
+  instead, which helps with your kind of food but not with favourites.
 - **Wrong is worse than missing (D27, D28, D29).** Both fixes above trade coverage
   for trust: fewer recipes and fewer swaps, but ones you can rely on.
 - **Confirm before commit (D8).** Vision miscounts are expected, so the cheap

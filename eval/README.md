@@ -34,8 +34,9 @@ as the system under test.
    `data/kitchens_holdout3.json`), double-marked like the rest.
 2. Substitutions: **done**, fixed by D28 (see
    [`RESULTS-stage2.md`](RESULTS-stage2.md)).
-3. Taste ranking: **measured** on 2,710 real food.com users replayed through
-   the app (see [`RESULTS-stage3.md`](RESULTS-stage3.md)). It barely beats a
-   coin flip, and simple signals that ignore the person do much better. Not
-   fixed yet.
+3. Taste ranking: **done.** 2,710 real food.com users replayed through the
+   app (see [`RESULTS-stage3.md`](RESULTS-stage3.md)). The first version, one
+   average of everything you cooked, barely beat a coin flip; comparing with
+   your nearest dishes (D31) raised "what they cook next" from 55 to 61 but
+   still doesn't pick favourites.
 4. Photo scanning.

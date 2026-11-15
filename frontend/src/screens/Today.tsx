@@ -236,7 +236,7 @@ export function Today() {
             },
             {
               term: "Liked · Not for me",
-              text: "Rate the recipes you cook. Liked ones pull “% like what you cook” in the feed towards them; ones you didn't like push it away.",
+              text: "Rate the recipes you cook. Recipes close to the dishes you cook move up the feed; ones you mark Not for me stop counting.",
             },
           ]}
         />

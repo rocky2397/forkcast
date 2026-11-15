@@ -5,9 +5,10 @@ usage: python run_taste.py <forkcast_checkout> <kaggle_dir> <corpus.db> <users.j
 Replays real food.com users. Each user's earliest 70% of ratings becomes
 their cooking history in the app's own meal log (5 stars = liked,
 3 stars or fewer = disliked, 4 stars = cooked without a rating), dated so
-that the day of their first hidden rating is today. The app's unchanged taste code (app.taste.taste_vector and
-score_recipes) then scores recipes, and two questions are asked about the
-hidden 30%:
+that the day of their first hidden rating is today. The app's own, unchanged
+taste code then scores recipes: whatever the checkout has (taste_profile from
+D31 on, the taste_vector centroid before it, so older commits stay
+reproducible). Two questions are asked about the hidden 30%:
 
   next   Does it pick the recipes they went on to rate out of 100 random
          recipes? Share of (hidden, random) pairs ranked the right way round.
@@ -114,7 +115,10 @@ for u in sorted(chosen, key=int):
         "INSERT INTO temp.meal_log VALUES (?, ?, ?)",
         [(rid, liked(s), (TODAY - (now - date.fromisoformat(d))).isoformat()) for d, rid, s in history],
     )
-    vec, _ = taste.taste_vector(con)
+    if hasattr(taste, "taste_profile"):
+        vec = taste.taste_profile(con)
+    else:
+        vec, _ = taste.taste_vector(con)
     if vec is None:
         no_profile += 1
         continue

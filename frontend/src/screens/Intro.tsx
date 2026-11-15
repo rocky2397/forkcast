@@ -17,7 +17,7 @@ const STEPS = [
   },
   {
     title: "It learns your taste and your day",
-    text: "Rate what you cook and “% like what you cook” follows you. Add a profile and dishes that fit the calories and macros you have left come first.",
+    text: "Recipes close to the dishes you cook move up, and the feed names the dish: “Like your Cherry Tomato Pasta”. Add a profile and dishes that fit the calories and macros you have left come first.",
   },
 ];
 

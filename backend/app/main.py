@@ -249,30 +249,33 @@ def cookable_recipes(
     the serving fits what's left of today's macro budget (D20).
     """
     with connect() as con:
-        taste_vec, n_meals = taste.taste_vector(con)
+        profile = taste.taste_profile(con)
         budget = _remaining_today(con)
-        pool = min(limit * 8, 300) if taste_vec is not None or budget else limit
+        pool = min(limit * 8, 300) if profile is not None or budget else limit
         results = recipes.cookable(
             con, max_missing=max_missing, assume_staples=assume_staples, limit=pool,
             min_missing=min_missing,
         )
-        if taste_vec is not None:
-            scores = taste.score_recipes(con, [r["id"] for r in results], taste_vec)
+        if profile is not None:
+            matches = taste.match_recipes(con, [r["id"] for r in results], profile)
             for r in results:
-                r["taste_sim"] = round(scores.get(r["id"], 0.0), 3)
+                score, _ = matches.get(r["id"], (0.0, None))
+                r["taste_sim"] = round(score, 3)
         if budget:
             for r in results:
                 fit = goals.macro_fit(r, budget["remaining"])
                 if fit is not None:
                     r["macro_fit"] = round(fit, 3)
-        if taste_vec is not None or budget:
+        if profile is not None or budget:
             results.sort(key=lambda r: (r["ingredients_missing"], -_rank_score(r)))
             results = results[:limit]
+        if profile is not None:
+            _annotate_like_your(con, results, matches)
         _annotate_subs(con, results)
         _annotate_signature(con, results)
     return {
         "count": len(results),
-        "personalized": taste_vec is not None,
+        "personalized": profile is not None,
         "macro_focus": budget["focus"] if budget else None,
         "recipes": results,
     }
@@ -289,12 +292,12 @@ def shopping_suggestions(
     not for tonight's remaining protein.
     """
     with connect() as con:
-        taste_vec, _ = taste.taste_vector(con)
+        profile = taste.taste_profile(con)
         items, truncated = shopping.suggest(
-            con, taste_vec=taste_vec, basket_size=basket, max_missing=max_missing
+            con, profile=profile, basket_size=basket, max_missing=max_missing
         )
     return {
-        "personalized": taste_vec is not None,
+        "personalized": profile is not None,
         "unlocks_total": sum(i["unlocks"] for i in items),
         # True means the candidate pool hit its ceiling, so the basket is the
         # best over a subset — not over every near-miss recipe.
@@ -307,6 +310,21 @@ def shopping_suggestions(
 # within-day nudge — the feed should stay recognizably yours on a protein day.
 TASTE_WEIGHT = 0.6
 MACRO_WEIGHT = 0.4
+
+
+def _annotate_like_your(con, results: list[dict], matches: dict) -> None:
+    """Name the cooked dish a recipe is closest to, when it is close (D31)."""
+    named = {rid: d for rid, (_, d) in matches.items() if d is not None}
+    if not named:
+        return
+    ids = sorted(set(named.values()))
+    names = dict(con.execute(
+        f"SELECT id, name FROM recipes WHERE id IN ({','.join('?' * len(ids))})", ids
+    ).fetchall())
+    for r in results:
+        d = named.get(r["id"])
+        if d is not None and d in names:
+            r["like_your"] = {"id": d, "name": names[d]}
 
 
 def _rank_score(r: dict) -> float:

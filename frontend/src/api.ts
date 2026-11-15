@@ -18,6 +18,8 @@ export interface CookableRecipe {
   missing: string[];
   subs?: Record<string, string>;
   taste_sim?: number;
+  /** The cooked dish this recipe is closest to, when the match is close (D31). */
+  like_your?: { id: number; name: string };
   macro_fit?: number;
   /** Main ingredients for the card's dots: staples left out, at most six. */
   signature?: { canonical: string; family: string | null; have: boolean }[];
