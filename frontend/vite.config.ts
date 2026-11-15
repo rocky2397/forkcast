@@ -7,7 +7,15 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      // Registered in main.tsx instead of an injected script, so the page
+      // reloads once when a new version takes over (see there).
+      injectRegister: false,
       workbox: {
+        // A new version takes over as soon as it has installed; main.tsx then
+        // reloads the page once. Stated explicitly: with injectRegister off,
+        // the plugin otherwise builds a worker that waits to be told.
+        skipWaiting: true,
+        clientsClaim: true,
         // include the zxing barcode decoder so scanning works offline (Safari path)
         globPatterns: ["**/*.{js,css,html,svg,png,ico,wasm}"],
         // Server pages, not app routes: the demo's usage totals (D33) and the API.
