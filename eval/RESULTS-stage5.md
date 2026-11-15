@@ -86,6 +86,42 @@ It catches every kJ and decimal mistake and most row swaps; swaps between
 two values of similar size slip through. The threshold was chosen on this
 same data, so these numbers are a first estimate, not a held-out result.
 
+Since D36 the app runs this check on every label reading and shows a
+warning before the values are used.
+
+## How far off: the size of the errors
+
+Right or wrong hides whether a wrong value is 2 kcal or 400 kcal off. Reader
+minus database, per 100 g (`score_labels.py` prints these tables). The
+database itself is wrong for some products (see the check above), so these
+are upper bounds on the reader's error:
+
+| All 150 readings | Typical | Average | Worst 10% | Within 5% | Within 10% | Within 20% |
+|---|---|---|---|---|---|---|
+| kcal | 0 | 44 kcal | 58 kcal | 81% | 86% | 89% |
+| protein | 0 | 1.5 g | 4.8 g | 74% | 79% | 84% |
+| carbs | 0 | 1.8 g | 3.8 g | 80% | 85% | 94% |
+| fat | 0 | 2.2 g | 6.6 g | 81% | 84% | 85% |
+
+| The 124 readings that pass the sum check | Typical | Average | Worst 10% | Within 5% | Within 10% | Within 20% |
+|---|---|---|---|---|---|---|
+| kcal | 0 | **11 kcal** | 20 kcal | 88% | 94% | 96% |
+| protein | 0 | 1.0 g | 1.7 g | 79% | 85% | 90% |
+| carbs | 0 | 1.4 g | 3.3 g | 81% | 86% | 95% |
+| fat | 0 | 1.0 g | 1.2 g | 87% | 90% | 91% |
+
+Most readings are exact ("typical" is the median). The average is pulled up
+by a few large mistakes, mostly kilojoules taken for kcal; the sum check
+removes most of those. For a 100 g portion an unflagged reading is off by
+about 11 kcal on average, against a daily budget near 2,000.
+
+**The recipes' own numbers.** Recipe nutrition comes from food.com, not
+from Forkcast. Whether it is *true* can't be checked without weighed,
+analysed meals, but whether it is *consistent* can: for 89% of the 87,849
+recipes the stated calories are within 10% of 9 × fat + 4 × (carbs +
+protein) (typical gap 3%). The macros arrive as rounded "% daily value", so
+they move in steps of a few grams.
+
 **Cost and speed:** about 2,100 tokens in and 60 out per photo, about
 $0.0024 at Haiku 4.5 list prices, 1.6 seconds (median).
 
@@ -101,8 +137,7 @@ $0.0024 at Haiku 4.5 list prices, 1.6 seconds (median).
 
 ## What to do next
 
-1. **The sum check on the "add from label" screen:** warn "these numbers
-   don't add up, please check them" when calories and macros disagree.
+1. ~~**The sum check on the "add from label" screen.**~~ Done (D36).
 2. **The prompt:** name the three mistakes (kcal not kJ, keep decimal
    commas, fat is the "Fett" row and not "davon gesättigte"), then measure
    again on a fresh sample.

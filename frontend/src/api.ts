@@ -95,6 +95,8 @@ export interface Product {
   carbs_g_100g: number | null;
   fat_g_100g: number | null;
   source: "openfoodfacts" | "label";
+  /** D36: a warning when label values are missing or don't add up. */
+  check?: string | null;
 }
 
 export interface RecipeDetail {

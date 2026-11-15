@@ -729,6 +729,8 @@ async def nutrition_scan(photo: UploadFile = File(...)):
             "carbs_g_100g": label.carbs_g,
             "fat_g_100g": label.fat_g,
             "source": "label",
+            # D36: a sum check, shown as a warning before the values are used
+            "check": nutrition.label_check(label.calories, label.protein_g, label.carbs_g, label.fat_g),
         }
     }
 

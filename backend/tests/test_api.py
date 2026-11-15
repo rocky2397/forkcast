@@ -183,3 +183,40 @@ def test_a_scanned_juice_carton_is_fruit_juice_not_the_fruit(client, monkeypatch
     r = client.post("/api/vision/scan", files={"photo": ("p.jpg", b"\xff\xd8\xff", "image/jpeg")})
     assert r.status_code == 200
     assert [p["canonical"] for p in r.json()["proposals"]] == ["fruit_juice", "orange", "yogurt"]
+
+
+@pytest.mark.parametrize("read, warns", [
+    ((539, 6.3, 57.5, 30.9), False),   # Nutella read right: 9*30.9 + 4*63.8 = 533
+    ((1345, 8.3, 60.0, 1.5), True),    # kJ taken for kcal
+    ((163, 3.0, 25.0, 1.8), False),    # soy drink, kJ and "2,5" read as 25: they happen to add up (blind spot)
+    ((443, 16.0, 70.0, 7.4), False),   # Mars rows swapped: adds up anyway (a known blind spot)
+    ((109, 26.0, 0.0, 0.5), False),    # tuna
+    ((14, 0.5, 0.0, None), True),      # a value missing
+    ((15, 0.5, 0.0, 1.1), False),      # tiny values: under the 40 kcal floor
+])
+def test_label_sum_check(read, warns):
+    """D36: the calorie sum check on values read off a label."""
+    from app import nutrition
+
+    assert (nutrition.label_check(*read) is not None) is warns
+
+
+def test_a_label_reading_that_doesnt_add_up_comes_with_a_warning(client, monkeypatch):
+    from app import vision
+
+    scan = vision.ProductScan(per_100g=vision.NutritionPer100g(calories=1345, protein_g=8.3, carbs_g=60.0, fat_g=1.5))
+    monkeypatch.setattr(vision, "extract_product", lambda raw, media_type: scan)
+    r = client.post("/api/nutrition/scan", files={"photo": ("p.jpg", b"\xff\xd8\xff", "image/jpeg")})
+    assert r.status_code == 200
+    product = r.json()["product"]
+    assert product["source"] == "label"
+    assert "don't add up" in product["check"]
+
+
+def test_a_label_reading_that_adds_up_has_no_warning(client, monkeypatch):
+    from app import vision
+
+    scan = vision.ProductScan(per_100g=vision.NutritionPer100g(calories=350, protein_g=10, carbs_g=61, fat_g=2.6))
+    monkeypatch.setattr(vision, "extract_product", lambda raw, media_type: scan)
+    r = client.post("/api/nutrition/scan", files={"photo": ("p.jpg", b"\xff\xd8\xff", "image/jpeg")})
+    assert r.json()["product"]["check"] is None

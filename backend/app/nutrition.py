@@ -79,3 +79,26 @@ def lookup(con: sqlite3.Connection, code: str) -> dict | None:
     if product is not None:
         cache(con, product)
     return product
+
+
+# D36: calories follow from the macros (about 9 kcal per gram of fat, 4 per
+# gram of carbs or protein). On 150 Open Food Facts products (eval stage 5) a
+# reading that broke this sum by more than 20% (and 40 kcal) was a misreading
+# in 8 of 13 checked mistakes, and only 1 of 74 right readings tripped it.
+SUM_TOLERANCE = 0.20
+SUM_MIN_GAP_KCAL = 40
+
+
+def label_check(calories, protein_g, carbs_g, fat_g) -> str | None:
+    """A warning for values read off a label that are missing or don't add up."""
+    if None in (calories, protein_g, carbs_g, fat_g):
+        return "Some values couldn't be read from the photo. Please check them against the label."
+    expected = 9 * fat_g + 4 * (protein_g + carbs_g)
+    gap = abs(calories - expected)
+    if gap > SUM_TOLERANCE * max(calories, expected) and gap > SUM_MIN_GAP_KCAL:
+        return (
+            f"These numbers don't add up: {round(calories)} kcal, but the fat, carbs and protein "
+            f"make about {round(expected)} kcal. Please check them against the label. The usual "
+            "misreadings are kJ instead of kcal, a lost decimal comma or a value from the next row."
+        )
+    return None

@@ -123,6 +123,7 @@ main.main {
 }
 
 .taste-note, .feedback { font-size: 14px; color: var(--ink-2); margin: 0 0 10px; }
+.feedback.warning { color: var(--warn); font-weight: 500; }
 .empty { color: var(--ink-3); text-align: center; margin: 40px 16px; }
 .link {
   background: none;

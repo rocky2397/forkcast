@@ -330,6 +330,11 @@ export function Today() {
                     Per 100 g: {fmt(product.calories_100g ?? 0)} kcal · {fmt(product.protein_g_100g ?? 0)} g protein ·{" "}
                     {fmt(product.carbs_g_100g ?? 0)} g carbs · {fmt(product.fat_g_100g ?? 0)} g fat
                   </p>
+                  {product.check && (
+                    <p className="feedback warning" role="alert">
+                      {product.check}
+                    </p>
+                  )}
                   <div className="product-use">
                     <label className="inline-label">
                       How much?
