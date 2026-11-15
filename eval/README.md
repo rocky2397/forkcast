@@ -13,6 +13,8 @@ as the system under test.
 | [`RESULTS.md`](RESULTS.md) | stage 1 scorecard and findings |
 | [`RESULTS-stage2.md`](RESULTS-stage2.md) | stage 2 (substitutions) scorecard and findings |
 | [`RESULTS-stage3.md`](RESULTS-stage3.md) | stage 3 (taste ranking) results and findings |
+| [`RESULTS-stage4.md`](RESULTS-stage4.md) | stage 4 (photo scanning) results and findings |
+| `data/vision_gold.json` | stage 4 answer key: the right ingredients for each of the 81 Grocery Store Dataset products |
 | `data/taste_users.json` | the frozen dev/test split of 5,419 food.com users for stage 3 |
 | `data/strings.jsonl`, `data/holdout.jsonl` | 275 development and 150 held-out ingredient strings |
 | `data/*_labeled.jsonl` | the same rows with gold labels |
@@ -39,4 +41,8 @@ as the system under test.
    average of everything you cooked, barely beat a coin flip; comparing with
    your nearest dishes (D31) raised "what they cook next" from 55 to 61 but
    still doesn't pick favourites.
-4. Photo scanning.
+4. Photo scanning: **first half done.** 405 store photos from a public
+   dataset through the app's scanner and matcher: the right ingredient for
+   65% (see [`RESULTS-stage4.md`](RESULTS-stage4.md)). A third of the misses
+   are the matcher, mostly "orange juice" becoming *orange*. Still to do: a
+   matcher fix judged on fresh photos, and real shopping photos.
