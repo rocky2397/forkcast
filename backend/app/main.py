@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from . import auth, demo, embeddings, goals, nutrition, recipes, shopping, stats, stats_page, substitutions, taste
+from . import auth, demo, embeddings, goals, nutrition, progress, recipes, shopping, stats, stats_page, substitutions, taste
 from .food_classes import NAME_TO_CLASS
 from .db import connect, current_db
 from .normalize import Normalizer, packaged
@@ -656,9 +656,21 @@ def delete_meal(meal_id: int):
 
 
 @app.get("/api/day")
-def day_summary(date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$")):
-    """One day's meals and macro totals vs the profile targets."""
-    day = date or _date.today().isoformat()
+def day_summary(
+    date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    tz: int | None = Query(None, ge=-840, le=840),
+):
+    """One day's meals and macro totals vs the profile targets.
+
+    With tz (the client's UTC offset in minutes, D40) days are the user's local
+    days; without it, the server's.
+    """
+    if tz is None:
+        day = date or _date.today().isoformat()
+        shift = "localtime"
+    else:
+        day = date or progress.local_today(tz).isoformat()
+        shift = f"{tz:+d} minutes"
     with connect() as con:
         rows = con.execute(
             """SELECT ml.id, ml.recipe_id, ml.logged_at, ml.liked,
@@ -669,9 +681,9 @@ def day_summary(date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$")):
                       COALESCE(ml.fat_g, r.fat_g)         AS fat_g
                FROM meal_log ml
                LEFT JOIN recipes r ON r.id = ml.recipe_id
-               WHERE date(ml.logged_at, 'localtime') = ?
+               WHERE date(ml.logged_at, ?) = ?
                ORDER BY ml.logged_at""",
-            (day,),
+            (shift, day),
         ).fetchall()
         profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
     meals = [dict(r) for r in rows]
@@ -686,6 +698,20 @@ def day_summary(date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$")):
         "targets": goals.targets(profile) if profile is not None else None,
         "plan": goals.plan(profile) if profile is not None else None,  # D39
     }
+
+
+@app.get("/api/progress")
+def progress_summary(tz: int = Query(0, ge=-840, le=840)):
+    """Streak, the last 14 days by class, 30-day totals and the weekly recap (D40).
+
+    tz is the client's offset from UTC in minutes (east positive), so days are
+    the user's local days.
+    """
+    with connect() as con:
+        profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+        if profile is None:
+            return {"progress": None}
+        return {"progress": progress.summary(con, profile, tz)}
 
 
 @app.get("/api/nutrition/barcode/{code}")

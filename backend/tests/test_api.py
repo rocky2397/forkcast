@@ -279,3 +279,16 @@ def test_an_old_database_gains_the_goal_columns(tmp_path):
     con = dbmod.connect(path, attach_corpus=False)
     row = con.execute("SELECT * FROM profile").fetchone()
     assert row["goal_weight_kg"] is None and row["pace"] is None
+
+
+def test_progress_needs_a_profile_then_reports(client):
+    assert client.get("/api/progress").json()["progress"] is None
+    client.put("/api/profile", json={"sex": "m", "age": 30, "height_cm": 180, "weight_kg": 80,
+                                     "activity": "moderate", "goal": "maintain"})
+    p = client.get("/api/progress?tz=60").json()["progress"]
+    assert p["burn"] == 2759 and len(p["strip"]) == 14 and "recap" in p
+
+
+def test_the_day_follows_the_clients_time_zone(client):
+    r = client.get("/api/day?tz=-300")
+    assert r.status_code == 200 and "date" in r.json()

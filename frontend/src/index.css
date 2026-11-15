@@ -18,6 +18,7 @@
   --accent-soft: #f3e3dc;
   --herb: #3f5f2e;
   --herb-soft: #e3ead8;
+  --cool: #2f5f86; /* D40: surplus days, neutral (not red) */
   --warn: #8a5a00;
   --on-ink: #f6f1e8;
   --dot-ring: rgba(30, 26, 22, 0.16);
@@ -42,6 +43,7 @@
     --accent-soft: #3a2520;
     --herb: #a6c486;
     --herb-soft: #253020;
+    --cool: #8fb6d6;
     --warn: #e0b04f;
     --on-ink: #171411;
     --dot-ring: rgba(241, 234, 224, 0.18);
