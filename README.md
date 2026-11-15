@@ -6,8 +6,9 @@ ones that suit your taste and today's calorie and protein budget first, and
 tells you what to buy to unlock more.
 
 **[Try the demo](https://rockyyyy2397-forkcast.hf.space)**: you get your own
-copy of a demo kitchen, private to you and deleted after a day without visits.
-Photo scanning is off there. After two days without visitors the server sleeps,
+copy of a demo kitchen, private to you and saved for your browser, so it is
+still there when you come back. It is deleted 30 days after your last visit,
+or at once with "Delete my data". Photo scanning is off there. After two days without visitors the server sleeps,
 and the next visit takes about a minute while it wakes up. The demo keeps only
 [anonymous usage totals](https://rockyyyy2397-forkcast.hf.space/stats).
 
@@ -285,7 +286,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 33 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 34 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

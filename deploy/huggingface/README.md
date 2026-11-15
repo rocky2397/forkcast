@@ -19,7 +19,11 @@ macros first.
 This is a public demo. You get your own copy of a demo kitchen with a few
 ingredients, a profile and two dishes already cooked. Add or remove
 ingredients, cook something, rate it, and watch the recipe list change. Your
-changes are private to you and are deleted after a day without visits.
+changes are private to you and saved for your browser, so they are still there
+when you come back. They are deleted 30 days after your last visit, or at once
+with "Delete my data" in the banner. What is saved is the kitchen, your meals
+and the profile, under a random id only your browser knows: no name, email or
+IP address.
 
 Photo scanning is switched off here, because it calls a paid AI model; the
 walkthrough in the project README shows it.

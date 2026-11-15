@@ -4,7 +4,7 @@ import { Inventory } from "./screens/Inventory";
 import { Recipes } from "./screens/Recipes";
 import { Login } from "./screens/Login";
 import { Intro } from "./screens/Intro";
-import { api, isDemo, keepsStats, setUnauthorizedHandler } from "./api";
+import { api, isDemo, keepsStats, savesKitchens, setUnauthorizedHandler } from "./api";
 import { KitchenIcon, RecipesIcon, TodayIcon } from "./Icons";
 import "./App.css";
 
@@ -19,6 +19,20 @@ type Gate = "checking" | "locked" | "open";
 
 // Bump the suffix to show the walkthrough again after the loop changes.
 const INTRO_SEEN = "forkcast.intro.v1";
+
+async function deleteMyData() {
+  const sure = window.confirm(
+    "Delete your demo kitchen, meals and profile from the server? This can't be undone. You'll start again with the demo kitchen.",
+  );
+  if (!sure) return;
+  try {
+    await api.deleteMyData();
+  } catch (e) {
+    window.alert(`Couldn't delete: ${e instanceof Error ? e.message : e}`);
+    return;
+  }
+  window.location.reload();
+}
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("today");
@@ -93,7 +107,17 @@ export default function App() {
         </div>
         {isDemo() && (
           <p className="demo-banner">
-            Demo: your changes are private to you and reset after a day.{" "}
+            {savesKitchens()
+              ? "Demo: your kitchen is private to you, saved for this browser only, and deleted 30 days after your last visit. "
+              : "Demo: your changes are private to you and reset after a day. "}
+            {savesKitchens() && (
+              <>
+                <button type="button" className="link-button" onClick={deleteMyData}>
+                  Delete my data
+                </button>
+                {" · "}
+              </>
+            )}
             {keepsStats() && (
               <>
                 Only <a href="/stats">anonymous usage totals</a> are kept.{" "}

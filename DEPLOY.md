@@ -36,9 +36,12 @@ For a link anyone can open, set `FORKCAST_DEMO=1` and no password:
 - Every visitor gets a private copy of the demo kitchen (the README screenshots'
   kitchen), so nobody sees or breaks anyone else's changes.
 - A kitchen unused for a day is deleted, and at most 300 exist at once.
+  With `FORKCAST_KITCHENS_DIR` set (D34, below) that only clears the live
+  copy; the saved one comes back on the next visit.
 - Photo and label scanning are off, so **don't set `ANTHROPIC_AUTH_TOKEN`**:
   the demo needs no secret at all. Barcode lookup still works.
-- No persistent disk is needed: kitchens are throwaway. A free host works.
+- No persistent disk is needed: without `FORKCAST_KITCHENS_DIR` kitchens are
+  throwaway. A free host works.
 - The app runs the recipe feed once on the demo kitchen while it starts, so
   the first visitor after a wake-up doesn't pay for its one-off preparation.
 
@@ -57,6 +60,18 @@ Hugging Face, attach a **private storage bucket** to the Space at `/data`
 (Space settings, Volumes); the Dockerfile points `FORKCAST_STATS_DIR` at
 `/data/forkcast-stats`. Without a bucket the totals still work but reset on
 every restart.
+
+**Saved kitchens (D34).** With `FORKCAST_KITCHENS_DIR` also set, a visitor's
+kitchen survives restarts and updates. The live copy stays on local disk
+(SQLite there is fast and safe); a changed kitchen is copied to
+`FORKCAST_KITCHENS_DIR` within 30 seconds and on shutdown, and a visitor whose
+live copy is gone gets the saved one back. A saved kitchen is deleted 30 days
+after the last visit, at most 5,000 are kept, and the banner's "Delete my
+data" removes both copies at once. What is saved: the kitchen, the meals and
+the profile (sex, age, height, weight, activity, goal), under a random id that
+only the visitor's browser knows; no name, email or IP. On Hugging Face the
+Dockerfile points it at `/data/forkcast-kitchens`, in the same private bucket
+as the usage totals.
 
 Try it locally:
 
