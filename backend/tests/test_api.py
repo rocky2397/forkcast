@@ -242,3 +242,40 @@ def test_a_label_scan_with_a_written_out_table_still_returns_per_100g(client, mo
     monkeypatch.setattr(vision, "extract_product", lambda raw, media_type: scan)
     product = client.post("/api/nutrition/scan", files={"photo": ("p.jpg", b"\xff\xd8\xff", "image/jpeg")}).json()["product"]
     assert product["calories_100g"] == 350 and product["check"] is None
+
+
+def test_a_goal_weight_is_saved_and_planned(client):
+    body = {"sex": "m", "age": 30, "height_cm": 180, "weight_kg": 80, "activity": "moderate",
+            "goal": "maintain", "goal_weight_kg": 72, "pace": "steady"}
+    r = client.put("/api/profile", json=body)
+    assert r.status_code == 200
+    assert r.json()["plan"]["calories"] == 2209
+    assert r.json()["profile"]["goal"] == "cut"  # the goal weight decides the direction
+    got = client.get("/api/profile").json()
+    assert got["profile"]["goal_weight_kg"] == 72 and got["plan"]["weeks"] == 16
+    assert client.get("/api/day").json()["plan"]["calories"] == 2209
+
+
+def test_an_unhealthy_goal_weight_is_refused_with_a_reason(client):
+    body = {"sex": "m", "age": 30, "height_cm": 180, "weight_kg": 80, "activity": "moderate",
+            "goal": "maintain", "goal_weight_kg": 55}
+    r = client.put("/api/profile", json=body)
+    assert r.status_code == 422 and "below a healthy weight" in r.json()["detail"]
+
+
+def test_an_old_database_gains_the_goal_columns(tmp_path):
+    import sqlite3
+
+    from app import db as dbmod
+
+    path = tmp_path / "old.db"
+    con = sqlite3.connect(path)
+    con.execute("""CREATE TABLE profile (id INTEGER PRIMARY KEY, sex TEXT NOT NULL, age INTEGER NOT NULL,
+        height_cm REAL NOT NULL, weight_kg REAL NOT NULL, activity TEXT NOT NULL, goal TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')))""")
+    con.execute("INSERT INTO profile (id, sex, age, height_cm, weight_kg, activity, goal) VALUES (1,'f',40,165,70,'light','cut')")
+    con.commit()
+    con.close()
+    con = dbmod.connect(path, attach_corpus=False)
+    row = con.execute("SELECT * FROM profile").fetchone()
+    assert row["goal_weight_kg"] is None and row["pace"] is None

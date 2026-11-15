@@ -74,3 +74,73 @@ def test_focus_names_the_macro_furthest_behind_as_a_share():
 def test_focus_is_none_once_everything_is_met():
     rem = goals.remaining({"calories": 2400, "protein_g": 150, "carbs_g": 270, "fat_g": 67}, TARGET)
     assert goals.focus(rem, TARGET) is None
+
+
+# --- D39: goal weight -------------------------------------------------------
+
+MAN = dict(sex="m", age=30, height_cm=180, weight_kg=80, activity="moderate", goal="maintain")
+
+
+def test_a_goal_weight_below_sets_a_deficit_from_the_pace():
+    p = goals.plan(MAN | {"goal_weight_kg": 72, "pace": "steady"})
+    assert p["direction"] == "lose"
+    assert p["burn"] == 2759 and p["change"] == 550 and p["calories"] == 2209
+    assert p["kg_per_week"] == 0.5 and p["weeks"] == 16 and p["limited"] is None
+    assert goals.targets(MAN | {"goal_weight_kg": 72, "pace": "steady"})["calories"] == 2209
+
+
+def test_the_gentle_pace_halves_the_deficit():
+    p = goals.plan(MAN | {"goal_weight_kg": 72, "pace": "gentle"})
+    assert p["change"] == 275 and p["weeks"] == 32
+
+
+def test_a_goal_weight_above_sets_a_surplus():
+    p = goals.plan(MAN | {"weight_kg": 60, "goal_weight_kg": 66, "pace": "gentle"})
+    assert p["direction"] == "gain" and p["calories"] == p["burn"] + 275 and p["weeks"] == 24
+
+
+def test_close_to_the_goal_keeps_weight():
+    p = goals.plan(MAN | {"goal_weight_kg": 79.8})
+    assert p["direction"] == "keep" and p["calories"] == p["burn"]
+
+
+def test_without_a_goal_weight_the_old_goal_still_works():
+    assert goals.plan(MAN) is None
+    assert goals.targets(MAN | {"goal": "cut"})["calories"] == round(2759.25 * 0.85)
+
+
+def test_the_deficit_never_goes_below_the_safe_minimum():
+    small = dict(sex="f", age=30, height_cm=160, weight_kg=55, activity="sedentary", goal="maintain",
+                 goal_weight_kg=50, pace="steady")
+    p = goals.plan(small)
+    floor = max(goals.bmr("f", 30, 160, 55), 1200)
+    assert p["calories"] >= floor - 1
+    assert p["change"] < 550 and "safe minimum" in p["limited"]
+
+
+def test_the_deficit_is_capped_at_a_quarter_of_the_burn():
+    woman = dict(sex="f", age=29, height_cm=168, weight_kg=63, activity="moderate", goal="maintain",
+                 goal_weight_kg=58, pace="steady")
+    p = goals.plan(woman)
+    assert p["change"] == round(0.25 * p["burn"]) and "a quarter" in p["limited"]
+
+
+def test_no_deficit_when_the_burn_is_already_at_the_minimum():
+    tiny = dict(sex="f", age=80, height_cm=150, weight_kg=50, activity="sedentary", goal="maintain",
+                goal_weight_kg=45, pace="steady")
+    p = goals.plan(tiny)
+    assert p["change"] == 0 and p["weeks"] is None and "doctor or dietitian" in p["limited"]
+
+
+def test_a_goal_below_a_healthy_weight_is_refused():
+    assert "below a healthy weight" in goals.goal_problem(MAN | {"goal_weight_kg": 55})
+    assert goals.plan(MAN | {"goal_weight_kg": 55}) is None
+
+
+def test_weight_loss_goals_are_for_adults():
+    assert "adults" in goals.goal_problem(MAN | {"age": 16, "goal_weight_kg": 72})
+    assert goals.goal_problem(MAN | {"age": 16, "weight_kg": 60, "goal_weight_kg": 66}) is None  # gaining is fine
+
+
+def test_the_healthy_range_follows_height():
+    assert goals.healthy_range_kg(180) == (60.0, 81.0)

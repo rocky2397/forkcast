@@ -30,15 +30,20 @@ export function ProfileForm({
 
   const set = <K extends keyof Profile>(key: K, value: Profile[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+  // D39: the usual healthy range for this height (BMI 18.5 to 25), as context
+  const m2 = (form.height_cm / 100) ** 2;
+  const low = Math.ceil(18.5 * m2 * 2) / 2;
+  const high = Math.floor(25 * m2 * 2) / 2;
+  const hasGoal = form.goal_weight_kg != null;
 
   async function save() {
     setBusy(true);
     setError(null);
     try {
-      const res = await api.saveProfile(form);
+      const res = await api.saveProfile({ ...form, pace: form.pace ?? "steady" });
       onSaved(res.profile, res.targets);
     } catch (e) {
-      setError(String(e));
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
@@ -89,13 +94,46 @@ export function ProfileForm({
         </select>
       </label>
       <label>
-        Goal
-        <select value={form.goal} onChange={(e) => set("goal", e.target.value as Profile["goal"])}>
-          {GOALS.map((g) => (
-            <option key={g.value} value={g.value}>{g.label}</option>
-          ))}
-        </select>
+        Goal weight in kg (optional)
+        <input
+          type="number"
+          inputMode="decimal"
+          min={35}
+          max={250}
+          step={0.5}
+          placeholder="e.g. 70"
+          value={form.goal_weight_kg ?? ""}
+          onChange={(e) => set("goal_weight_kg", e.target.value === "" ? null : Number(e.target.value))}
+        />
+        <span className="field-hint">
+          A healthy weight for {form.height_cm} cm is about {low}–{high} kg. With a goal weight, Forkcast works out how
+          much to eat each day and roughly how long it takes.
+        </span>
       </label>
+      {hasGoal ? (
+        <label>
+          Pace
+          <select value={form.pace ?? "steady"} onChange={(e) => set("pace", e.target.value as Profile["pace"])}>
+            <option value="gentle">Gentle: about 0.25 kg a week</option>
+            <option value="steady">Steady: about 0.5 kg a week</option>
+          </select>
+        </label>
+      ) : (
+        <label>
+          Goal
+          <select value={form.goal} onChange={(e) => set("goal", e.target.value as Profile["goal"])}>
+            {GOALS.map((g) => (
+              <option key={g.value} value={g.value}>{g.label}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      {hasGoal && (
+        <p className="field-hint">
+          These are estimates, not medical advice. If you are pregnant, under 18 or have a health condition, talk to a
+          doctor before changing how much you eat.
+        </p>
+      )}
       {error && <p className="feedback error">{error}</p>}
       <button type="submit" className="btn" disabled={busy}>
         {busy ? "Saving…" : "Save and work out my targets"}

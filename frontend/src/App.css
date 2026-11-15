@@ -679,6 +679,8 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .ring-value { font-family: var(--font-display); font-size: 36px; line-height: 1; font-variant-numeric: tabular-nums; }
 .ring-label { margin-top: 4px; font-size: 13px; color: var(--ink-3); }
 .ring-caption { margin: 10px 0 18px; text-align: center; font-size: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.plan-line { margin: -8px 0 18px; text-align: center; font-size: 14px; color: var(--ink-2); line-height: 1.45; }
+.plan-limited { color: var(--warn); }
 
 .macros { display: flex; flex-direction: column; gap: 14px; width: 100%; }
 .macro-head { display: flex; justify-content: space-between; font-size: 14px; }

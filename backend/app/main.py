@@ -564,6 +564,9 @@ class ProfileIn(BaseModel):
     weight_kg: float = Field(ge=35, le=250)
     activity: Literal["sedentary", "light", "moderate", "active", "very_active"]
     goal: Literal["cut", "maintain", "bulk"]
+    # D39: optional; when set, it decides the direction and the pace the size
+    goal_weight_kg: float | None = Field(default=None, ge=35, le=250)
+    pace: Literal["gentle", "steady"] | None = "steady"  # None (older profiles): steady
 
 
 @app.get("/api/profile")
@@ -571,26 +574,36 @@ def get_profile():
     with connect() as con:
         row = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
     if row is None:
-        return {"profile": None, "targets": None}
-    return {"profile": dict(row), "targets": goals.targets(row)}
+        return {"profile": None, "targets": None, "plan": None}
+    return {"profile": dict(row), "targets": goals.targets(row), "plan": goals.plan(row)}
 
 
 @app.put("/api/profile")
 def put_profile(body: ProfileIn):
+    data = body.model_dump()
+    problem = goals.goal_problem(data)  # D39 guardrails
+    if problem:
+        raise HTTPException(422, problem)
+    p = goals.plan(data)
+    if p is not None:  # the goal weight decides the direction
+        data["goal"] = {"lose": "cut", "keep": "maintain", "gain": "bulk"}[p["direction"]]
     with connect() as con:
         con.execute(
-            """INSERT INTO profile (id, sex, age, height_cm, weight_kg, activity, goal, updated_at)
-               VALUES (1, ?, ?, ?, ?, ?, ?, datetime('now'))
+            """INSERT INTO profile (id, sex, age, height_cm, weight_kg, activity, goal,
+                                    goal_weight_kg, pace, updated_at)
+               VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
                ON CONFLICT(id) DO UPDATE SET
                  sex = excluded.sex, age = excluded.age,
                  height_cm = excluded.height_cm, weight_kg = excluded.weight_kg,
                  activity = excluded.activity, goal = excluded.goal,
+                 goal_weight_kg = excluded.goal_weight_kg, pace = excluded.pace,
                  updated_at = excluded.updated_at""",
-            (body.sex, body.age, body.height_cm, body.weight_kg, body.activity, body.goal),
+            (data["sex"], data["age"], data["height_cm"], data["weight_kg"], data["activity"],
+             data["goal"], data["goal_weight_kg"], data["pace"]),
         )
         con.commit()
     stats.event("profile_saved")  # that it changed, never the values
-    return {"profile": body.model_dump(), "targets": goals.targets(body.model_dump())}
+    return {"profile": data, "targets": goals.targets(data), "plan": p}
 
 
 class MealAdd(BaseModel):
@@ -671,6 +684,7 @@ def day_summary(date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$")):
         "meals": meals,
         "totals": totals,
         "targets": goals.targets(profile) if profile is not None else None,
+        "plan": goals.plan(profile) if profile is not None else None,  # D39
     }
 
 
