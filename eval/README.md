@@ -4,13 +4,16 @@ Datasets, labels and scripts that measure whether Forkcast does what it
 claims. The data comes from **outside the app's code**: ingredient strings
 sampled from the published recipe corpus, and real grocery product names from
 the Instacart Market Basket dataset. It is labelled **blind**, without seeing
-what Forkcast's matcher predicts. The scripts import the app only to run it as
-the system under test.
+what Forkcast's matcher predicts. Stage 3 needs no labels: real food.com
+users' ratings are the answer key. The scripts import the app only to run it
+as the system under test.
 
 | Path | What it is |
 |---|---|
 | [`RESULTS.md`](RESULTS.md) | stage 1 scorecard and findings |
 | [`RESULTS-stage2.md`](RESULTS-stage2.md) | stage 2 (substitutions) scorecard and findings |
+| [`RESULTS-stage3.md`](RESULTS-stage3.md) | stage 3 (taste ranking) results and findings |
+| `data/taste_users.json` | the frozen dev/test split of 5,419 food.com users for stage 3 |
 | `data/strings.jsonl`, `data/holdout.jsonl` | 275 development and 150 held-out ingredient strings |
 | `data/*_labeled.jsonl` | the same rows with gold labels |
 | `data/kitchens.json`, `data/kitchens_holdout.json`, `data/kitchens_holdout2.json` | test kitchens in plain words (3 development, 1 + 3 held-out) |
@@ -31,12 +34,9 @@ the system under test.
    `data/kitchens_holdout3.json`), double-marked like the rest.
 2. Substitutions: **done**, fixed by D28 (see
    [`RESULTS-stage2.md`](RESULTS-stage2.md)).
-3. Taste ranking: **parked.** The plan is to replay real food.com users'
-   ratings: log part of a user's history as cooks, then check that the recipes
-   they rated highly rank above the rest. The ratings are public
-   (`peterpeeterspeter/recipe-interactions` on Hugging Face), but they are
-   keyed by food.com recipe ids, which the corpus doesn't store. Joining them
-   needs the original recipe table with ids (`RAW_recipes.csv` from Kaggle's
-   *Food.com Recipes and User Interactions*, sign-in required). The free
-   copies checked were broken or had the ids removed.
+3. Taste ranking: **done.** 2,710 real food.com users replayed through the
+   app (see [`RESULTS-stage3.md`](RESULTS-stage3.md)). The first version, one
+   average of everything you cooked, barely beat a coin flip; comparing with
+   your nearest dishes (D31) raised "what they cook next" from 55 to 61 but
+   still doesn't pick favourites.
 4. Photo scanning.

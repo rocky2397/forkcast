@@ -221,9 +221,7 @@ function RecipeCard({
         ))
       ) : (
         <span className="recipe-tags">
-          {r.taste_sim != null && r.taste_sim > 0 && (
-            <span className="tag-taste">{Math.round(r.taste_sim * 100)}% like what you cook</span>
-          )}
+          {r.like_your && <span className="tag-taste">Like your {displayName(r.like_your.name)}</span>}
           {covers ? (
             <span className="tag-fit">Covers today's {MACRO_LABELS[focus!.macro]}</span>
           ) : (
@@ -262,9 +260,9 @@ function FeedGuide({ onClose }: { onClose: () => void }) {
           text: "How many of those you have. Salt, pepper, oil, butter, flour and sugar are assumed, so they never count as missing.",
         },
         {
-          term: "92% like what you cook",
+          term: "Like your Cherry Tomato Pasta",
           termClass: "tag-taste",
-          text: "How close the recipe is to the meals you've logged, with the ones you liked counting most. It appears once you've logged a cook.",
+          text: "The dish you've cooked that this recipe is closest to, by its main ingredients. Recipes close to what you cook rank higher; dishes you marked Not for me don't count. It only appears when the match is close.",
         },
         {
           term: "Fits what's left today",

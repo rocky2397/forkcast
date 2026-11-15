@@ -27,17 +27,16 @@ EXAMPLES_PER_ITEM = 3
 TASTE_FLOOR = 0.5
 
 
-def _weights(con: sqlite3.Connection, pool: list[dict], taste_vec) -> dict[int, float]:
+def _weights(con: sqlite3.Connection, pool: list[dict], profile) -> dict[int, float]:
     """Per-recipe ranking weight in [TASTE_FLOOR, 1], or all 1.0 without taste data.
 
-    Min-max normalized *within the pool*: absolute cosines aren't comparable
-    across the corpus (hub effects, paper §8 — the same reason D13 gates on
-    ranks), and in practice they bunch up around 0.9, which would make an
-    unnormalized weight no better than counting.
+    Min-max normalized *within the pool*: absolute taste scores aren't
+    comparable across the corpus (hub effects, paper §8 — the same reason D13
+    gates on ranks), so only their order within this pool is used.
     """
-    if taste_vec is None or not pool:
+    if profile is None or not pool:
         return {r["id"]: 1.0 for r in pool}
-    scores = taste.score_recipes(con, [r["id"] for r in pool], taste_vec)
+    scores = taste.score_recipes(con, [r["id"] for r in pool], profile)
     vals = np.fromiter((scores.get(r["id"], 0.0) for r in pool), dtype="float64", count=len(pool))
     lo, hi = float(vals.min()), float(vals.max())
     if hi - lo < 1e-9:
@@ -50,7 +49,7 @@ def _weights(con: sqlite3.Connection, pool: list[dict], taste_vec) -> dict[int, 
 
 def suggest(
     con: sqlite3.Connection,
-    taste_vec=None,
+    profile=None,
     basket_size: int = 3,
     max_missing: int = 3,
 ) -> tuple[list[dict], bool]:
@@ -59,7 +58,7 @@ def suggest(
     truncated = len(pool) >= POOL_LIMIT
     if not pool:
         return [], truncated
-    weight = _weights(con, pool, taste_vec)
+    weight = _weights(con, pool, profile)
 
     basket: set[str] = set()
     locked = list(pool)
