@@ -1,0 +1,1653 @@
+[
+ {
+  "code": "4014400932959",
+  "name": "Toffifee White Chocolate",
+  "image": "https://images.openfoodfacts.org/images/products/401/440/093/2959/nutrition_de.153.full.jpg",
+  "truth": {
+   "calories": 541.0,
+   "protein_g": 6.4,
+   "carbs_g": 55.9,
+   "fat_g": 32.7
+  }
+ },
+ {
+  "code": "4012359114303",
+  "name": "Tofu rosso olives et tomates",
+  "image": "https://images.openfoodfacts.org/images/products/401/235/911/4303/nutrition_de.84.full.jpg",
+  "truth": {
+   "calories": 223.0,
+   "protein_g": 17.0,
+   "carbs_g": 3.9,
+   "fat_g": 15.0
+  }
+ },
+ {
+  "code": "4335619014459",
+  "name": "Kalifornische Pistazien geröstet",
+  "image": "https://images.openfoodfacts.org/images/products/433/561/901/4459/nutrition_de.20.full.jpg",
+  "truth": {
+   "calories": 623.0,
+   "protein_g": 23.0,
+   "carbs_g": 7.8,
+   "fat_g": 52.9
+  }
+ },
+ {
+  "code": "20481940",
+  "name": "Dunkle Ganze Mandel",
+  "image": "https://images.openfoodfacts.org/images/products/20481940/nutrition_de.118.full.jpg",
+  "truth": {
+   "calories": 574.0,
+   "protein_g": 10.3,
+   "carbs_g": 43.1,
+   "fat_g": 38.0
+  }
+ },
+ {
+  "code": "5411188112747",
+  "name": "Dessert végétal citron vert",
+  "image": "https://images.openfoodfacts.org/images/products/541/118/811/2747/nutrition_de.9.full.jpg",
+  "truth": {
+   "calories": 70.0,
+   "protein_g": 3.6,
+   "carbs_g": 8.4,
+   "fat_g": 2.0
+  }
+ },
+ {
+  "code": "20757809",
+  "name": "Hummus Classic",
+  "image": "https://images.openfoodfacts.org/images/products/20757809/nutrition_de.183.full.jpg",
+  "truth": {
+   "calories": 286.0,
+   "protein_g": 7.8,
+   "carbs_g": 13.9,
+   "fat_g": 21.1
+  }
+ },
+ {
+  "code": "20425562",
+  "name": "Pesto rosso",
+  "image": "https://images.openfoodfacts.org/images/products/20425562/nutrition_de.75.full.jpg",
+  "truth": {
+   "calories": 307.368421052632,
+   "protein_g": 4.4,
+   "carbs_g": 10.7,
+   "fat_g": 27.0
+  }
+ },
+ {
+  "code": "8000430132267",
+  "name": "Mozzarella mini",
+  "image": "https://images.openfoodfacts.org/images/products/800/043/013/2267/nutrition_de.191.full.jpg",
+  "truth": {
+   "calories": 207.0,
+   "protein_g": 17.0,
+   "carbs_g": 1.0,
+   "fat_g": 15.0
+  }
+ },
+ {
+  "code": "8000500359556",
+  "name": "czekolada Rafael",
+  "image": "https://images.openfoodfacts.org/images/products/800/050/035/9556/nutrition_de.201.full.jpg",
+  "truth": {
+   "calories": 599.0,
+   "protein_g": 8.1,
+   "carbs_g": 46.5,
+   "fat_g": 41.8
+  }
+ },
+ {
+  "code": "4056489685937",
+  "name": "Yogur High Protein Coco",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/968/5937/nutrition_de.72.full.jpg",
+  "truth": {
+   "calories": 72.0,
+   "protein_g": 10.0,
+   "carbs_g": 6.3,
+   "fat_g": 0.6
+  }
+ },
+ {
+  "code": "4056489258346",
+  "name": "High Protein Blueberry milk product",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/925/8346/nutrition_de.221.full.jpg",
+  "truth": {
+   "calories": 72.0,
+   "protein_g": 10.0,
+   "carbs_g": 7.4,
+   "fat_g": 0.3
+  }
+ },
+ {
+  "code": "20353032",
+  "name": "Mélange de noix et d'olives",
+  "image": "https://images.openfoodfacts.org/images/products/20353032/nutrition_de.106.full.jpg",
+  "truth": {
+   "calories": 645.0,
+   "protein_g": 23.5,
+   "carbs_g": 10.6,
+   "fat_g": 54.5
+  }
+ },
+ {
+  "code": "4335619022126",
+  "name": "Tortilla Wraps Vollkorn",
+  "image": "https://images.openfoodfacts.org/images/products/433/561/902/2126/nutrition_de.86.full.jpg",
+  "truth": {
+   "calories": 284.0,
+   "protein_g": 8.8,
+   "carbs_g": 45.0,
+   "fat_g": 6.0
+  }
+ },
+ {
+  "code": "3046920010856",
+  "name": "Lindt chocolate negro Limon con Gengibre con amandes",
+  "image": "https://images.openfoodfacts.org/images/products/304/692/001/0856/nutrition_de.25.full.jpg",
+  "truth": {
+   "calories": 534.0,
+   "protein_g": 6.9,
+   "carbs_g": 51.0,
+   "fat_g": 32.0
+  }
+ },
+ {
+  "code": "5000157073020",
+  "name": "Worcester sauce",
+  "image": "https://images.openfoodfacts.org/images/products/500/015/707/3020/nutrition_de.112.full.jpg",
+  "truth": {
+   "calories": 97.0,
+   "protein_g": 0.7,
+   "carbs_g": 22.0,
+   "fat_g": 0.7
+  }
+ },
+ {
+  "code": "5053990127665",
+  "name": "Pringles Hot & Spicy",
+  "image": "https://images.openfoodfacts.org/images/products/505/399/012/7665/nutrition_de.47.full.jpg",
+  "truth": {
+   "calories": 521.0,
+   "protein_g": 6.6,
+   "carbs_g": 54.0,
+   "fat_g": 30.0
+  }
+ },
+ {
+  "code": "8005110551215",
+  "name": "Pizzasauce Aromatica",
+  "image": "https://images.openfoodfacts.org/images/products/800/511/055/1215/nutrition_de.81.full.jpg",
+  "truth": {
+   "calories": 36.0,
+   "protein_g": 1.6,
+   "carbs_g": 5.4,
+   "fat_g": 0.5
+  }
+ },
+ {
+  "code": "4056489530268",
+  "name": "Salmon ahumado",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/953/0268/nutrition_de.24.full.jpg",
+  "truth": {
+   "calories": 151.0,
+   "protein_g": 20.5,
+   "carbs_g": 0.0,
+   "fat_g": 7.7
+  }
+ },
+ {
+  "code": "4058172308277",
+  "name": "Eisen + Vitamin C",
+  "image": "https://images.openfoodfacts.org/images/products/405/817/230/8277/nutrition_de.30.full.jpg",
+  "truth": {
+   "calories": 74.5,
+   "protein_g": 0.5,
+   "carbs_g": 17.0,
+   "fat_g": 0.5
+  }
+ },
+ {
+  "code": "5411188138013",
+  "name": "Zitrone Limette aus Soja",
+  "image": "https://images.openfoodfacts.org/images/products/541/118/813/8013/nutrition_de.58.full.jpg",
+  "truth": {
+   "calories": 70.0,
+   "protein_g": 3.6,
+   "carbs_g": 8.4,
+   "fat_g": 2.0
+  }
+ },
+ {
+  "code": "20063399",
+  "name": "Nature Tortilla",
+  "image": "https://images.openfoodfacts.org/images/products/20063399/nutrition_de.165.full.jpg",
+  "truth": {
+   "calories": 472.0,
+   "protein_g": 6.6,
+   "carbs_g": 64.4,
+   "fat_g": 20.0
+  }
+ },
+ {
+  "code": "8076809576598",
+  "name": "Pesto Rustico",
+  "image": "https://images.openfoodfacts.org/images/products/807/680/957/6598/nutrition_de.174.full.jpg",
+  "truth": {
+   "calories": 194.0,
+   "protein_g": 1.9,
+   "carbs_g": 10.0,
+   "fat_g": 16.0
+  }
+ },
+ {
+  "code": "5900020045133",
+  "name": "Trix",
+  "image": "https://images.openfoodfacts.org/images/products/590/002/004/5133/nutrition_de.35.full.jpg",
+  "truth": {
+   "calories": 391.0,
+   "protein_g": 6.4,
+   "carbs_g": 78.9,
+   "fat_g": 4.3
+  }
+ },
+ {
+  "code": "20521493",
+  "name": "SOS DE SOIA",
+  "image": "https://images.openfoodfacts.org/images/products/20521493/nutrition_de.126.full.jpg",
+  "truth": {
+   "calories": 70.0,
+   "protein_g": 8.1,
+   "carbs_g": 8.0,
+   "fat_g": 0.0
+  }
+ },
+ {
+  "code": "8076809578264",
+  "name": "Pesto Basilico e Peperoncino 195g",
+  "image": "https://images.openfoodfacts.org/images/products/807/680/957/8264/nutrition_de.161.full.jpg",
+  "truth": {
+   "calories": 441.0,
+   "protein_g": 3.0,
+   "carbs_g": 13.0,
+   "fat_g": 41.0
+  }
+ },
+ {
+  "code": "4033634061020",
+  "name": "Organic Crisp Bread",
+  "image": "https://images.openfoodfacts.org/images/products/403/363/406/1020/nutrition_de.66.full.jpg",
+  "truth": {
+   "calories": 442.0,
+   "protein_g": 18.0,
+   "carbs_g": 47.0,
+   "fat_g": 18.0
+  }
+ },
+ {
+  "code": "3073781192148",
+  "name": "VACHE QUI RIT ORIGINAL",
+  "image": "https://images.openfoodfacts.org/images/products/307/378/119/2148/nutrition_de.7.full.jpg",
+  "truth": {
+   "calories": 232.0,
+   "protein_g": 11.0,
+   "carbs_g": 6.5,
+   "fat_g": 18.0
+  }
+ },
+ {
+  "code": "4003586101310",
+  "name": "Chipsfrisch ungarisch",
+  "image": "https://images.openfoodfacts.org/images/products/400/358/610/1310/nutrition_de.40.full.jpg",
+  "truth": {
+   "calories": 533.333333333333,
+   "protein_g": 6.1,
+   "carbs_g": 49.0,
+   "fat_g": 33.0
+  }
+ },
+ {
+  "code": "4335619201859",
+  "name": "Dubai chocolate",
+  "image": "https://images.openfoodfacts.org/images/products/433/561/920/1859/nutrition_de.60.full.jpg",
+  "truth": {
+   "calories": 531.0,
+   "protein_g": 11.6,
+   "carbs_g": 51.7,
+   "fat_g": 30.0
+  }
+ },
+ {
+  "code": "8000500309469",
+  "name": "Chocolat Kinder Chocofresh fourré lait noisette x5",
+  "image": "https://images.openfoodfacts.org/images/products/800/050/030/9469/nutrition_de.193.full.jpg",
+  "truth": {
+   "calories": 577.0,
+   "protein_g": 7.3,
+   "carbs_g": 40.2,
+   "fat_g": 42.7
+  }
+ },
+ {
+  "code": "20005726",
+  "name": "Nut & Fruit Mix Classic",
+  "image": "https://images.openfoodfacts.org/images/products/20005726/nutrition_de.88.full.jpg",
+  "truth": {
+   "calories": 531.0,
+   "protein_g": 13.1,
+   "carbs_g": 33.9,
+   "fat_g": 36.5
+  }
+ },
+ {
+  "code": "5413548283128",
+  "name": "kinder schoko bons",
+  "image": "https://images.openfoodfacts.org/images/products/541/354/828/3128/nutrition_de.220.full.jpg",
+  "truth": {
+   "calories": 576.0,
+   "protein_g": 8.3,
+   "carbs_g": 52.5,
+   "fat_g": 36.6
+  }
+ },
+ {
+  "code": "4056489664567",
+  "name": "Sübstoff",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/966/4567/nutrition_de.48.full.jpg",
+  "truth": {
+   "calories": 25.0,
+   "protein_g": 0.0,
+   "carbs_g": 0.0,
+   "fat_g": 0.0
+  }
+ },
+ {
+  "code": "5411188135005",
+  "name": "Not Milk 1,8",
+  "image": "https://images.openfoodfacts.org/images/products/541/118/813/5005/nutrition_de.158.full.jpg",
+  "truth": {
+   "calories": 44.0,
+   "protein_g": 0.7,
+   "carbs_g": 5.6,
+   "fat_g": 1.8
+  }
+ },
+ {
+  "code": "0633148100013",
+  "name": "Krydder m/Lime og Chili",
+  "image": "https://images.openfoodfacts.org/images/products/063/314/810/0013/nutrition_de.104.full.jpg",
+  "truth": {
+   "calories": 190.0,
+   "protein_g": 4.0,
+   "carbs_g": 38.0,
+   "fat_g": 2.5
+  }
+ },
+ {
+  "code": "5010029227062",
+  "name": "Oreo O's",
+  "image": "https://images.openfoodfacts.org/images/products/501/002/922/7062/nutrition_de.161.full.jpg",
+  "truth": {
+   "calories": 382.0,
+   "protein_g": 7.9,
+   "carbs_g": 81.0,
+   "fat_g": 2.1
+  }
+ },
+ {
+  "code": "4006040007999",
+  "name": "Nuss-Nougat-Creme",
+  "image": "https://images.openfoodfacts.org/images/products/400/604/000/7999/nutrition_de.110.full.jpg",
+  "truth": {
+   "calories": 598.0,
+   "protein_g": 6.9,
+   "carbs_g": 42.0,
+   "fat_g": 44.0
+  }
+ },
+ {
+  "code": "4012359133007",
+  "name": "Tofu fumesse",
+  "image": "https://images.openfoodfacts.org/images/products/401/235/913/3007/nutrition_de.71.full.jpg",
+  "truth": {
+   "calories": 256.0,
+   "protein_g": 15.0,
+   "carbs_g": 5.3,
+   "fat_g": 19.0
+  }
+ },
+ {
+  "code": "40349558",
+  "name": "Meggle Feine Butter",
+  "image": "https://images.openfoodfacts.org/images/products/40349558/nutrition_de.153.full.jpg",
+  "truth": {
+   "calories": 743.0,
+   "protein_g": 0.7,
+   "carbs_g": 0.6,
+   "fat_g": 82.0
+  }
+ },
+ {
+  "code": "80053835",
+  "name": "Classico - olio extra vergine di oliva",
+  "image": "https://images.openfoodfacts.org/images/products/80053835/nutrition_de.88.full.jpg",
+  "truth": {
+   "calories": 828.0,
+   "protein_g": 0.0,
+   "carbs_g": 0.0,
+   "fat_g": 92.0
+  }
+ },
+ {
+  "code": "4061458024068",
+  "name": "Hummus Natur",
+  "image": "https://images.openfoodfacts.org/images/products/406/145/802/4068/nutrition_de.82.full.jpg",
+  "truth": {
+   "calories": 307.0,
+   "protein_g": 8.0,
+   "carbs_g": 15.1,
+   "fat_g": 22.7
+  }
+ },
+ {
+  "code": "4000540000108",
+  "name": "Haferflocken Blütenzart",
+  "image": "https://images.openfoodfacts.org/images/products/400/054/000/0108/nutrition_de.277.full.jpg",
+  "truth": {
+   "calories": 361.0,
+   "protein_g": 14.0,
+   "carbs_g": 56.0,
+   "fat_g": 6.7
+  }
+ },
+ {
+  "code": "20051389",
+  "name": "Mayonnaise",
+  "image": "https://images.openfoodfacts.org/images/products/20051389/nutrition_de.110.full.jpg",
+  "truth": {
+   "calories": 753.0,
+   "protein_g": 0.85,
+   "carbs_g": 2.4,
+   "fat_g": 82.0
+  }
+ },
+ {
+  "code": "8715035210301",
+  "name": "Teriyakisauce",
+  "image": "https://images.openfoodfacts.org/images/products/871/503/521/0301/nutrition_de.100.full.jpg",
+  "truth": {
+   "calories": 99.0,
+   "protein_g": 7.0,
+   "carbs_g": 12.0,
+   "fat_g": 0.0
+  }
+ },
+ {
+  "code": "4056489258353",
+  "name": "Raspberry-Pomegranate Milk Product",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/925/8353/nutrition_de.215.full.jpg",
+  "truth": {
+   "calories": 65.0,
+   "protein_g": 10.0,
+   "carbs_g": 6.0,
+   "fat_g": 0.3
+  }
+ },
+ {
+  "code": "20002268",
+  "name": "Mozzarella",
+  "image": "https://images.openfoodfacts.org/images/products/20002268/nutrition_de.133.full.jpg",
+  "truth": {
+   "calories": 248.0,
+   "protein_g": 17.5,
+   "carbs_g": 1.5,
+   "fat_g": 19.0
+  }
+ },
+ {
+  "code": "20026370",
+  "name": "",
+  "image": "https://images.openfoodfacts.org/images/products/20026370/nutrition_de.105.full.jpg",
+  "truth": {
+   "calories": 130.0,
+   "protein_g": 2.3,
+   "carbs_g": 17.6,
+   "fat_g": 5.2
+  }
+ },
+ {
+  "code": "8000500435618",
+  "name": "Eat Natural Vegan - Erdnüsse, Kokos & dunkle Schokolade",
+  "image": "https://images.openfoodfacts.org/images/products/800/050/043/5618/nutrition_de.31.full.jpg",
+  "truth": {
+   "calories": 493.0,
+   "protein_g": 10.9,
+   "carbs_g": 44.5,
+   "fat_g": 28.5
+  }
+ },
+ {
+  "code": "7622201127206",
+  "name": "Haselnusscreme",
+  "image": "https://images.openfoodfacts.org/images/products/762/220/112/7206/nutrition_de.110.full.jpg",
+  "truth": {
+   "calories": 553.333333333333,
+   "protein_g": 3.8,
+   "carbs_g": 58.0,
+   "fat_g": 34.0
+  }
+ },
+ {
+  "code": "4001724038870",
+  "name": "DR.OETKER RISTORANTE Quattro Form.",
+  "image": "https://images.openfoodfacts.org/images/products/400/172/403/8870/nutrition_de.75.full.jpg",
+  "truth": {
+   "calories": 257.0,
+   "protein_g": 11.0,
+   "carbs_g": 24.0,
+   "fat_g": 13.0
+  }
+ },
+ {
+  "code": "5411188136347",
+  "name": "Alpro Fermentiertes Sojaprodukt, rote Früchte mit Datteln, ohne Zuckerzusatz 400g",
+  "image": "https://images.openfoodfacts.org/images/products/541/118/813/6347/nutrition_de.111.full.jpg",
+  "truth": {
+   "calories": 65.0,
+   "protein_g": 3.7,
+   "carbs_g": 6.6,
+   "fat_g": 2.1
+  }
+ },
+ {
+  "code": "4008258185001",
+  "name": "Cranberries gesüßt",
+  "image": "https://images.openfoodfacts.org/images/products/400/825/818/5001/nutrition_de.106.full.jpg",
+  "truth": {
+   "calories": 338.0,
+   "protein_g": 0.3,
+   "carbs_g": 78.0,
+   "fat_g": 1.3
+  }
+ },
+ {
+  "code": "8008698005491",
+  "name": "CHOCO CHIP COOKIES - Biscuits aux pépites de chocolat",
+  "image": "https://images.openfoodfacts.org/images/products/800/869/800/5491/nutrition_de.186.full.jpg",
+  "truth": {
+   "calories": 523.0,
+   "protein_g": 4.3,
+   "carbs_g": 62.0,
+   "fat_g": 28.0
+  }
+ },
+ {
+  "code": "3415581122015",
+  "name": "Macadamia nut brittle",
+  "image": "https://images.openfoodfacts.org/images/products/341/558/112/2015/nutrition_de.42.full.jpg",
+  "truth": {
+   "calories": 264.0,
+   "protein_g": 3.9,
+   "carbs_g": 25.2,
+   "fat_g": 16.3
+  }
+ },
+ {
+  "code": "8076809523738",
+  "name": "Lasagne",
+  "image": "https://images.openfoodfacts.org/images/products/807/680/952/3738/nutrition_de.439.full.jpg",
+  "truth": {
+   "calories": 359.0,
+   "protein_g": 13.0,
+   "carbs_g": 71.0,
+   "fat_g": 2.0
+  }
+ },
+ {
+  "code": "4056489216230",
+  "name": "Fromage blanc fraise",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/921/6230/nutrition_de.68.full.jpg",
+  "truth": {
+   "calories": 67.0,
+   "protein_g": 12.4,
+   "carbs_g": 3.3,
+   "fat_g": 0.4
+  }
+ },
+ {
+  "code": "4056489216223",
+  "name": "High Protein Quark Dessert Raspberry",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/921/6223/nutrition_de.40.full.jpg",
+  "truth": {
+   "calories": 68.0,
+   "protein_g": 12.6,
+   "carbs_g": 3.4,
+   "fat_g": 0.4
+  }
+ },
+ {
+  "code": "8001250120120",
+  "name": "De Cecco Spaghetti Nr. 12",
+  "image": "https://images.openfoodfacts.org/images/products/800/125/012/0120/nutrition_de.77.full.jpg",
+  "truth": {
+   "calories": 351.0,
+   "protein_g": 14.0,
+   "carbs_g": 69.0,
+   "fat_g": 1.5
+  }
+ },
+ {
+  "code": "8853662056005",
+  "name": "Sriracha",
+  "image": "https://images.openfoodfacts.org/images/products/885/366/205/6005/nutrition_de.69.full.jpg",
+  "truth": {
+   "calories": 139.0,
+   "protein_g": 2.3,
+   "carbs_g": 28.0,
+   "fat_g": 1.2
+  }
+ },
+ {
+  "code": "4000405004968",
+  "name": "Rügenwalder Mühle Veganer Schinken-Spicker Mortadella 4000405004968 Vegane Schinkenwurst Alternative mit Sonnenblumenprotein, gegart",
+  "image": "https://images.openfoodfacts.org/images/products/400/040/500/4968/nutrition_de.106.full.jpg",
+  "truth": {
+   "calories": 117.0,
+   "protein_g": 8.0,
+   "carbs_g": 2.9,
+   "fat_g": 9.0
+  }
+ },
+ {
+  "code": "20276539",
+  "name": "RASPBERRY fruit spread",
+  "image": "https://images.openfoodfacts.org/images/products/20276539/nutrition_de.49.full.jpg",
+  "truth": {
+   "calories": 250.0,
+   "protein_g": 0.5,
+   "carbs_g": 57.0,
+   "fat_g": 0.1
+  }
+ },
+ {
+  "code": "4017100370007",
+  "name": "Leibniz Butterkeks",
+  "image": "https://images.openfoodfacts.org/images/products/401/710/037/0007/nutrition_de.183.full.jpg",
+  "truth": {
+   "calories": 435.0,
+   "protein_g": 8.4,
+   "carbs_g": 72.0,
+   "fat_g": 12.0
+  }
+ },
+ {
+  "code": "4056489617181",
+  "name": "Tomato Ketchup",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/961/7181/nutrition_de.26.full.jpg",
+  "truth": {
+   "calories": 38.0,
+   "protein_g": 1.7,
+   "carbs_g": 6.7,
+   "fat_g": 0.1
+  }
+ },
+ {
+  "code": "4004980401907",
+  "name": "Erdnüsse geröstet & gesalzen",
+  "image": "https://images.openfoodfacts.org/images/products/400/498/040/1907/nutrition_de.48.full.jpg",
+  "truth": {
+   "calories": 621.0,
+   "protein_g": 24.0,
+   "carbs_g": 11.0,
+   "fat_g": 51.0
+  }
+ },
+ {
+  "code": "4056489814764",
+  "name": "Coconut flavour quark",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/981/4764/nutrition_de.26.full.jpg",
+  "truth": {
+   "calories": 51.0,
+   "protein_g": 7.4,
+   "carbs_g": 3.9,
+   "fat_g": 0.4
+  }
+ },
+ {
+  "code": "4056489182528",
+  "name": "Frischei-Waffeln",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/918/2528/nutrition_de.111.full.jpg",
+  "truth": {
+   "calories": 453.0,
+   "protein_g": 7.1,
+   "carbs_g": 53.2,
+   "fat_g": 23.3
+  }
+ },
+ {
+  "code": "8711327370708",
+  "name": "Chocolate Fudge Brownie",
+  "image": "https://images.openfoodfacts.org/images/products/871/132/737/0708/nutrition_de.372.full.jpg",
+  "truth": {
+   "calories": 251.0,
+   "protein_g": 4.3,
+   "carbs_g": 30.0,
+   "fat_g": 13.0
+  }
+ },
+ {
+  "code": "8008343299671",
+  "name": "Sugo al Basilico",
+  "image": "https://images.openfoodfacts.org/images/products/800/834/329/9671/nutrition_de.19.full.jpg",
+  "truth": {
+   "calories": 67.0,
+   "protein_g": 1.1,
+   "carbs_g": 5.4,
+   "fat_g": 4.4
+  }
+ },
+ {
+  "code": "4056489774754",
+  "name": "Sirop d'érable",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/977/4754/nutrition_de.40.full.jpg",
+  "truth": {
+   "calories": 360.0,
+   "protein_g": 0.0,
+   "carbs_g": 90.0,
+   "fat_g": 0.0
+  }
+ },
+ {
+  "code": "4012860003110",
+  "name": "Senf mittelscharf",
+  "image": "https://images.openfoodfacts.org/images/products/401/286/000/3110/nutrition_de.197.full.jpg",
+  "truth": {
+   "calories": 108.0,
+   "protein_g": 6.1,
+   "carbs_g": 2.2,
+   "fat_g": 6.7
+  }
+ },
+ {
+  "code": "8076808050440",
+  "name": "MACCHERONI N°44",
+  "image": "https://images.openfoodfacts.org/images/products/807/680/805/0440/nutrition_de.431.full.jpg",
+  "truth": {
+   "calories": 359.0,
+   "protein_g": 13.0,
+   "carbs_g": 71.0,
+   "fat_g": 2.0
+  }
+ },
+ {
+  "code": "20187897",
+  "name": "",
+  "image": "https://images.openfoodfacts.org/images/products/20187897/nutrition_de.275.full.jpg",
+  "truth": {
+   "calories": 75.0,
+   "protein_g": 2.6,
+   "carbs_g": 9.3,
+   "fat_g": 2.3
+  }
+ },
+ {
+  "code": "4008258107010",
+  "name": "Cashew Kerne Nüsse",
+  "image": "https://images.openfoodfacts.org/images/products/400/825/810/7010/nutrition_de.126.full.jpg",
+  "truth": {
+   "calories": 606.0,
+   "protein_g": 19.0,
+   "carbs_g": 23.0,
+   "fat_g": 48.0
+  }
+ },
+ {
+  "code": "8001010076568",
+  "name": "Crema Aceto Balsamico di Modena",
+  "image": "https://images.openfoodfacts.org/images/products/800/101/007/6568/nutrition_de.62.full.jpg",
+  "truth": {
+   "calories": 195.0,
+   "protein_g": 0.9,
+   "carbs_g": 44.0,
+   "fat_g": 0.0
+  }
+ },
+ {
+  "code": "8719200262140",
+  "name": "Becel Vital",
+  "image": "https://images.openfoodfacts.org/images/products/871/920/026/2140/nutrition_de.21.full.jpg",
+  "truth": {
+   "calories": 252.0,
+   "protein_g": 0.5,
+   "carbs_g": 0.5,
+   "fat_g": 28.0
+  }
+ },
+ {
+  "code": "8076809578356",
+  "name": "Tortiglioni- Pâtes alimentaires de semoule et de blé dur 500G",
+  "image": "https://images.openfoodfacts.org/images/products/807/680/957/8356/nutrition_de.40.full.jpg",
+  "truth": {
+   "calories": 347.0,
+   "protein_g": 13.0,
+   "carbs_g": 64.0,
+   "fat_g": 2.5
+  }
+ },
+ {
+  "code": "20003937",
+  "name": "Bolognese",
+  "image": "https://images.openfoodfacts.org/images/products/20003937/nutrition_de.17.full.jpg",
+  "truth": {
+   "calories": 82.0,
+   "protein_g": 3.9,
+   "carbs_g": 6.3,
+   "fat_g": 4.3
+  }
+ },
+ {
+  "code": "4017100376108",
+  "name": "Kipferl",
+  "image": "https://images.openfoodfacts.org/images/products/401/710/037/6108/nutrition_de.117.full.jpg",
+  "truth": {
+   "calories": 542.0,
+   "protein_g": 8.4,
+   "carbs_g": 56.0,
+   "fat_g": 31.0
+  }
+ },
+ {
+  "code": "11044204",
+  "name": "Schoko Reis Waffeln",
+  "image": "https://images.openfoodfacts.org/images/products/11044204/nutrition_de.102.full.jpg",
+  "truth": {
+   "calories": 439.0,
+   "protein_g": 10.0,
+   "carbs_g": 64.0,
+   "fat_g": 14.0
+  }
+ },
+ {
+  "code": "20052713",
+  "name": "Mandorle intere",
+  "image": "https://images.openfoodfacts.org/images/products/20052713/nutrition_de.159.full.jpg",
+  "truth": {
+   "calories": 645.0,
+   "protein_g": 24.2,
+   "carbs_g": 5.4,
+   "fat_g": 56.0
+  }
+ },
+ {
+  "code": "8801043150620",
+  "name": "Shin Ramyun Instant Noedels, Heet en pittig",
+  "image": "https://images.openfoodfacts.org/images/products/880/104/315/0620/nutrition_de.210.full.jpg",
+  "truth": {
+   "calories": 422.0,
+   "protein_g": 8.2,
+   "carbs_g": 68.0,
+   "fat_g": 13.0
+  }
+ },
+ {
+  "code": "3415581101010",
+  "name": "Vanilla",
+  "image": "https://images.openfoodfacts.org/images/products/341/558/110/1010/nutrition_de.68.full.jpg",
+  "truth": {
+   "calories": 250.0,
+   "protein_g": 4.3,
+   "carbs_g": 19.9,
+   "fat_g": 16.9
+  }
+ },
+ {
+  "code": "20681937",
+  "name": "Bio Vollkorn Penne Rigante",
+  "image": "https://images.openfoodfacts.org/images/products/20681937/nutrition_de.127.full.jpg",
+  "truth": {
+   "calories": 350.0,
+   "protein_g": 12.0,
+   "carbs_g": 67.0,
+   "fat_g": 2.2
+  }
+ },
+ {
+  "code": "20202866",
+  "name": "premium müsli",
+  "image": "https://images.openfoodfacts.org/images/products/20202866/nutrition_de.103.full.jpg",
+  "truth": {
+   "calories": 382.0,
+   "protein_g": 8.5,
+   "carbs_g": 66.7,
+   "fat_g": 7.1
+  }
+ },
+ {
+  "code": "7394376621932",
+  "name": "Barista Edition Haverdrank",
+  "image": "https://images.openfoodfacts.org/images/products/739/437/662/1932/nutrition_de.53.full.jpg",
+  "truth": {
+   "calories": 61.0,
+   "protein_g": 1.1,
+   "carbs_g": 7.1,
+   "fat_g": 3.0
+  }
+ },
+ {
+  "code": "20103699",
+  "name": "",
+  "image": "https://images.openfoodfacts.org/images/products/20103699/nutrition_de.133.full.jpg",
+  "truth": {
+   "calories": 364.0,
+   "protein_g": 11.8,
+   "carbs_g": 75.5,
+   "fat_g": 1.0
+  }
+ },
+ {
+  "code": "20995751",
+  "name": "bio vollkorn penne",
+  "image": "https://images.openfoodfacts.org/images/products/20995751/nutrition_de.96.full.jpg",
+  "truth": {
+   "calories": 343.0,
+   "protein_g": 13.0,
+   "carbs_g": 65.0,
+   "fat_g": 1.9
+  }
+ },
+ {
+  "code": "5711953068881",
+  "name": "Chocolate Flavour Shake",
+  "image": "https://images.openfoodfacts.org/images/products/571/195/306/8881/nutrition_de.36.full.jpg",
+  "truth": {
+   "calories": 51.0,
+   "protein_g": 5.7,
+   "carbs_g": 4.9,
+   "fat_g": 0.9
+  }
+ },
+ {
+  "code": "20103644",
+  "name": "Coconut Milk kókusz tej",
+  "image": "https://images.openfoodfacts.org/images/products/20103644/nutrition_de.320.full.jpg",
+  "truth": {
+   "calories": 207.0,
+   "protein_g": 1.8,
+   "carbs_g": 2.2,
+   "fat_g": 21.0
+  }
+ },
+ {
+  "code": "20146092",
+  "name": "Milk & Hazelnut Wafer Sandwhich",
+  "image": "https://images.openfoodfacts.org/images/products/20146092/nutrition_de.68.full.jpg",
+  "truth": {
+   "calories": 533.0,
+   "protein_g": 7.9,
+   "carbs_g": 52.6,
+   "fat_g": 31.6
+  }
+ },
+ {
+  "code": "20353889",
+  "name": "Raisin-nuts Müsli",
+  "image": "https://images.openfoodfacts.org/images/products/20353889/nutrition_de.486.full.jpg",
+  "truth": {
+   "calories": 375.0,
+   "protein_g": 10.8,
+   "carbs_g": 53.6,
+   "fat_g": 10.6
+  }
+ },
+ {
+  "code": "4000607852008",
+  "name": "Dark Chocolate",
+  "image": "https://images.openfoodfacts.org/images/products/400/060/785/2008/nutrition_de.56.full.jpg",
+  "truth": {
+   "calories": 525.0,
+   "protein_g": 6.4,
+   "carbs_g": 50.0,
+   "fat_g": 31.0
+  }
+ },
+ {
+  "code": "4012359111104",
+  "name": "Tofu fumé",
+  "image": "https://images.openfoodfacts.org/images/products/401/235/911/1104/nutrition_de.123.full.jpg",
+  "truth": {
+   "calories": 163.0,
+   "protein_g": 19.0,
+   "carbs_g": 1.8,
+   "fat_g": 8.7
+  }
+ },
+ {
+  "code": "8719200233041",
+  "name": "Margarine",
+  "image": "https://images.openfoodfacts.org/images/products/871/920/023/3041/nutrition_de.19.full.jpg",
+  "truth": {
+   "calories": 540.0,
+   "protein_g": 0.5,
+   "carbs_g": 0.5,
+   "fat_g": 60.0
+  }
+ },
+ {
+  "code": "4056489379737",
+  "name": "Crema Balsamico Classic",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/937/9737/nutrition_de.77.full.jpg",
+  "truth": {
+   "calories": 228.0,
+   "protein_g": 0.4,
+   "carbs_g": 54.0,
+   "fat_g": 0.0
+  }
+ },
+ {
+  "code": "4056489135524",
+  "name": "Sunflower Oil",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/913/5524/nutrition_de.28.full.jpg",
+  "truth": {
+   "calories": 828.0,
+   "protein_g": 0.0,
+   "carbs_g": 0.0,
+   "fat_g": 92.0
+  }
+ },
+ {
+  "code": "4056489009184",
+  "name": "Tortelloni Pesto Basilico",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/900/9184/nutrition_de.40.full.jpg",
+  "truth": {
+   "calories": 299.0,
+   "protein_g": 11.1,
+   "carbs_g": 33.0,
+   "fat_g": 13.2
+  }
+ },
+ {
+  "code": "40144450",
+  "name": "",
+  "image": "https://images.openfoodfacts.org/images/products/40144450/nutrition_de.147.full.jpg",
+  "truth": {
+   "calories": 531.0,
+   "protein_g": 8.4,
+   "carbs_g": 52.2,
+   "fat_g": 31.6
+  }
+ },
+ {
+  "code": "90162565",
+  "name": "Red Bull Energydrink Classic",
+  "image": "https://images.openfoodfacts.org/images/products/90162565/nutrition_de.135.full.jpg",
+  "truth": {
+   "calories": 46.0,
+   "protein_g": 0.0,
+   "carbs_g": 11.0,
+   "fat_g": 0.0
+  }
+ },
+ {
+  "code": "5391532124162",
+  "name": "Chocolate and Hazelnut",
+  "image": "https://images.openfoodfacts.org/images/products/539/153/212/4162/nutrition_de.62.full.jpg",
+  "truth": {
+   "calories": 516.36364,
+   "protein_g": 34.54545,
+   "carbs_g": 29.09091,
+   "fat_g": 16.36364
+  }
+ },
+ {
+  "code": "4337256690508",
+  "name": "Remoulade",
+  "image": "https://images.openfoodfacts.org/images/products/433/725/669/0508/nutrition_de.18.full.jpg",
+  "truth": {
+   "calories": 594.0,
+   "protein_g": 0.6,
+   "carbs_g": 3.4,
+   "fat_g": 64.0
+  }
+ },
+ {
+  "code": "4000339035229",
+  "name": "Philadelphia Original cream cheese",
+  "image": "https://images.openfoodfacts.org/images/products/400/033/903/5229/nutrition_de.84.full.jpg",
+  "truth": {
+   "calories": 226.0,
+   "protein_g": 5.4,
+   "carbs_g": 4.3,
+   "fat_g": 21.0
+  }
+ },
+ {
+  "code": "7612100907603",
+  "name": "Crunchy cream",
+  "image": "https://images.openfoodfacts.org/images/products/761/210/090/7603/nutrition_de.45.full.jpg",
+  "truth": {
+   "calories": 547.0,
+   "protein_g": 3.7,
+   "carbs_g": 59.4,
+   "fat_g": 32.4
+  }
+ },
+ {
+  "code": "4058172922077",
+  "name": "Vitamin B12",
+  "image": "https://images.openfoodfacts.org/images/products/405/817/292/2077/nutrition_de.7.full.jpg",
+  "truth": {
+   "calories": 201.0,
+   "protein_g": 0.5,
+   "carbs_g": 16.0,
+   "fat_g": 0.5
+  }
+ },
+ {
+  "code": "8801073113893",
+  "name": "Carboana Buldak Spicy Ramen",
+  "image": "https://images.openfoodfacts.org/images/products/880/107/311/3893/nutrition_de.86.full.jpg",
+  "truth": {
+   "calories": 423.076923076923,
+   "protein_g": 6.3,
+   "carbs_g": 63.84,
+   "fat_g": 13.84
+  }
+ },
+ {
+  "code": "5411188124702",
+  "name": "Alpro Haferdrink, Ungesüßt 1 L, FRESH",
+  "image": "https://images.openfoodfacts.org/images/products/541/118/812/4702/nutrition_de.86.full.jpg",
+  "truth": {
+   "calories": 44.0,
+   "protein_g": 0.8,
+   "carbs_g": 6.4,
+   "fat_g": 1.5
+  }
+ },
+ {
+  "code": "4056489416951",
+  "name": "Crème avec vinaigre balsamique de molène",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/941/6951/nutrition_de.14.full.jpg",
+  "truth": {
+   "calories": 228.0,
+   "protein_g": 0.4,
+   "carbs_g": 54.0,
+   "fat_g": 0.0
+  }
+ },
+ {
+  "code": "3161710000128",
+  "name": "Caprice des Dieux",
+  "image": "https://images.openfoodfacts.org/images/products/316/171/000/0128/nutrition_de.103.full.jpg",
+  "truth": {
+   "calories": 333.0,
+   "protein_g": 15.0,
+   "carbs_g": 0.8,
+   "fat_g": 30.0
+  }
+ },
+ {
+  "code": "20000691",
+  "name": "Raspberry conserve",
+  "image": "https://images.openfoodfacts.org/images/products/20000691/nutrition_de.35.full.jpg",
+  "truth": {
+   "calories": 239.0,
+   "protein_g": 0.4,
+   "carbs_g": 57.1,
+   "fat_g": 0.2
+  }
+ },
+ {
+  "code": "20333737",
+  "name": "Roasted Cashew-Peanut-Mix Honey & Salt",
+  "image": "https://images.openfoodfacts.org/images/products/20333737/nutrition_de.80.full.jpg",
+  "truth": {
+   "calories": 533.0,
+   "protein_g": 14.7,
+   "carbs_g": 43.2,
+   "fat_g": 32.4
+  }
+ },
+ {
+  "code": "20772970",
+  "name": "Snack mix",
+  "image": "https://images.openfoodfacts.org/images/products/20772970/nutrition_de.34.full.jpg",
+  "truth": {
+   "calories": 646.67,
+   "protein_g": 22.1,
+   "carbs_g": 10.4,
+   "fat_g": 55.7
+  }
+ },
+ {
+  "code": "20884697",
+  "name": "Mais Waffeln mit Meersalz Bio",
+  "image": "https://images.openfoodfacts.org/images/products/20884697/nutrition_de.155.full.jpg",
+  "truth": {
+   "calories": 383.0,
+   "protein_g": 7.7,
+   "carbs_g": 84.0,
+   "fat_g": 1.4
+  }
+ },
+ {
+  "code": "7300400118118",
+  "name": "ORIGINAL au seigle",
+  "image": "https://images.openfoodfacts.org/images/products/730/040/011/8118/nutrition_de.60.full.jpg",
+  "truth": {
+   "calories": 336.0,
+   "protein_g": 9.0,
+   "carbs_g": 62.0,
+   "fat_g": 1.5
+  }
+ },
+ {
+  "code": "5410041066005",
+  "name": "",
+  "image": "https://images.openfoodfacts.org/images/products/541/004/106/6005/nutrition_de.126.full.jpg",
+  "truth": {
+   "calories": 495.0,
+   "protein_g": 7.8,
+   "carbs_g": 63.0,
+   "fat_g": 23.0
+  }
+ },
+ {
+  "code": "4056489962991",
+  "name": "Guacamole w tomato and spices",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/996/2991/nutrition_de.105.full.jpg",
+  "truth": {
+   "calories": 183.0,
+   "protein_g": 1.6,
+   "carbs_g": 8.6,
+   "fat_g": 15.3
+  }
+ },
+ {
+  "code": "3387390326468",
+  "name": "Chocolate con Leche",
+  "image": "https://images.openfoodfacts.org/images/products/338/739/032/6468/nutrition_de.222.full.jpg",
+  "truth": {
+   "calories": 396.0,
+   "protein_g": 8.6,
+   "carbs_g": 69.5,
+   "fat_g": 7.2
+  }
+ },
+ {
+  "code": "3387390339499",
+  "name": "FITNESS Cerealien",
+  "image": "https://images.openfoodfacts.org/images/products/338/739/033/9499/nutrition_de.135.full.jpg",
+  "truth": {
+   "calories": 366.0,
+   "protein_g": 9.4,
+   "carbs_g": 72.2,
+   "fat_g": 2.1
+  }
+ },
+ {
+  "code": "5711953103766",
+  "name": "Buko Der Sahnige",
+  "image": "https://images.openfoodfacts.org/images/products/571/195/310/3766/nutrition_de.22.full.jpg",
+  "truth": {
+   "calories": 252.0,
+   "protein_g": 4.5,
+   "carbs_g": 3.0,
+   "fat_g": 25.0
+  }
+ },
+ {
+  "code": "3083681139723",
+  "name": "Lunch bowl Légumes & épeautre 250g",
+  "image": "https://images.openfoodfacts.org/images/products/308/368/113/9723/nutrition_de.46.full.jpg",
+  "truth": {
+   "calories": 126.0,
+   "protein_g": 4.7,
+   "carbs_g": 20.0,
+   "fat_g": 2.2
+  }
+ },
+ {
+  "code": "4056489695370",
+  "name": "Boisson au soja, sucré",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/969/5370/nutrition_de.25.full.jpg",
+  "truth": {
+   "calories": 40.0,
+   "protein_g": 3.0,
+   "carbs_g": 3.13333333333333,
+   "fat_g": 1.66666666666667
+  }
+ },
+ {
+  "code": "4056489689720",
+  "name": "",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/968/9720/nutrition_de.95.full.jpg",
+  "truth": {
+   "calories": 50.0,
+   "protein_g": 5.0,
+   "carbs_g": 2.4,
+   "fat_g": 2.2
+  }
+ },
+ {
+  "code": "4066447468342",
+  "name": "Erdnussmus",
+  "image": "https://images.openfoodfacts.org/images/products/406/644/746/8342/nutrition_de.95.full.jpg",
+  "truth": {
+   "calories": 630.0,
+   "protein_g": 28.0,
+   "carbs_g": 7.1,
+   "fat_g": 52.0
+  }
+ },
+ {
+  "code": "8076809521543",
+  "name": "Ricotta",
+  "image": "https://images.openfoodfacts.org/images/products/807/680/952/1543/nutrition_de.130.full.jpg",
+  "truth": {
+   "calories": 87.0,
+   "protein_g": 3.3,
+   "carbs_g": 6.3,
+   "fat_g": 5.0
+  }
+ },
+ {
+  "code": "4000405002360",
+  "name": "Vegane Pommersche mit Schnittlauch",
+  "image": "https://images.openfoodfacts.org/images/products/400/040/500/2360/nutrition_de.30.full.jpg",
+  "truth": {
+   "calories": 221.0,
+   "protein_g": 7.2,
+   "carbs_g": 7.3,
+   "fat_g": 17.0
+  }
+ },
+ {
+  "code": "20047900",
+  "name": "Potato Wedges seasoned",
+  "image": "https://images.openfoodfacts.org/images/products/20047900/nutrition_de.11.full.jpg",
+  "truth": {
+   "calories": 131.0,
+   "protein_g": 2.1,
+   "carbs_g": 20.8,
+   "fat_g": 3.9
+  }
+ },
+ {
+  "code": "4056489012788",
+  "name": "Skyr",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/901/2788/nutrition_de.125.full.jpg",
+  "truth": {
+   "calories": 62.4,
+   "protein_g": 11.0,
+   "carbs_g": 4.0,
+   "fat_g": 0.2
+  }
+ },
+ {
+  "code": "4056489183631",
+  "name": "Pure Kornkraft Haferbrot",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/918/3631/nutrition_de.103.full.jpg",
+  "truth": {
+   "calories": 286.0,
+   "protein_g": 11.0,
+   "carbs_g": 20.0,
+   "fat_g": 16.0
+  }
+ },
+ {
+  "code": "80841197",
+  "name": "La crema zero",
+  "image": "https://images.openfoodfacts.org/images/products/80841197/nutrition_de.43.full.jpg",
+  "truth": {
+   "calories": 430.0,
+   "protein_g": 3.6,
+   "carbs_g": 55.0,
+   "fat_g": 30.0
+  }
+ },
+ {
+  "code": "5449000017888",
+  "name": "Coca-Cola 1 Liter",
+  "image": "https://images.openfoodfacts.org/images/products/544/900/001/7888/nutrition_de.77.full.jpg",
+  "truth": {
+   "calories": 42.0,
+   "protein_g": 0.0,
+   "carbs_g": 10.6,
+   "fat_g": 0.0
+  }
+ },
+ {
+  "code": "80751151",
+  "name": "Nutella pate a tartiner noisettes-cacao barquette 15 gr",
+  "image": "https://images.openfoodfacts.org/images/products/80751151/nutrition_de.24.full.jpg",
+  "truth": {
+   "calories": 539.0,
+   "protein_g": 6.3,
+   "carbs_g": 57.5,
+   "fat_g": 30.9
+  }
+ },
+ {
+  "code": "20918279",
+  "name": "Bio Knäckebrot",
+  "image": "https://images.openfoodfacts.org/images/products/20918279/nutrition_de.229.full.jpg",
+  "truth": {
+   "calories": 447.0,
+   "protein_g": 19.1,
+   "carbs_g": 43.2,
+   "fat_g": 19.9
+  }
+ },
+ {
+  "code": "4335619110694",
+  "name": "Bio natives Olivenöl extra",
+  "image": "https://images.openfoodfacts.org/images/products/433/561/911/0694/nutrition_de.13.full.jpg",
+  "truth": {
+   "calories": 824.0,
+   "protein_g": 0.0,
+   "carbs_g": 0.0,
+   "fat_g": 91.6
+  }
+ },
+ {
+  "code": "20164034",
+  "name": "Isliamo",
+  "image": "https://images.openfoodfacts.org/images/products/20164034/nutrition_de.111.full.jpg",
+  "truth": {
+   "calories": 29.0,
+   "protein_g": 1.5,
+   "carbs_g": 4.4,
+   "fat_g": 0.1
+  }
+ },
+ {
+  "code": "20164041",
+  "name": "Passata",
+  "image": "https://images.openfoodfacts.org/images/products/20164041/nutrition_de.35.full.jpg",
+  "truth": {
+   "calories": 36.0,
+   "protein_g": 1.7,
+   "carbs_g": 6.4,
+   "fat_g": 0.5
+  }
+ },
+ {
+  "code": "5000111041836",
+  "name": "Worcestershire Sauce",
+  "image": "https://images.openfoodfacts.org/images/products/500/011/104/1836/nutrition_de.43.full.jpg",
+  "truth": {
+   "calories": 96.0,
+   "protein_g": 0.8,
+   "carbs_g": 21.0,
+   "fat_g": 0.9
+  }
+ },
+ {
+  "code": "8719200261464",
+  "name": "Becel Classic",
+  "image": "https://images.openfoodfacts.org/images/products/871/920/026/1464/nutrition_de.31.full.jpg",
+  "truth": {
+   "calories": 315.0,
+   "protein_g": 0.49,
+   "carbs_g": 0.49,
+   "fat_g": 35.0
+  }
+ },
+ {
+  "code": "7613035544482",
+  "name": "NESTLE LION Céréales 1,05 kg",
+  "image": "https://images.openfoodfacts.org/images/products/761/303/554/4482/nutrition_de.33.full.jpg",
+  "truth": {
+   "calories": 406.0,
+   "protein_g": 8.1,
+   "carbs_g": 73.2,
+   "fat_g": 7.4
+  }
+ },
+ {
+  "code": "40084107",
+  "name": "kinder Überraschung",
+  "image": "https://images.openfoodfacts.org/images/products/40084107/nutrition_de.163.full.jpg",
+  "truth": {
+   "calories": 552.0,
+   "protein_g": 8.1,
+   "carbs_g": 52.3,
+   "fat_g": 34.2
+  }
+ },
+ {
+  "code": "8076809586177",
+  "name": "Sauce pesto au basilic et mozzarella Barilla 190g",
+  "image": "https://images.openfoodfacts.org/images/products/807/680/958/6177/nutrition_de.21.full.jpg",
+  "truth": {
+   "calories": 558.0,
+   "protein_g": 2.9,
+   "carbs_g": 12.0,
+   "fat_g": 55.0
+  }
+ },
+ {
+  "code": "4001954165018",
+  "name": "Kerrygold extra Butter & Rapsöl - ungesalzen",
+  "image": "https://images.openfoodfacts.org/images/products/400/195/416/5018/nutrition_de.127.full.jpg",
+  "truth": {
+   "calories": 589.0,
+   "protein_g": 0.5,
+   "carbs_g": 0.5,
+   "fat_g": 65.0
+  }
+ },
+ {
+  "code": "40193151",
+  "name": "Der Sahnige",
+  "image": "https://images.openfoodfacts.org/images/products/40193151/nutrition_de.97.full.jpg",
+  "truth": {
+   "calories": 238.0,
+   "protein_g": 5.5,
+   "carbs_g": 3.0,
+   "fat_g": 22.5
+  }
+ },
+ {
+  "code": "8002885004557",
+  "name": "PEANUT BUTTER",
+  "image": "https://images.openfoodfacts.org/images/products/800/288/500/4557/nutrition_de.73.full.jpg",
+  "truth": {
+   "calories": 614.0,
+   "protein_g": 25.8,
+   "carbs_g": 14.0,
+   "fat_g": 49.0
+  }
+ },
+ {
+  "code": "5053990167845",
+  "name": "Sour Cream & Onion",
+  "image": "https://images.openfoodfacts.org/images/products/505/399/016/7845/nutrition_de.97.full.jpg",
+  "truth": {
+   "calories": 519.0,
+   "protein_g": 6.3,
+   "carbs_g": 54.0,
+   "fat_g": 30.0
+  }
+ },
+ {
+  "code": "4056489703990",
+  "name": "Knusperbrot",
+  "image": "https://images.openfoodfacts.org/images/products/405/648/970/3990/nutrition_de.31.full.jpg",
+  "truth": {
+   "calories": 385.0,
+   "protein_g": 13.0,
+   "carbs_g": 70.0,
+   "fat_g": 4.0
+  }
+ },
+ {
+  "code": "4058172922091",
+  "name": "Multi-Mineral",
+  "image": "https://images.openfoodfacts.org/images/products/405/817/292/2091/nutrition_de.29.full.jpg",
+  "truth": {
+   "calories": 182.0,
+   "protein_g": 0.6,
+   "carbs_g": 15.0,
+   "fat_g": 0.5,
+   "fat_g_modifier": "<"
+  }
+ },
+ {
+  "code": "20114671",
+  "name": "Confiture extra fraise bio",
+  "image": "https://images.openfoodfacts.org/images/products/20114671/nutrition_de.23.full.jpg",
+  "truth": {
+   "calories": 242.0,
+   "protein_g": 0.3,
+   "carbs_g": 59.0,
+   "fat_g": 0.1
+  }
+ },
+ {
+  "code": "8853662056661",
+  "name": "Sriracha sauce mayo",
+  "image": "https://images.openfoodfacts.org/images/products/885/366/205/6661/nutrition_de.99.full.jpg",
+  "truth": {
+   "calories": 281.0,
+   "protein_g": 9.0,
+   "carbs_g": 26.0,
+   "fat_g": 19.0
+  }
+ },
+ {
+  "code": "4066600603405",
+  "name": "EDEKA hayunga Paulaner Spezi 1x Flaschen à 0.5 Liter Kiste je (1 Liter 1.00€) zzgl. ??? € Pfand 1l 1.00€",
+  "image": "https://images.openfoodfacts.org/images/products/406/660/060/3405/nutrition_de.162.full.jpg",
+  "truth": {
+   "calories": 37.0,
+   "protein_g": 0.0,
+   "carbs_g": 9.2,
+   "fat_g": 0.0
+  }
+ },
+ {
+  "code": "8000500435700",
+  "name": "PROTEINES",
+  "image": "https://images.openfoodfacts.org/images/products/800/050/043/5700/nutrition_de.38.full.jpg",
+  "truth": {
+   "calories": 497.5,
+   "protein_g": 21.6,
+   "carbs_g": 31.6,
+   "fat_g": 30.3
+  }
+ },
+ {
+  "code": "20003555",
+  "name": "Choco Duo",
+  "image": "https://images.openfoodfacts.org/images/products/20003555/nutrition_de.10.full.jpg",
+  "truth": {
+   "calories": 573.0,
+   "protein_g": 2.1,
+   "carbs_g": 59.1,
+   "fat_g": 36.3
+  }
+ }
+]

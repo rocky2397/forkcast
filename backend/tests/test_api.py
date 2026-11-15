@@ -220,3 +220,25 @@ def test_a_label_reading_that_adds_up_has_no_warning(client, monkeypatch):
     monkeypatch.setattr(vision, "extract_product", lambda raw, media_type: scan)
     r = client.post("/api/nutrition/scan", files={"photo": ("p.jpg", b"\xff\xd8\xff", "image/jpeg")})
     assert r.json()["product"]["check"] is None
+
+
+def test_the_label_reader_writes_out_the_table_first():
+    """D37: the table comes before per_100g in the schema, so it is generated first."""
+    from app import vision
+
+    fields = list(vision.ProductScan.model_fields)
+    assert fields.index("table") < fields.index("per_100g")
+    assert "kcal" in vision.PRODUCT_PROMPT and "1,2 g" in vision.PRODUCT_PROMPT
+
+
+def test_a_label_scan_with_a_written_out_table_still_returns_per_100g(client, monkeypatch):
+    from app import vision
+
+    scan = vision.ProductScan(
+        table=[vision.TableRow(name="Energie", per_100g="1463 kJ / 350 kcal"),
+               vision.TableRow(name="Fett", per_100g="2,6 g")],
+        per_100g=vision.NutritionPer100g(calories=350, protein_g=10, carbs_g=61, fat_g=2.6),
+    )
+    monkeypatch.setattr(vision, "extract_product", lambda raw, media_type: scan)
+    product = client.post("/api/nutrition/scan", files={"photo": ("p.jpg", b"\xff\xd8\xff", "image/jpeg")}).json()["product"]
+    assert product["calories_100g"] == 350 and product["check"] is None
