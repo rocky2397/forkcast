@@ -38,8 +38,13 @@ For a link anyone can open, set `FORKCAST_DEMO=1` and no password:
 - A kitchen unused for a day is deleted, and at most 300 exist at once.
   With `FORKCAST_KITCHENS_DIR` set (D34, below) that only clears the live
   copy; the saved one comes back on the next visit.
-- Photo and label scanning are off, so **don't set `ANTHROPIC_AUTH_TOKEN`**:
-  the demo needs no secret at all. Barcode lookup still works.
+- Photo and label scanning are off unless you set **`ANTHROPIC_API_KEY`**
+  (D38): a pay-per-use key from the Anthropic Console with a monthly spending
+  limit, added as a secret in the host's settings. Never a Claude
+  subscription login (`ANTHROPIC_AUTH_TOKEN`, `sk-ant-oat…`): that is for
+  your own use, not for a public site. With a key, each visitor gets 10 scans
+  a day and the whole demo 200; the spending limit is the hard stop. Without
+  one the demo needs no secret at all, and barcode lookup still works.
 - No persistent disk is needed: without `FORKCAST_KITCHENS_DIR` kitchens are
   throwaway. A free host works.
 - The app runs the recipe feed once on the demo kitchen while it starts, so

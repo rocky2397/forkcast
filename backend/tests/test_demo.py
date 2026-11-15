@@ -249,3 +249,61 @@ def test_unsaved_changes_are_not_swept_away(saved_app):
 def test_delete_is_only_for_the_demo(db, monkeypatch):
     monkeypatch.delenv("FORKCAST_DEMO", raising=False)
     assert TestClient(main.app).delete("/api/demo/kitchen").status_code == 404
+
+
+# --- scanning in the demo (D38): only with an API key, and capped ---
+
+
+@pytest.fixture
+def scanning_app(demo_app, monkeypatch):
+    from app import vision
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+    monkeypatch.setattr(demo, "_scans", {})
+    monkeypatch.setattr(demo, "_scans_total", 0)
+    monkeypatch.setattr(demo, "_scans_day", "")
+    seen = vision.ScanResult(items=[vision.SeenItem(name="garlic", confidence=0.9)])
+    monkeypatch.setattr(vision, "extract_items", lambda raw, media_type: seen)
+    return demo_app
+
+
+PHOTO = {"photo": ("p.jpg", b"\xff\xd8\xff", "image/jpeg")}
+
+
+def test_without_a_key_scanning_stays_off(demo_app, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    assert demo_app.get("/api/session").json()["scans"] is False
+    assert demo_app.post("/api/vision/scan", files=PHOTO).status_code == 403
+
+
+def test_with_a_key_a_visitor_can_scan(scanning_app):
+    k, _ = _visit(scanning_app)
+    assert scanning_app.get("/api/session").json()["scans"] is True
+    r = scanning_app.post("/api/vision/scan", files=PHOTO, headers={H: k})
+    assert r.status_code == 200
+    assert r.json()["proposals"][0]["seen"] == "garlic"
+
+
+def test_a_visitor_gets_ten_scans_a_day(scanning_app):
+    k, _ = _visit(scanning_app)
+    codes = [scanning_app.post("/api/vision/scan", files=PHOTO, headers={H: k}).status_code for _ in range(11)]
+    assert codes == [200] * 10 + [429]
+    other, _ = _visit(scanning_app)
+    assert scanning_app.post("/api/vision/scan", files=PHOTO, headers={H: other}).status_code == 200
+
+
+def test_the_whole_demo_has_a_daily_cap(scanning_app, monkeypatch):
+    monkeypatch.setattr(demo, "SCANS_PER_DAY", 3)
+    codes = []
+    for _ in range(4):
+        k, _ = _visit(scanning_app)
+        codes.append(scanning_app.post("/api/vision/scan", files=PHOTO, headers={H: k}).status_code)
+    assert codes == [200, 200, 200, 429]
+
+
+def test_the_caps_reset_the_next_day(scanning_app, monkeypatch):
+    k, _ = _visit(scanning_app)
+    for _ in range(10):
+        scanning_app.post("/api/vision/scan", files=PHOTO, headers={H: k})
+    monkeypatch.setattr(demo, "_today", lambda: "2099-01-01")
+    assert scanning_app.post("/api/vision/scan", files=PHOTO, headers={H: k}).status_code == 200

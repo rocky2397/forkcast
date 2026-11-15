@@ -25,8 +25,10 @@ with "Delete my data" in the banner. What is saved is the kitchen, your meals
 and the profile, under a random id only your browser knows: no name, email or
 IP address.
 
-Photo scanning is switched off here, because it calls a paid AI model; the
-walkthrough in the project README shows it.
+You can photograph your groceries or a nutrition label: the photo is sent to
+Anthropic's Claude to be read and Forkcast doesn't keep it. Up to 10 scans a
+day per visitor, and you always confirm what was read before anything is
+saved.
 
 Usage is counted only as anonymous totals (no IP addresses, nothing typed,
 nothing per visitor). They are public at `/stats` on the app.

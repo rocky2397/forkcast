@@ -3,11 +3,13 @@
 # This file and README.md are the whole Space. It builds Forkcast from the
 # public GitHub repo at one fixed commit, the same way the main Dockerfile does,
 # and starts it in demo mode: every visitor gets a private copy of the demo
-# kitchen, and photo scanning is off. No key or other secret is needed or used.
+# kitchen. Photo and label scanning work only when the Space has an
+# ANTHROPIC_API_KEY secret (D38): a pay-per-use key with a spending limit,
+# capped at 10 scans per visitor and 200 a day. No other secret is used.
 #
 # To put a newer Forkcast online, change FORKCAST_COMMIT to a commit on main.
 
-ARG FORKCAST_COMMIT=5cf5a8cfaaeb4bf62a8fe4f7ad85b7449ec98e01
+ARG FORKCAST_COMMIT=7eb62190db74ba2b02882f5e23593e3a7dd27f02
 
 # ---- 1. Source at the pinned commit -----------------------------------------
 FROM python:3.12-slim AS source

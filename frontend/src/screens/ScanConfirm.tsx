@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { api, pretty, type ScanProposal } from "../api";
 
+/** What the photo reader said, when it isn't just the ingredient's own name
+ *  (D38): "orange juice" became Fruit juice. Lets a wrong match show. */
+function saidOtherwise(seen: string, canonical: string): boolean {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "").replace(/(es|s)$/, "");
+  return norm(seen) !== norm(canonical.replace(/_/g, " "));
+}
+
 /** The checklist after a grocery photo (D8): a cheap vision model plus a
  *  mandatory human check, so nothing misread lands in the kitchen. */
 export function ScanConfirm({
@@ -46,6 +53,9 @@ export function ScanConfirm({
               />
               <span className="scan-name">
                 {p.canonical ? pretty(p.canonical) : p.seen}
+                {p.canonical && saidOtherwise(p.seen, p.canonical) && (
+                  <span className="scan-why">Seen as “{p.seen}”</span>
+                )}
                 {!p.canonical && <span className="scan-why">Not in the ingredient list, so it can't be added.</span>}
               </span>
               {p.quantity && <span className="scan-qty">{p.quantity}</span>}
