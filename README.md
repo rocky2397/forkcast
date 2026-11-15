@@ -100,6 +100,13 @@ misses were the ingredient matcher, not the camera: "orange juice" became
 used to design the fix, 76%: vegetables 85%, fruit 76%, cartons 69%. Photos of
 a whole shopping haul are not tested yet ([details](eval/RESULTS-stage4.md)).
 
+**Tested:** reading nutrition labels. On 150 popular products from Open Food
+Facts, the label reader got calories, protein, carbs and fat all right for an
+estimated two in three (database disagreements checked by eye). Its mistakes
+are systematic: kilojoules taken for kcal, "1,2 g" read as 12, a value from
+the neighbouring row. A simple calorie sum check catches most of them
+([details](eval/RESULTS-stage5.md)).
+
 ### How the tests work
 
 Tests 1 and 2 work like marking an exam.

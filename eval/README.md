@@ -14,6 +14,8 @@ as the system under test.
 | [`RESULTS-stage2.md`](RESULTS-stage2.md) | stage 2 (substitutions) scorecard and findings |
 | [`RESULTS-stage3.md`](RESULTS-stage3.md) | stage 3 (taste ranking) results and findings |
 | [`RESULTS-stage4.md`](RESULTS-stage4.md) | stage 4 (photo scanning) results and findings |
+| [`RESULTS-stage5.md`](RESULTS-stage5.md) | stage 5 (nutrition-label reading) results and findings |
+| `data/labels_off150.json` | stage 5 sample: 150 Open Food Facts products with their per-100 g values and label photo URLs |
 | `data/vision_gold.json` | stage 4 answer key: the right ingredients for each of the 81 Grocery Store Dataset products |
 | `data/taste_users.json` | the frozen dev/test split of 5,419 food.com users for stage 3 |
 | `data/strings.jsonl`, `data/holdout.jsonl` | 275 development and 150 held-out ingredient strings |
@@ -47,3 +49,7 @@ as the system under test.
    misses the matcher's. The matcher fix (D35), judged on 289 validation
    photos it wasn't designed on, raised it from 71% to 76%. Still to do: real
    shopping photos.
+5. Nutrition-label reading: **done** (see
+   [`RESULTS-stage5.md`](RESULTS-stage5.md)). 150 Open Food Facts products:
+   all four values right for an estimated 67%, after checking 20 database
+   disagreements by eye. A calorie sum check catches most mistakes.
