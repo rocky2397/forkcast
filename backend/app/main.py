@@ -4,18 +4,19 @@ Run from the repo root:
   .venv/bin/uvicorn app.main:app --app-dir backend --reload
 """
 
-from contextlib import asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
 from datetime import date as _date
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Query, Request, Response, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from . import auth, demo, embeddings, goals, nutrition, recipes, shopping, substitutions, taste
+from . import auth, demo, embeddings, goals, nutrition, recipes, shopping, stats, stats_page, substitutions, taste
 from .food_classes import NAME_TO_CLASS
 from .db import connect, current_db
 from .normalize import Normalizer
@@ -31,7 +32,22 @@ async def lifespan(app: FastAPI):
         unknown = demo.build_template(normalizer.match)
         if unknown:
             raise RuntimeError(f"demo kitchen items not recognised: {unknown}")
+    flusher = None
+    if stats.enabled():  # anonymous usage totals (D33)
+        stats.start(embeddings.vocabulary())
+        flusher = asyncio.create_task(_flush_stats())
     yield
+    if flusher is not None:
+        flusher.cancel()
+        with suppress(asyncio.CancelledError):
+            await flusher
+        stats.flush()
+
+
+async def _flush_stats():
+    while True:
+        await asyncio.sleep(stats.FLUSH_SECONDS)
+        await asyncio.to_thread(stats.flush)
 
 
 app = FastAPI(title="Forkcast API", lifespan=lifespan)
@@ -57,11 +73,15 @@ async def demo_kitchen(request: Request, call_next):
     """Public demo (D32): run each API request against the visitor's own kitchen."""
     if not demo.enabled() or not request.url.path.startswith("/api/"):
         return await call_next(request)
-    kitchen_id, path = await run_in_threadpool(demo.kitchen, request.headers.get(demo.HEADER))
+    kitchen_id, path, created = await run_in_threadpool(demo.kitchen, request.headers.get(demo.HEADER))
     token = current_db.set(path)
+    kitchen_token = stats.current_kitchen.set(kitchen_id)
     try:
+        if created:
+            stats.visit()
         response = await call_next(request)
     finally:
+        stats.current_kitchen.reset(kitchen_token)
         current_db.reset(token)
     response.headers[demo.HEADER] = kitchen_id
     return response
@@ -98,6 +118,7 @@ def session(request: Request):
     """Whether a password is configured, and whether this caller has passed it."""
     return {
         "demo": demo.enabled(),
+        "stats": stats.enabled(),
         "required": auth.required(),
         "authenticated": not auth.required()
         or auth.valid_token(request.cookies.get(auth.COOKIE)),
@@ -173,6 +194,8 @@ def add_inventory(body: InventoryAdd):
             con.execute("INSERT OR IGNORE INTO inventory (canonical) VALUES (?)", (canonical,))
             added.append(canonical)
         con.commit()
+    for canonical in added:
+        stats.event("ingredient_added", item=canonical, stage="added")
     return {"added": added, "unknown": unknown}
 
 
@@ -184,6 +207,7 @@ def remove_inventory(name: str):
         con.commit()
     if cur.rowcount == 0:
         raise HTTPException(404, f"not in inventory: {name!r}")
+    stats.event("ingredient_removed")
     return {"removed": canonical}
 
 
@@ -195,6 +219,7 @@ def recipe_detail(recipe_id: int):
         r = con.execute("SELECT * FROM recipes WHERE id = ?", (recipe_id,)).fetchone()
         if r is None:
             raise HTTPException(404, f"no recipe {recipe_id}")
+        stats.event("recipe_opened", item=recipe_id, stage="opened")
         ings = con.execute(
             """SELECT ri.raw, ri.canonical, inv.canonical IS NOT NULL AS in_inventory
                FROM recipe_ingredients ri
@@ -247,6 +272,7 @@ def log_cooked(recipe_id: int, body: CookedIn | None = None):
     with connect() as con:
         if con.execute("SELECT 1 FROM recipes WHERE id = ?", (recipe_id,)).fetchone() is None:
             raise HTTPException(404, f"no recipe {recipe_id}")
+        stats.event("recipe_cooked", item=recipe_id, stage="cooked")
         cur = con.execute("INSERT INTO meal_log (recipe_id) VALUES (?)", (recipe_id,))
         removed = [
             c for c in dict.fromkeys(used_up)
@@ -447,6 +473,7 @@ async def _read_photo(photo: UploadFile) -> bytes:
 async def vision_scan(photo: UploadFile = File(...)):
     """Groceries photo -> proposed items (nothing committed; client confirms)."""
     if demo.enabled():
+        stats.event("photo_scan_tried")
         raise HTTPException(403, demo.SCAN_OFF)
     from . import vision
 
@@ -498,6 +525,7 @@ def put_profile(body: ProfileIn):
             (body.sex, body.age, body.height_cm, body.weight_kg, body.activity, body.goal),
         )
         con.commit()
+    stats.event("profile_saved")  # that it changed, never the values
     return {"profile": body.model_dump(), "targets": goals.targets(body.model_dump())}
 
 
@@ -517,6 +545,7 @@ def add_meal(body: MealAdd):
             (body.name, body.calories, body.protein_g, body.carbs_g, body.fat_g),
         )
         con.commit()
+    stats.event("meal_typed")  # that one was typed, never what
     return {"logged": True, "meal_log_id": cur.lastrowid}
 
 
@@ -535,6 +564,7 @@ def rate_meal(meal_id: int, body: MealRating):
         con.commit()
     if cur.rowcount == 0:
         raise HTTPException(404, f"no logged meal {meal_id}")
+    stats.event({True: "rated_liked", False: "rated_not_for_me", None: "rating_cleared"}[body.liked])
     return {"id": meal_id, "liked": body.liked}
 
 
@@ -585,6 +615,7 @@ def barcode_lookup(code: str):
     """Barcode -> per-100g nutrition (products cache, then Open Food Facts)."""
     if not code.isdigit() or not 6 <= len(code) <= 14:
         raise HTTPException(422, f"not a barcode: {code!r}")
+    stats.event("barcode_lookup")
     with connect() as con:
         try:
             product = nutrition.lookup(con, code)
@@ -604,6 +635,7 @@ async def nutrition_scan(photo: UploadFile = File(...)):
     product), otherwise the label values are returned as proposals.
     """
     if demo.enabled():
+        stats.event("label_scan_tried")
         raise HTTPException(403, demo.SCAN_OFF)
     from . import vision
 
@@ -650,6 +682,31 @@ def taste_profile():
     if vec is None:
         return {"meals_logged": 0, "profile": []}
     return {"meals_logged": n_meals, "profile": taste.nearest_ingredients(vec)}
+
+
+def _recipe_names(ids: list[int]) -> dict[int, str]:
+    if not ids:
+        return {}
+    with connect() as con:
+        rows = con.execute(
+            f"SELECT id, name FROM recipes WHERE id IN ({','.join('?' * len(ids))})", ids
+        ).fetchall()
+    return {r["id"]: r["name"] for r in rows}
+
+
+@app.get("/stats.json")
+def usage_stats_json():
+    """Public, anonymous usage totals of the demo (D33)."""
+    if not stats.enabled():
+        raise HTTPException(404, "usage totals are only kept on the public demo")
+    return stats.summary(_recipe_names)
+
+
+@app.get("/stats", response_class=HTMLResponse)
+def usage_stats_page():
+    if not stats.enabled():
+        raise HTTPException(404, "usage totals are only kept on the public demo")
+    return stats_page.render(stats.summary(_recipe_names))
 
 
 # Serve the built frontend when it exists, so one port (and one tunnel)

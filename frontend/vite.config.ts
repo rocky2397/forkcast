@@ -10,6 +10,8 @@ export default defineConfig({
       workbox: {
         // include the zxing barcode decoder so scanning works offline (Safari path)
         globPatterns: ["**/*.{js,css,html,svg,png,ico,wasm}"],
+        // Server pages, not app routes: the demo's usage totals (D33) and the API.
+        navigateFallbackDenylist: [/^\/stats/, /^\/api\//, /^\/health/],
         maximumFileSizeToCacheInBytes: 4_000_000,
         // Fonts ship one file per script subset; the browser fetches only the
         // ones it needs, so cache those on first use instead of precaching all.

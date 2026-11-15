@@ -8,7 +8,8 @@ tells you what to buy to unlock more.
 **[Try the demo](https://rockyyyy2397-forkcast.hf.space)**: you get your own
 copy of a demo kitchen, private to you and deleted after a day without visits.
 Photo scanning is off there. After two days without visitors the server sleeps,
-and the next visit takes about a minute while it wakes up.
+and the next visit takes about a minute while it wakes up. The demo keeps only
+[anonymous usage totals](https://rockyyyy2397-forkcast.hf.space/stats).
 
 <p align="center"><img src="docs/screenshots/demo.gif" width="300" alt="A 30-second walkthrough on a phone: the three-step welcome, adding avocado and lime to the kitchen, the recipe list naming the cooked dish each recipe is like, its help panel explaining the coloured dots, a recipe one ingredient away that suggests red onion for the missing shallot, cook mode one step at a time, and the Today screen with calories and macros left"></p>
 
@@ -256,7 +257,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 226 pytest tests in under a second, offline and without the corpus (48 of
+- **Tests:** 234 pytest tests in under a second, offline and without the corpus (48 of
   them need the Epicure weights and skip without them), plus frontend lint and
   build, all in CI.
 
@@ -284,7 +285,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 32 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 33 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

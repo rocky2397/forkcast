@@ -137,8 +137,11 @@ let kitchenId: string | null = (() => {
   }
 })();
 let demo = false;
+let usageStats = false;
 /** True on the public demo; known once api.session() has answered. */
 export const isDemo = () => demo;
+/** True when the demo keeps anonymous usage totals (D33), shown at /stats. */
+export const keepsStats = () => usageStats;
 
 function withKitchen(init?: RequestInit): RequestInit | undefined {
   if (!kitchenId) return init;
@@ -174,8 +177,11 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   session: async () => {
-    const s = await req<{ demo?: boolean; required: boolean; authenticated: boolean }>("/api/session");
+    const s = await req<{ demo?: boolean; stats?: boolean; required: boolean; authenticated: boolean }>(
+      "/api/session",
+    );
     demo = Boolean(s.demo);
+    usageStats = Boolean(s.stats);
     return s;
   },
   // Deliberately not routed through req(): a wrong password is also a 401, and

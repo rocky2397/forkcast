@@ -4,7 +4,7 @@ import { Inventory } from "./screens/Inventory";
 import { Recipes } from "./screens/Recipes";
 import { Login } from "./screens/Login";
 import { Intro } from "./screens/Intro";
-import { api, isDemo, setUnauthorizedHandler } from "./api";
+import { api, isDemo, keepsStats, setUnauthorizedHandler } from "./api";
 import { KitchenIcon, RecipesIcon, TodayIcon } from "./Icons";
 import "./App.css";
 
@@ -94,6 +94,11 @@ export default function App() {
         {isDemo() && (
           <p className="demo-banner">
             Demo: your changes are private to you and reset after a day.{" "}
+            {keepsStats() && (
+              <>
+                Only <a href="/stats">anonymous usage totals</a> are kept.{" "}
+              </>
+            )}
             <a href="https://github.com/rocky2397/forkcast">Code on GitHub</a>
           </p>
         )}
