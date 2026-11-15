@@ -35,6 +35,10 @@ export function ProfileForm({
   const low = Math.ceil(18.5 * m2 * 2) / 2;
   const high = Math.floor(25 * m2 * 2) / 2;
   const hasGoal = form.goal_weight_kg != null;
+  // D44: the pace is a share of body weight a week; the kilos follow from it.
+  const gaining = hasGoal && (form.goal_weight_kg ?? 0) > form.weight_kg;
+  const shares = gaining ? { gentle: 0.25, steady: 0.5 } : { gentle: 0.5, steady: 0.75 };
+  const perWeek = (pct: number) => (Math.round(form.weight_kg * pct) / 100).toFixed(2).replace(/0$/, "");
 
   async function save() {
     setBusy(true);
@@ -114,8 +118,12 @@ export function ProfileForm({
         <label>
           Pace
           <select value={form.pace ?? "steady"} onChange={(e) => set("pace", e.target.value as Profile["pace"])}>
-            <option value="gentle">Gentle: about 0.25 kg a week</option>
-            <option value="steady">Steady: about 0.5 kg a week</option>
+            <option value="gentle">
+              Gentle: {shares.gentle}% of your weight a week (about {perWeek(shares.gentle)} kg)
+            </option>
+            <option value="steady">
+              Steady: {shares.steady}% of your weight a week (about {perWeek(shares.steady)} kg)
+            </option>
           </select>
         </label>
       ) : (

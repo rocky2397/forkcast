@@ -249,11 +249,11 @@ def test_a_goal_weight_is_saved_and_planned(client):
             "goal": "maintain", "goal_weight_kg": 72, "pace": "steady"}
     r = client.put("/api/profile", json=body)
     assert r.status_code == 200
-    assert r.json()["plan"]["calories"] == 2209
+    assert r.json()["plan"]["calories"] == 2099  # 0.75% of 80 kg a week (D44)
     assert r.json()["profile"]["goal"] == "cut"  # the goal weight decides the direction
     got = client.get("/api/profile").json()
-    assert got["profile"]["goal_weight_kg"] == 72 and got["plan"]["weeks"] == 16
-    assert client.get("/api/day").json()["plan"]["calories"] == 2209
+    assert got["profile"]["goal_weight_kg"] == 72 and got["plan"]["weeks"] == 14
+    assert client.get("/api/day").json()["plan"]["calories"] == 2099
 
 
 def test_an_unhealthy_goal_weight_is_refused_with_a_reason(client):

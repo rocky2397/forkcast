@@ -5,7 +5,9 @@ Mifflin-St Jeor BMR x activity factor = TDEE, adjusted by goal.
 Protein 1.8 g/kg body weight, fat 25% of kcal, carbs the remainder.
 
 With a goal weight (D39) the adjustment comes from the pace instead: about
-7,700 kcal per kg, so 0.5 kg a week is a 550 kcal daily deficit or surplus.
+7,700 kcal per kg. Since D44 the pace is a share of body weight a week, not a
+fixed number of kilos: losing 0.5% (gentle) or 0.75% (steady), gaining 0.25%
+or 0.5%, so it scales with the body and shrinks as the weight comes off.
 Guardrails: a deficit is at most 25% of what you burn, and the daily target
 never drops below your resting burn or 1,200 kcal (women) / 1,500 kcal (men);
 when the pace would need more, the plan slows down and says why.
@@ -28,8 +30,12 @@ GOAL_ADJUST = {
     "bulk": 0.10,
 }
 
-# D39: goal weight
-PACE_KG_PER_WEEK = {"gentle": 0.25, "steady": 0.5}
+# D39: goal weight. D44: the pace is a share of body weight per week, the way
+# common guidance puts it (about 0.5-1% a week to lose, 0.25-0.5% to gain).
+PACE_SHARE = {
+    "lose": {"gentle": 0.005, "steady": 0.0075},
+    "gain": {"gentle": 0.0025, "steady": 0.005},
+}
 KCAL_PER_KG = 7700.0
 MAX_DEFICIT_SHARE = 0.25
 KCAL_FLOOR = {"f": 1200.0, "m": 1500.0}
@@ -87,6 +93,22 @@ def goal_problem(profile: Mapping) -> str | None:
     return None
 
 
+def weeks_to_goal(now_kg: float, goal_kg: float, kg_per_week: float, share: float | None) -> float | None:
+    """Weeks from now_kg to goal_kg (None: no movement planned).
+
+    With a share, the pace is that share of a shrinking (or growing) weight,
+    so each week moves a little less (or more): now * (1 -/+ share) ** weeks
+    = goal. Without one (held back by a guardrail: a fixed deficit) it is a
+    straight line.
+    """
+    if kg_per_week <= 0:
+        return None
+    if share is None:
+        return abs(goal_kg - now_kg) / kg_per_week
+    step = 1.0 - share if goal_kg < now_kg else 1.0 + share
+    return max(math.log(goal_kg / now_kg) / math.log(step), 0.0)
+
+
 def plan(profile: Mapping) -> dict | None:
     """How to reach the goal weight: daily calories, pace and rough timeline."""
     goal = _opt(profile, "goal_weight_kg")
@@ -99,7 +121,8 @@ def plan(profile: Mapping) -> dict | None:
         return out | {"direction": "keep", "calories": round(daily_burn), "change": 0,
                       "kg_per_week": 0.0, "weeks": 0, "limited": None}
     pace = _opt(profile, "pace") or "steady"
-    wanted = PACE_KG_PER_WEEK[pace] * KCAL_PER_KG / 7.0
+    share = PACE_SHARE["lose" if diff < 0 else "gain"][pace]
+    wanted = share * profile["weight_kg"] * KCAL_PER_KG / 7.0
     limited = None
     if diff < 0:
         room = max(daily_burn - minimum_calories(profile), 0.0)
@@ -119,9 +142,11 @@ def plan(profile: Mapping) -> dict | None:
         calories = daily_burn + change
         direction = "gain"
     kg_per_week = change * 7.0 / KCAL_PER_KG
-    weeks = math.ceil(abs(diff) / kg_per_week) if kg_per_week > 0 else None
+    left = weeks_to_goal(profile["weight_kg"], goal, kg_per_week, None if limited else share)
+    weeks = None if left is None else math.ceil(left)
     return out | {"direction": direction, "calories": round(calories), "change": round(change),
-                  "kg_per_week": round(kg_per_week, 2), "weeks": weeks, "limited": limited}
+                  "kg_per_week": round(kg_per_week, 2), "pace_share": share, "weeks": weeks,
+                  "limited": limited}
 
 
 def targets(profile: Mapping) -> dict:
