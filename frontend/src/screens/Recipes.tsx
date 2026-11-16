@@ -40,6 +40,18 @@ export function Recipes() {
     api.shopping().then((s) => setBasket(s.items)).catch(() => {});
   }, []);
 
+  // A tester wanted more than three. The picks are made one after another,
+  // so the first three stay the same and two more are added below them.
+  const [moreBusy, setMoreBusy] = useState(false);
+  async function showMore() {
+    setMoreBusy(true);
+    try {
+      setBasket((await api.shopping(5)).items);
+    } finally {
+      setMoreBusy(false);
+    }
+  }
+
   useEffect(() => {
     setLoading(true);
     api
@@ -160,6 +172,11 @@ export function Recipes() {
                 </li>
               ))}
             </ol>
+            {basket.length === 3 && (
+              <button type="button" className="link-button" disabled={moreBusy} onClick={showMore}>
+                {moreBusy ? "Finding two more…" : "Show 2 more"}
+              </button>
+            )}
           </section>
         )}
       </section>

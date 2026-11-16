@@ -114,6 +114,7 @@ main.main {
 .lead { margin: 10px 0 0; font-size: 15px; color: var(--ink-2); max-width: 46ch; }
 .lead em { font-family: var(--font-display); font-style: italic; color: var(--ink); }
 .lead strong { color: var(--accent); font-weight: 600; }
+.lead a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
 .section-title, h3 {
   font-family: var(--font-display);
@@ -639,6 +640,18 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 }
 .notice p { margin: 0; }
 .notice p + p { margin-top: 6px; }
+.notice .did-you-mean + .did-you-mean, .notice .did-you-mean + p, .notice p + .did-you-mean { margin-top: 10px; }
+.suggest-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.suggest-chip {
+  min-height: 36px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ink-2);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.suggest-chip:hover { background: var(--ink); color: var(--on-ink); }
 .error { color: var(--accent); }
 .notice .error { color: var(--ink); }
 .notice:has(.error) { background: var(--accent-soft); }
@@ -747,6 +760,7 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .meal-main { padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .meal-name { text-transform: none; font-size: 19px; line-height: 1.2; }
 .meal-list .rate { margin-top: 4px; display: flex; gap: 6px; }
+.meal-list .rate-note { display: block; margin-top: 4px; font-size: 13px; color: var(--ink-2); }
 .log-btn { width: 100%; }
 
 .meal-form {
@@ -842,3 +856,4 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
   text-decoration: underline;
   cursor: pointer;
 }
+.shopping > .link-button { margin-top: 14px; }

@@ -338,7 +338,8 @@ export const api = {
   logout: () => req<{ authenticated: boolean }>("/api/logout", { method: "POST" }),
   inventory: () => req<{ items: InventoryItem[] }>("/api/inventory"),
   addInventory: (items: string[]) =>
-    req<{ added: string[]; unknown: string[] }>("/api/inventory", {
+    // D46: suggestions holds "Did you mean…?" names for what wasn't recognised.
+    req<{ added: string[]; unknown: string[]; suggestions?: Record<string, string[]> }>("/api/inventory", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ items }),
@@ -356,13 +357,13 @@ export const api = {
       recipes: CookableRecipe[];
     }>(`/api/recipes/cookable?max_missing=${maxMissing}&min_missing=${exact ? maxMissing : 0}&limit=30`),
   taste: () => req<TasteProfile>("/api/taste"),
-  shopping: () =>
+  shopping: (basket = 3) =>
     req<{
       personalized: boolean;
       unlocks_total: number;
       partial_scan: boolean;
       items: ShoppingItem[];
-    }>("/api/shopping"),
+    }>(`/api/shopping?basket=${basket}`),
   scanPhoto: (file: File) => {
     const form = new FormData();
     form.append("photo", file);

@@ -321,3 +321,12 @@ def test_health_says_what_is_running_when_the_image_says(client, monkeypatch):
                        "https://github.com/rocky2397/forkcast-corpus/releases/download/corpus-20261115-d35/corpus.db")
     got = client.get("/health").json()
     assert got["commit"] == "abc123" and got["corpus"] == "corpus-20261115-d35"
+
+
+def test_unrecognised_ingredients_get_did_you_mean_suggestions(client, db):
+    # D46: a close spelling is offered, never added on its own; a brand gets nothing.
+    r = client.post("/api/inventory", json={"items": ["chiken", "Arla", "onion"]}).json()
+    assert r["added"] == ["onion"] and r["unknown"] == ["chiken", "Arla"]
+    assert r["suggestions"] == {"chiken": ["chicken"]}
+    kitchen = {row["canonical"] for row in db.execute("SELECT canonical FROM inventory")}
+    assert "chiken" not in kitchen and "Arla" not in kitchen
