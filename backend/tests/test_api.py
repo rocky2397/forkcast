@@ -311,3 +311,13 @@ def test_the_weight_endpoints(client):
     s = client.delete(f"/api/weight/{s['entries'][0]['id']}").json()
     assert s["entries"] == []
 
+
+
+def test_health_says_what_is_running_when_the_image_says(client, monkeypatch):
+    # The demo's image sets these (deploy/huggingface/Dockerfile); ops/check_live.py reads them.
+    assert "commit" not in client.get("/health").json()
+    monkeypatch.setenv("FORKCAST_COMMIT", "abc123")
+    monkeypatch.setenv("FORKCAST_CORPUS_URL",
+                       "https://github.com/rocky2397/forkcast-corpus/releases/download/corpus-20261115-d35/corpus.db")
+    got = client.get("/health").json()
+    assert got["commit"] == "abc123" and got["corpus"] == "corpus-20261115-d35"

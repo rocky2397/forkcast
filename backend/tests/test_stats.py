@@ -202,3 +202,17 @@ def test_percentiles_come_from_the_histogram():
     assert stats._percentile_ms(buckets, 0.95) == 250
     buckets[-1] = 1000
     assert stats._percentile_ms(buckets, 0.95) is None  # slower than 5 s
+
+
+def test_the_post_deploy_check_is_not_counted(app):
+    # ops/check_live.py sends X-Forkcast-Check: a check is not a visitor.
+    check = {stats.CHECK_HEADER: "1"}
+    k = app.get("/api/session", headers=check).headers[H]
+    app.post("/api/inventory", json={"items": ["saffron"]}, headers=check | {H: k})
+    app.get("/api/recipes/7", headers=check | {H: k})
+    s = stats.summary(lambda ids: {})
+    assert s["visitors"] == 0 and s["events"].get("ingredient_added", 0) == 0
+    assert s["funnel"]["opened"]["visitors"] == 0
+    # A real visitor straight after is counted as usual.
+    _new_visitor(app)
+    assert stats.summary(lambda ids: {})["visitors"] == 1

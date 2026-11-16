@@ -5,6 +5,7 @@ Run from the repo root:
 """
 
 import asyncio
+import os
 import time
 from contextlib import asynccontextmanager, suppress
 from datetime import date as _date
@@ -110,6 +111,7 @@ async def demo_kitchen(request: Request, call_next):
     token = current_db.set(path)
     id_token = demo.current_id.set(kitchen_id)
     kitchen_token = stats.current_kitchen.set(kitchen_id)
+    counting_token = stats.counting.set(request.headers.get(stats.CHECK_HEADER) != "1")
     began = time.perf_counter()
     status = 500  # unless a response comes back
     try:
@@ -124,6 +126,7 @@ async def demo_kitchen(request: Request, call_next):
             status,
             (time.perf_counter() - began) * 1000,
         )
+        stats.counting.reset(counting_token)
         stats.current_kitchen.reset(kitchen_token)
         demo.current_id.reset(id_token)
         current_db.reset(token)
@@ -154,7 +157,13 @@ if not auth.required():
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "vocab_size": len(embeddings.vocabulary())}
+    out = {"status": "ok", "vocab_size": len(embeddings.vocabulary())}
+    # Set in the demo's image: what is running, for the post-deploy check.
+    if os.environ.get("FORKCAST_COMMIT"):
+        out["commit"] = os.environ["FORKCAST_COMMIT"]
+    if os.environ.get("FORKCAST_CORPUS_URL"):
+        out["corpus"] = os.environ["FORKCAST_CORPUS_URL"].rstrip("/").split("/")[-2]
+    return out
 
 
 class Login(BaseModel):

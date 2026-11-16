@@ -74,6 +74,11 @@ sys.exit(0 if n else 'corpus has no recipes')"
 COPY --from=source /src/backend/ ./backend/
 COPY --from=frontend /build/dist ./frontend/dist
 
+# /health reports what is running, so ops/check_live.py can confirm a deploy.
+ARG FORKCAST_COMMIT
+ENV FORKCAST_COMMIT=${FORKCAST_COMMIT} \
+    FORKCAST_CORPUS_URL=${CORPUS_URL}
+
 # Everything is local from here on.
 ENV HF_HUB_OFFLINE=1
 

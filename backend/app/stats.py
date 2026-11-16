@@ -19,7 +19,9 @@ file per day (UTC), every FLUSH_SECONDS and on shutdown. On Hugging Face that
 directory is a mounted storage bucket, so it survives restarts. A crash loses
 at most a few minutes of counts.
 
-Only active in demo mode (D32) with FORKCAST_STATS_DIR set.
+Only active in demo mode (D32) with FORKCAST_STATS_DIR set. Requests from
+the post-deploy check (ops/check_live.py, header X-Forkcast-Check) are not
+counted: a check is not a visitor.
 """
 
 import json
@@ -54,6 +56,10 @@ _MAX_STARTS = 100  # start durations kept per day
 
 # Set by the demo middleware for each request: the visitor's random kitchen id.
 current_kitchen: ContextVar[str | None] = ContextVar("current_kitchen", default=None)
+# False for the post-deploy check (ops/check_live.py), which sends CHECK_HEADER:
+# a check is not a visitor, so it must not show up in the public totals.
+CHECK_HEADER = "X-Forkcast-Check"
+counting: ContextVar[bool] = ContextVar("counting", default=True)
 
 _lock = threading.Lock()
 _days: dict[str, dict] = {}
@@ -154,7 +160,7 @@ def _reach(kitchen: str | None, stage: str, day: str) -> None:
 
 def visit() -> None:
     """A new demo kitchen, i.e. a new visitor."""
-    if not enabled():
+    if not enabled() or not counting.get():
         return
     with _lock:
         day = today()
@@ -165,7 +171,7 @@ def visit() -> None:
 
 def event(name: str, item: str | int | None = None, stage: str | None = None) -> None:
     """Count one event. Unknown names, items and stages are dropped, never stored."""
-    if not enabled() or name not in EVENTS:
+    if not enabled() or not counting.get() or name not in EVENTS:
         return
     with _lock:
         day = today()
@@ -188,7 +194,7 @@ def event(name: str, item: str | int | None = None, stage: str | None = None) ->
 
 def request_done(route: str | None, status: int, ms: float) -> None:
     """Time and outcome of one API request, by route template."""
-    if not enabled():
+    if not enabled() or not counting.get():
         return
     with _lock:
         day = today()

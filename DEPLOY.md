@@ -56,6 +56,26 @@ Forkcast from this repo at one pinned commit. Create a public Docker Space,
 add those two files, and it builds. To update the demo, change
 `FORKCAST_COMMIT` in the Space's Dockerfile.
 
+**After every deploy,** check it:
+
+```bash
+python3 ops/check_live.py --wait 900
+```
+
+It waits (up to 15 minutes here) until the Space runs the latest upload, then
+checks that:
+- the Space pins the same commit and corpus as `deploy/huggingface/Dockerfile`
+  in this repo, and `/health` reports the same commit and corpus;
+- demo mode, saved kitchens, scanning and usage totals are on;
+- the page and every script and stylesheet it loads are served;
+- a visit works in a throwaway kitchen: the recipe feed and a recipe, worth
+  buying, a goal weight, a typed meal, a weigh-in, Done for today, progress.
+
+It deletes that kitchen and checks that it is gone. Scanning is left out,
+because each scan costs money and counts against the daily cap. Its requests
+carry `X-Forkcast-Check`, so it is never counted in the usage totals. It uses
+only Python's standard library, and exits 1 if anything fails.
+
 **Usage totals (D33).** With `FORKCAST_STATS_DIR` also set, the demo keeps
 anonymous daily totals there (one JSON file per UTC day, written every 5
 minutes) and shows them at `/stats`: visitors, what they did, how far they
