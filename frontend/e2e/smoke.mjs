@@ -88,11 +88,13 @@ async function run(page) {
     ["stock the kitchen by name", async () => {
       await tab(page, "Kitchen").click();
       const field = page.getByPlaceholder("e.g. chicken breasts");
-      await field.fill("chicken breast, rice, onion, garlic, skyr");
+      await field.fill("chicken breast, rice, onion, garlic, skyr, Zitrone");
       await page.getByRole("button", { name: "Add", exact: true }).click();
       await expectText(page.locator(".kitchen-group").filter({ hasText: /onion/i }), /onion/i, "kitchen list");
       // D46: skyr is yogurt, and a misspelling gets "Did you mean…?".
       await expectText(page.locator(".kitchen-group").filter({ hasText: /yogurt/i }), /yogurt/i, "skyr as yogurt");
+      // D47: German names work too.
+      await expectText(page.locator(".kitchen-group").filter({ hasText: /lemon/i }), /lemon/i, "Zitrone as lemon");
       await field.fill("tomatoe");
       await page.getByRole("button", { name: "Add", exact: true }).click();
       await expectText(page.locator(".did-you-mean"), /Couldn't match “tomatoe”\. Add instead/, "did you mean");

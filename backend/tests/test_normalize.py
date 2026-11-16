@@ -6,6 +6,7 @@ effects are measured with backend/scripts/normalizer_diff.py instead.
 """
 
 import pytest
+from conftest import needs_embeddings
 
 from app.normalize import Normalizer
 
@@ -232,3 +233,65 @@ def test_nothing_close_gets_no_guess(n46, raw):
 def test_at_most_three_suggestions_without_repeats(n46):
     got = n46.suggest("chiken")
     assert len(got) <= 3 and len(got) == len(set(got))
+
+
+# --- D47: German names, translated and then matched as English ---
+
+@pytest.fixture
+def de():
+    return Normalizer(VOCAB + ["yogurt", "carrot", "lemon", "beef", "paprika", "parsley", "red_onion",
+                               "cream", "egg", "rice", "speck", "banana"])
+
+
+@pytest.mark.parametrize("raw, name", [
+    ("Zwiebel", "onion"), ("Zwiebeln", "onion"), ("rote Zwiebel", "red_onion"),
+    ("Knoblauch", "garlic"), ("Kartoffeln", "potato"), ("Süßkartoffel", "sweet_potato"),
+    ("Hähnchen", "chicken"), ("Hähnchenbrust", "chicken"), ("Hackfleisch", "beef"),
+    ("Möhren", "carrot"), ("Zitrone", "lemon"), ("frische Petersilie", "parsley"),
+    ("Eier", "egg"), ("Sahne", "cream"), ("Reis", "rice"), ("Joghurt", "yogurt"),
+    ("Olivenöl", "olive_oil"),
+])
+def test_german_names(de, raw, name):
+    assert de.match(raw) == name
+
+
+def test_paprika_alone_is_the_spice_but_a_red_one_is_a_bell_pepper(de):
+    assert de.match("Paprika") == "paprika"
+    assert de.match("rote Paprika") == "bell_pepper"
+    assert de.match("Paprikaschote") == "bell_pepper"
+
+
+def test_english_wins_where_both_languages_use_a_word(de):
+    assert de.match("speck") == "speck"  # the Italian ham, as English recipes mean it
+
+
+def test_another_languages_name_is_not_read_as_german(de):
+    # "Banane" is German, but "creme de banane" is a liqueur, not a banana.
+    assert de.match("creme de banane") != "banana"
+
+
+def test_a_misspelled_german_word_gets_a_suggestion(de):
+    assert de.match("Zwiebl") is None
+    assert de.suggest("Zwiebl")[0] == "onion"
+
+
+@needs_embeddings
+def test_every_german_word_is_one_the_english_matcher_does_not_know():
+    """A German word English already recognises would never be translated:
+    English is tried first. "speck" and "paprika" are left out on purpose."""
+    from app import embeddings, german
+
+    n = Normalizer(embeddings.vocabulary())
+    clashes = {w: n._match_english(w) for w in german.WORDS if n._match_english(w)}
+    assert clashes == {}
+    describing = {"red", "green", "yellow", "fresh", "dried", "ground"}
+    # Unmatched on purpose, in English too (D27): a product, not the food in it.
+    abstains = {"tomato paste", "powdered sugar"}
+    unplaced = {w: e for w, e in {**german.WORDS, **german.PHRASES}.items()
+                if e not in describing | abstains and n.match(e) is None}
+    assert unplaced == {}
+    # ...and the German behaves exactly like the English.
+    for w, e in german.WORDS.items():
+        if e not in describing:
+            assert n.match(w) == n.match(e), w
+

@@ -14,6 +14,7 @@ import difflib
 import re
 from collections.abc import Iterable
 
+from . import german
 from .food_classes import NAME_TO_CLASS
 
 # Synonyms -> canonical Epicure name. Targets are validated against the
@@ -141,8 +142,12 @@ DESCRIPTORS = {
 _SPELLINGS = {"yoghurt": "yogurt", "yoghurts": "yogurts"}
 
 
+# D47: German umlauts and ß spelled out, so "Hähnchen" isn't cut to "h hnchen".
+_UMLAUTS = str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"})
+
+
 def _clean(term: str) -> str:
-    t = term.lower().strip()
+    t = term.lower().strip().translate(_UMLAUTS)
     t = re.sub(r"\(.*?\)", " ", t)
     t = re.sub(r"[^a-z ]+", " ", t)
     t = re.sub(r"\s+", " ", t).strip()
@@ -293,7 +298,8 @@ class Normalizer:
         # on the process's hash seed. Arbitrary but stable beats arbitrary.
         self._by_len = sorted(self._canon, key=lambda c: (-len(c), c))
         # Every word in a known name or alias, for spelling suggestions (D46).
-        self._words = sorted({w for phrase in [*self._canon, *self._aliases] for w in phrase.split()})
+        # ...and German ones (D47), so "zwiebl" is offered onion.
+        self._words = sorted({w for phrase in [*self._canon, *self._aliases, *german.WORDS] for w in phrase.split()})
         # Compound names that may override a narrower word they contain.
         self._compounds = {
             k: v for k, v in self._aliases.items() if k in _COMPOUND_UPGRADES
@@ -337,6 +343,20 @@ class Normalizer:
         t = _clean(raw)
         if not t:
             return None
+        # D47: a German phrase that would read wrongly word by word ("rote
+        # paprika" is a bell pepper, not the spice) is translated first.
+        if t in german.PHRASES:
+            t = german.PHRASES[t]
+        hit = self._match_english(t)
+        if hit is None:
+            # English first, so nothing English changes; then German words
+            # translated, and matched as English: "zwiebeln" -> onion.
+            english = german.translate(t)
+            if english:
+                hit = self._match_english(english)
+        return hit
+
+    def _match_english(self, t: str) -> str | None:
         # Before any rewriting: a name that *is* the whole phrase wins outright.
         # "gluten free flour" is its own ingredient, and stripping the negation
         # out of it would leave plain flour.
