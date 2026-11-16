@@ -96,6 +96,11 @@ def embeddings_cached() -> bool:
         return False
 
 
+# CI downloads the weights first and sets FORKCAST_REQUIRE_EMBEDDINGS, so a
+# broken download or cache fails the run instead of quietly skipping 48 tests.
+if os.environ.get("FORKCAST_REQUIRE_EMBEDDINGS") and not embeddings_cached():
+    raise RuntimeError("FORKCAST_REQUIRE_EMBEDDINGS is set but the Epicure weights are not cached")
+
 needs_embeddings = pytest.mark.skipif(
     not embeddings_cached(),
     reason="Epicure weights not cached; run after a dev session or set HF_HOME",
