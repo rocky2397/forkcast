@@ -193,7 +193,7 @@ export function Inventory() {
             </button>
           </div>
           <p id="add-hint" className="field-hint">
-            Separate several with commas.
+            Separate several with commas. English or German names both work.
           </p>
         </form>
       </div>

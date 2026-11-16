@@ -330,3 +330,8 @@ def test_unrecognised_ingredients_get_did_you_mean_suggestions(client, db):
     assert r["suggestions"] == {"chiken": ["chicken"]}
     kitchen = {row["canonical"] for row in db.execute("SELECT canonical FROM inventory")}
     assert "chiken" not in kitchen and "Arla" not in kitchen
+
+
+def test_german_names_can_be_added_to_the_kitchen(client, db):
+    r = client.post("/api/inventory", json={"items": ["Zwiebeln", "Hähnchenbrust"]}).json()
+    assert r["added"] == ["onion", "chicken"] and r["unknown"] == []

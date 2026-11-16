@@ -43,7 +43,7 @@ leaves" all have to become `basil`, both for what is in your kitchen and for
 every line of every recipe. Once both sides use the same list, the rest is
 comparison.
 
-1. **Your kitchen.** You type items, photograph your groceries or scan a
+1. **Your kitchen.** You type items (in English or German), photograph your groceries or scan a
    barcode. A photo goes to a small vision model (Claude Haiku), which returns
    a list you confirm before anything is saved. A barcode is looked up in Open
    Food Facts, with a photo of the nutrition label as the fallback. Every item
@@ -331,7 +331,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 380 pytest tests in about three seconds, offline and without the
+- **Tests:** 403 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 48 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -360,7 +360,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 46 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 47 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
