@@ -120,6 +120,21 @@ export interface Progress {
   };
 }
 
+/** D45: what you burn, learned from complete days and weigh-ins once there
+ *  is enough of both; until then measured is null and burn is the formula's. */
+export interface BurnEstimate {
+  formula: number;
+  burn: number;
+  measured: number | null;
+  trust: number;
+  limited: boolean;
+  complete_days: number;
+  needed_days: number;
+  weigh_in_days: number;
+  needed_span: number;
+  window_days: number;
+}
+
 /** D41: weigh-ins, the trend and the projection to the goal weight. */
 export interface WeightSummary {
   today: string;
@@ -135,6 +150,7 @@ export interface WeightSummary {
     plan_date: string | null;
     actual_date: string | null;
   } | null;
+  burn?: BurnEstimate | null;
 }
 
 /** The browser's offset from UTC in minutes, east positive (D40: local days). */
@@ -165,6 +181,7 @@ export interface DaySummary {
   totals: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
   targets: Targets | null;
   plan?: WeightPlan | null;
+  burn?: BurnEstimate | null;
 }
 
 export interface Product {
@@ -351,9 +368,9 @@ export const api = {
     form.append("photo", file);
     return req<{ proposals: ScanProposal[] }>("/api/vision/scan", { method: "POST", body: form });
   },
-  profile: () => req<{ profile: Profile | null; targets: Targets | null }>("/api/profile"),
+  profile: () => req<{ profile: Profile | null; targets: Targets | null }>(`/api/profile?tz=${tzMinutes()}`),
   saveProfile: (p: Profile) =>
-    req<{ profile: Profile; targets: Targets }>("/api/profile", {
+    req<{ profile: Profile; targets: Targets }>(`/api/profile?tz=${tzMinutes()}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(p),

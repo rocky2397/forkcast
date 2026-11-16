@@ -28,7 +28,7 @@ next visit takes about a minute while it wakes up. Usage is counted only as
 
 | Losing weight | Gaining weight |
 |---|---|
-| <img src="docs/screenshots/progress-lose.jpg" width="300" alt="Weight card for someone losing weight: a falling trend line through noisy weigh-ins, a dashed path to the 64 kg goal, On track at minus 0.4 kg a week against a plan of minus 0.5, 64 kg around late March; below it 7 days in a row on target and two weeks of dots, mostly green deficit days, two blue surplus days and one forgotten day"> | <img src="docs/screenshots/progress-gain.jpg" width="300" alt="Weight card for someone gaining weight: a rising trend line, a dashed path up to the 72 kg goal, On track at plus 0.3 kg a week; below it 8 days in a row on target and two weeks of mostly blue surplus days, one maintenance day and one forgotten day"> |
+| <img src="docs/screenshots/progress-lose.jpg" width="300" alt="Weight card for someone losing weight: a falling trend line through noisy weigh-ins, a dashed path to the 64 kg goal, On track at minus 0.4 kg a week against a plan of minus 0.5, 64 kg around late March, and what she burns, learned from her meals and weigh-ins: about 2,290 kcal a day, the formula said 2,267; below it 7 days in a row on target and two weeks of dots, mostly green deficit days, two blue surplus days and one forgotten day"> | <img src="docs/screenshots/progress-gain.jpg" width="300" alt="Weight card for someone gaining weight: a rising trend line, a dashed path up to the 72 kg goal, On track at plus 0.3 kg a week, and what he burns, learned: about 3,144 kcal a day where the formula said 2,920; below it 8 days in a row on target and two weeks of mostly blue surplus days, one maintenance day and one forgotten day"> |
 | Deficit days on target, weight falling about 0.4 kg a week | Surplus days on target, weight rising about 0.25 kg a week |
 
 Screenshots come from a demo kitchen with a sample profile, not real data. The
@@ -106,14 +106,24 @@ is shown next to the plan's.
 
 Log your weight now and then and Forkcast draws a smoothed trend, compares
 your actual pace over the last three weeks with the plan, and tells you when
-you'd reach your goal at that pace. Your daily target follows the trend. Each recipe gets a score
+you'd reach your goal at that pace. Your daily target follows the trend.
+
+The formula's idea of what you burn is often 10% or more off for one person:
+a few hundred kcal a day, about the size of a whole deficit. So after about
+two weeks of complete days and weigh-ins, Forkcast learns your real number:
+if you ate 2,000 kcal a day and your weight stayed level, you burn about
+2,000. The more data, the more it trusts yours over the formula; it never
+moves more than 15% from it, and the Weight card says which number it uses.
+
+Each recipe gets a score
 from 0 to 1 for how well its mix of protein, carbs and fat matches what is
 still missing today. When you are short on protein, high-protein dishes move up.
 
 ## Evaluation
 
-The app makes promises you act on. Five are tested, each on data from outside
-the app, and every fix is judged on cases it wasn't designed on:
+The app makes promises you act on. Six are tested: five on data from outside
+the app, one on simulated people. Every fix is judged on cases it wasn't
+designed on:
 
 1. **"You can cook this now."** Is a listed recipe really cookable from your
    kitchen?
@@ -122,6 +132,8 @@ the app, and every fix is judged on cases it wasn't designed on:
    likes? (Your kind of food, yes; your favourites, no. See test 3.)
 4. **"This is what's in your photo."** Does photo scanning name your groceries?
 5. **"These are the label's macros."** Does it read a nutrition label right?
+6. **"This is what you burn."** Does learning from your meals and weigh-ins
+   beat the formula?
 
 | Test | Before | After the fix | Judged on |
 |---|---|---|---|
@@ -130,6 +142,7 @@ the app, and every fix is judged on cases it wasn't designed on:
 | 3. Picks what people cook next (50 = coin flip) | 55 | **61** | 2,710 real food.com users |
 | 4. Photo scan proposes the right ingredient | 71% | **76%** | 289 unseen store photos |
 | 5. Label read with the right calories | 78% | **83%** | 150 fresh products |
+| 6. What you burn, off by (kcal a day, median) | 186 | **74** | 2,000 simulated people, 4 weeks |
 
 **Test 4, photo scanning,** on phone photos from a public grocery dataset. A
 third of the misses were the ingredient matcher, not the camera: "orange
@@ -144,6 +157,15 @@ read as 12 and a value from the neighbouring row. Two fixes: the app warns
 when the values don't add up (D36), and a new prompt has the reader write out
 the table first (D37), which cut the average calorie error on fresh products
 from 6.7 to 4.0 kcal per 100 g ([details](eval/RESULTS-stage5.md)).
+
+**Test 6, what you burn,** on simulated people, because no public data has
+weeks of food logs with a known true burn. Each one's real burn is up to 15%
+off the formula; they log 85% of days and weigh in with realistic water
+swings. After four weeks of honest logs the typical error falls from 186 to
+74 kcal a day. When a log misses 10% of what was eaten, the learned number
+reads low, but that is the number their plan needs: the plan's error falls
+from 272 to 104. Not tested: real people, and the water lost in the first
+weeks of a diet ([details](eval/RESULTS-stage6.md)).
 
 ### How the tests work
 
@@ -337,7 +359,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 44 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 45 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

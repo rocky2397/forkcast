@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from . import auth, demo, embeddings, goals, nutrition, progress, recipes, shopping, stats, stats_page, substitutions, taste, weight
+from . import adaptive, auth, demo, embeddings, goals, nutrition, progress, recipes, shopping, stats, stats_page, substitutions, taste, weight
 from .food_classes import NAME_TO_CLASS
 from .db import connect, current_db
 from .normalize import Normalizer, packaged
@@ -444,7 +444,7 @@ def _remaining_today(con) -> dict | None:
     None when there is no profile to derive targets from, or when so little of
     the day is left that steering suggestions by it would be noise.
     """
-    profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+    profile, _ = adaptive.profile_with_burn(con)
     if profile is None:
         return None
     target = goals.targets(profile)
@@ -570,16 +570,17 @@ class ProfileIn(BaseModel):
 
 
 @app.get("/api/profile")
-def get_profile():
+def get_profile(tz: int = Query(0, ge=-840, le=840)):
     with connect() as con:
-        row = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
-    if row is None:
-        return {"profile": None, "targets": None, "plan": None}
-    return {"profile": dict(row), "targets": goals.targets(row), "plan": goals.plan(row)}
+        profile, est = adaptive.profile_with_burn(con, tz)
+    if profile is None:
+        return {"profile": None, "targets": None, "plan": None, "burn": None}
+    return {"profile": adaptive.public(profile), "targets": goals.targets(profile),
+            "plan": goals.plan(profile), "burn": est}
 
 
 @app.put("/api/profile")
-def put_profile(body: ProfileIn):
+def put_profile(body: ProfileIn, tz: int = Query(0, ge=-840, le=840)):
     data = body.model_dump()
     problem = goals.goal_problem(data)  # D39 guardrails
     if problem:
@@ -602,8 +603,10 @@ def put_profile(body: ProfileIn):
              data["goal"], data["goal_weight_kg"], data["pace"]),
         )
         con.commit()
+        profile, est = adaptive.profile_with_burn(con, tz)  # D45: the learned burn, if any
     stats.event("profile_saved")  # that it changed, never the values
-    return {"profile": data, "targets": goals.targets(data), "plan": p}
+    return {"profile": adaptive.public(profile), "targets": goals.targets(profile),
+            "plan": goals.plan(profile), "burn": est}
 
 
 class MealAdd(BaseModel):
@@ -685,7 +688,7 @@ def day_summary(
                ORDER BY ml.logged_at""",
             (shift, day),
         ).fetchall()
-        profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+        profile, est = adaptive.profile_with_burn(con, tz or 0)
     meals = [dict(r) for r in rows]
     totals = {
         key: round(sum(m[key] or 0.0 for m in meals), 1)
@@ -697,6 +700,7 @@ def day_summary(
         "totals": totals,
         "targets": goals.targets(profile) if profile is not None else None,
         "plan": goals.plan(profile) if profile is not None else None,  # D39
+        "burn": est,  # D45
     }
 
 
@@ -708,7 +712,7 @@ def progress_summary(tz: int = Query(0, ge=-840, le=840)):
     the user's local days.
     """
     with connect() as con:
-        profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
+        profile, _ = adaptive.profile_with_burn(con, tz)
         if profile is None:
             return {"progress": None}
         return {"progress": progress.summary(con, profile, tz)}
@@ -738,24 +742,24 @@ class WeighIn(BaseModel):
 def weight_summary(tz: int = Query(0, ge=-840, le=840)):
     """D41: weigh-ins, the trend and the projection to the goal weight."""
     with connect() as con:
-        profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
-        return weight.summary(con, profile, tz)
+        profile, est = adaptive.profile_with_burn(con, tz)
+        return weight.summary(con, profile, tz) | {"burn": est}
 
 
 @app.post("/api/weight")
 def log_weight(body: WeighIn, tz: int = Query(0, ge=-840, le=840)):
     with connect() as con:
         weight.log(con, body.weight_kg)
-        profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
-        return weight.summary(con, profile, tz)
+        profile, est = adaptive.profile_with_burn(con, tz)
+        return weight.summary(con, profile, tz) | {"burn": est}
 
 
 @app.delete("/api/weight/{entry_id}")
 def delete_weight(entry_id: int, tz: int = Query(0, ge=-840, le=840)):
     with connect() as con:
         weight.remove(con, entry_id)
-        profile = con.execute("SELECT * FROM profile WHERE id = 1").fetchone()
-        return weight.summary(con, profile, tz)
+        profile, est = adaptive.profile_with_burn(con, tz)
+        return weight.summary(con, profile, tz) | {"burn": est}
 
 
 @app.get("/api/nutrition/barcode/{code}")
