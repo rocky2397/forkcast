@@ -9,7 +9,7 @@
 #
 # To put a newer Forkcast online, change FORKCAST_COMMIT to a commit on main.
 
-ARG FORKCAST_COMMIT=2a923bc92413f9c011275a4a865e940b730e8de0
+ARG FORKCAST_COMMIT=15dff316a79b4d7b909a729f444ba3ef82b2391a
 
 # ---- 1. Source at the pinned commit -----------------------------------------
 FROM python:3.12-slim AS source
