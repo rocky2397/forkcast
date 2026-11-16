@@ -332,8 +332,9 @@ hard for any method. Details:
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
 - **Tests:** 354 pytest tests in about three seconds, offline and without the
-  corpus (48 of them need the Epicure weights and skip without them), frontend
-  lint and build, and a browser smoke test of a first visit, all in CI.
+  corpus, frontend lint and build, and a browser smoke test of a first visit,
+  all in CI. 48 of the pytest tests need the Epicure weights; CI caches them and
+  fails rather than skip those tests.
 
 ## Design
 
@@ -409,9 +410,11 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-Tests that need the Epicure weights skip themselves unless the weights are
-already cached. CI runs the suite with `HF_HUB_OFFLINE=1`, so a test that would
-download anything fails loudly instead.
+The 48 tests that need the Epicure weights (swaps and taste ranking) skip
+themselves locally unless the weights are cached. CI downloads and caches
+them first and sets `FORKCAST_REQUIRE_EMBEDDINGS=1`, so there a missing
+download fails the run instead of quietly skipping them. The suite runs with
+`HF_HUB_OFFLINE=1`, so a test that would download anything fails loudly.
 
 The browser smoke test checks that the screens and the API still fit
 together, which neither side's unit tests can see:
