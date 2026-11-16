@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api, type WeightSummary } from "../api";
+import { api, type BurnEstimate, type WeightSummary } from "../api";
 
 /** D41: weigh-ins, the smoothed trend, and the path to the goal weight. */
 
@@ -38,6 +38,39 @@ function statusText(w: WeightSummary): string | null {
     default:
       return pace == null ? null : `Your trend: ${paceText} over the last 3 weeks.`;
   }
+}
+
+const kcal = (n: number) => `${Math.round(n).toLocaleString("en")} kcal`;
+
+/** D45: what you burn, and whether it's learned yet. */
+function BurnLine({ b }: { b: BurnEstimate }) {
+  if (b.measured == null) {
+    const days = Math.min(b.complete_days, b.needed_days);
+    const span = Math.min(b.weigh_in_days, b.needed_span);
+    return (
+      <p className="weight-status burn-line">
+        <strong>What you burn: about {kcal(b.formula)} a day</strong>, from a formula for your body and activity. After
+        about two weeks of complete days and weigh-ins, Forkcast learns your real number from them. So far:{" "}
+        {days} of {b.needed_days} complete days, weigh-ins over {span} of {b.needed_span} days.
+      </p>
+    );
+  }
+  const weeks = Math.round(b.window_days / 7);
+  return (
+    <p className="weight-status burn-line">
+      <strong>What you burn: about {kcal(b.burn)} a day</strong>, learned from your meals and weigh-ins over the last{" "}
+      {weeks} weeks (the formula says {kcal(b.formula)}). Your targets use it.
+      {b.limited ? (
+        <>
+          {" "}
+          Your log points to about {kcal(b.measured)}, but Forkcast moves at most 15% away from the formula.
+          {b.measured < b.formula && " If meals are missing from your log, what you burn looks lower than it is."}
+        </>
+      ) : (
+        b.trust < 0.7 && " It leans on the formula until there's more data."
+      )}
+    </p>
+  );
 }
 
 function Chart({ w }: { w: WeightSummary }) {
@@ -145,6 +178,7 @@ export function WeightCard({ initial, onChange }: { initial: WeightSummary; onCh
           {p.plan_date && <>The plan says {roughDate(p.plan_date)}.</>}
         </p>
       )}
+      {w.burn && <BurnLine b={w.burn} />}
       {w.too_fast && (
         <p className="weight-status warn-text">
           You're losing more than 1% of your weight a week. Faster isn't better: it costs muscle and is hard to keep up.

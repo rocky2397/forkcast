@@ -15,6 +15,7 @@ as the system under test.
 | [`RESULTS-stage3.md`](RESULTS-stage3.md) | stage 3 (taste ranking) results and findings |
 | [`RESULTS-stage4.md`](RESULTS-stage4.md) | stage 4 (photo scanning) results and findings |
 | [`RESULTS-stage5.md`](RESULTS-stage5.md) | stage 5 (nutrition-label reading) results and findings |
+| [`RESULTS-stage6.md`](RESULTS-stage6.md) | stage 6 (learning what you burn) simulation results |
 | `data/labels_off150.json` | stage 5 sample: 150 Open Food Facts products with their per-100 g values and label photo URLs |
 | `data/labels_fresh150.json` | 150 fresh products (ranks 601 on) for judging the D37 prompt |
 | `data/vision_gold.json` | stage 4 answer key: the right ingredients for each of the 81 Grocery Store Dataset products |
@@ -54,3 +55,8 @@ as the system under test.
    [`RESULTS-stage5.md`](RESULTS-stage5.md)). 150 Open Food Facts products:
    all four values right for an estimated 67%, after checking 20 database
    disagreements by eye. A calorie sum check catches most mistakes.
+6. Learning what you burn: **done, on simulated people** (see
+   [`RESULTS-stage6.md`](RESULTS-stage6.md)). No public data has weeks of
+   food logs with a known true burn, so `scripts/sim_burn.py` simulates
+   2,000 people and runs the app's estimator on them. After four weeks of
+   honest logs the typical error falls from 186 to 74 kcal a day.

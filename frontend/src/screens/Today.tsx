@@ -273,7 +273,7 @@ export function Today() {
             },
             {
               term: "Your targets",
-              text: "Worked out from your profile: a standard formula (Mifflin-St Jeor) for your body, then your activity level and goal. With a goal weight, the line under the ring says how much less or more than you burn to eat, and roughly how long it takes. Change them under Edit profile.",
+              text: "Worked out from your profile: a standard formula (Mifflin-St Jeor) for your body, then your activity level and goal. After about two weeks of complete days and weigh-ins, Forkcast learns what you really burn from them and uses that instead (the Weight card says which). With a goal weight, the line under the ring says how much less or more than you burn to eat, and roughly how long it takes. Change them under Edit profile.",
             },
             {
               term: "Liked · Not for me",

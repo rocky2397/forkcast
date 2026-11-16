@@ -65,7 +65,8 @@ export function ProfileForm({
       <h1 className="display">Your daily targets</h1>
       <p className="lead">
         Forkcast uses this only to work out how many calories and how much protein, carbs and fat suit you each
-        day: a standard formula (Mifflin-St Jeor) for your body, adjusted for your activity and goal.
+        day: a standard formula (Mifflin-St Jeor) for your body, adjusted for your activity and goal. Once you've
+        logged complete days and weighed in for about two weeks, it learns what you really burn and uses that.
         {initial && " Targets update when you save."}
       </p>
       <div className="form-grid">

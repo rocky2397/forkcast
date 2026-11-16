@@ -61,10 +61,17 @@ def _opt(profile, key: str):
     return profile[key] if key in profile.keys() else None
 
 
-def burn(profile: Mapping) -> float:
-    """Estimated calories burned a day (TDEE)."""
+def formula_burn(profile: Mapping) -> float:
+    """Calories burned a day (TDEE) by the formula alone."""
     b = bmr(profile["sex"], profile["age"], profile["height_cm"], profile["weight_kg"])
     return b * ACTIVITY_FACTORS[profile["activity"]]
+
+
+def burn(profile: Mapping) -> float:
+    """Calories burned a day: learned from meals and weigh-ins once there is
+    enough data (D45, adaptive.py, passed in as burn_kcal), else the formula."""
+    learned = _opt(profile, "burn_kcal")
+    return float(learned) if learned else formula_burn(profile)
 
 
 def minimum_calories(profile: Mapping) -> float:
