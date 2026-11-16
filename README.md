@@ -331,9 +331,9 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 238 pytest tests in under a second, offline and without the corpus (48 of
-  them need the Epicure weights and skip without them), plus frontend lint and
-  build, all in CI.
+- **Tests:** 354 pytest tests in about three seconds, offline and without the
+  corpus (48 of them need the Epicure weights and skip without them), frontend
+  lint and build, and a browser smoke test of a first visit, all in CI.
 
 ## Design
 
@@ -412,6 +412,23 @@ pytest
 Tests that need the Epicure weights skip themselves unless the weights are
 already cached. CI runs the suite with `HF_HUB_OFFLINE=1`, so a test that would
 download anything fails loudly instead.
+
+The browser smoke test checks that the screens and the API still fit
+together, which neither side's unit tests can see:
+
+```bash
+ops/e2e.sh            # needs Google Chrome, the corpus and the Epicure weights
+```
+
+It starts the app on an empty data dir and makes a first visit in Chrome:
+a profile with a goal weight, the kitchen, the recipe feed, a cooked recipe
+and what ran out, a typed meal, "Done for today", a weigh-in and a reload.
+It fails if a screen doesn't show what it should, on any JavaScript or
+console error, on any API error, and on a serious accessibility problem
+(axe-core) on any screen. Breaking the app on purpose (a renamed API field,
+a value the API rejects, a crash in one card, a button without a name, text
+too faint to read) makes it fail each time. CI runs it on every push, with
+the same recipe corpus as the demo.
 
 ## Data and attribution
 

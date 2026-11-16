@@ -44,6 +44,55 @@ jobs:
       # Also type-checks: the build script is `tsc -b && vite build`.
       - run: npm run build
 
+  e2e:
+    # A first visit in a real browser (frontend/e2e/smoke.mjs): profile, kitchen,
+    # recipe feed, a cooked recipe, a typed meal, Done for today, a weigh-in,
+    # a reload. Fails on a missing screen element, a JavaScript or console
+    # error, an API error, or a serious accessibility problem. Uses the same
+    # recipe corpus as the demo and the Chrome already on the runner.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - name: Corpus release the demo uses
+        id: corpus
+        run: echo "url=$(grep '^ARG CORPUS_URL=' deploy/huggingface/Dockerfile | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: data/corpus.db
+          key: corpus-${{ steps.corpus.outputs.url }}
+      - name: Download the corpus (about 130 MB, cached)
+        run: |
+          [ -f data/corpus.db ] || { mkdir -p data && curl -fsSL --retry 3 -o data/corpus.db "${{ steps.corpus.outputs.url }}"; }
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: epicure-${{ hashFiles('backend/app/embeddings.py') }}
+      - name: Epicure weights (about 15 MB, cached)
+        run: python -c "from huggingface_hub import snapshot_download; [snapshot_download(m) for m in ('Kaikaku/epicure-cooc','Kaikaku/epicure-core','Kaikaku/epicure-chem')]"
+      - name: Browser smoke test
+        env:
+          HF_HUB_OFFLINE: "1"  # everything it needs is downloaded above
+        run: ops/e2e.sh data/corpus.db e2e-failure
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failure
+          path: e2e-failure/
+          if-no-files-found: ignore
+
 # Not built here: the Docker image (D15). It prefetches the Epicure weights and
 # bakes in the ~130 MB corpus, which costs more CI time than it protects —
 # nothing in the app's code can break it that these two jobs don't catch first.

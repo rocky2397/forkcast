@@ -21,6 +21,8 @@ data/
 !eval/data/
 caches/
 .env
+# Browser smoke test: screenshot and page text when it fails
+e2e-failure/
 *.sparsebundle
 
 # Claude Code local settings
