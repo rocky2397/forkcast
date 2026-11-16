@@ -10,6 +10,7 @@ All variant generation is membership-checked against the vocabulary, so a
 wrong guess ("chives" -> "chif") is harmless — it simply doesn't match.
 """
 
+import difflib
 import re
 from collections.abc import Iterable
 
@@ -58,6 +59,8 @@ ALIASES = {
     "black peppercorn": "black_pepper",
     "cracked pepper": "black_pepper",
     "applesauce": "apple_sauce",
+    # D46: a tester couldn't add skyr; it cooks like a thick yogurt.
+    "skyr": "yogurt",
     "soymilk": "soy_milk",
     "oatmeal": "oats",
     "red chili": "chili_pepper",
@@ -289,6 +292,8 @@ class Normalizer:
         # iteration order, so "bread flour" matched bread or flour depending
         # on the process's hash seed. Arbitrary but stable beats arbitrary.
         self._by_len = sorted(self._canon, key=lambda c: (-len(c), c))
+        # Every word in a known name or alias, for spelling suggestions (D46).
+        self._words = sorted({w for phrase in [*self._canon, *self._aliases] for w in phrase.split()})
         # Compound names that may override a narrower word they contain.
         self._compounds = {
             k: v for k, v in self._aliases.items() if k in _COMPOUND_UPGRADES
@@ -301,6 +306,32 @@ class Normalizer:
             if v in self._canon:
                 return self._canon[v]
         return None
+
+    def suggest(self, raw: str, limit: int = 3) -> list[str]:
+        """Known names close to something match() didn't recognise (D46).
+
+        Spelling only: difflib over the vocabulary and the aliases, so
+        "tomatoe" or "chiken" get an offer. A name it has nothing close to,
+        like a brand, gets none, which beats a confident wrong guess.
+        """
+        t = _clean(raw)
+        if not t:
+            return []
+        out: list[str] = []
+        # First, each misspelled word corrected to a known one, and the
+        # phrase matched as usual: "chiken breast" -> "chicken breast".
+        fixed = [w if w in self._words else next(iter(difflib.get_close_matches(w, self._words, n=1, cutoff=0.85)), w)
+                 for w in t.split()]
+        if fixed != t.split():
+            hit = self.match(" ".join(fixed))
+            if hit:
+                out.append(hit)
+        # Then whole names spelled alike: "mozarella" -> mozzarella cheese.
+        for key in difflib.get_close_matches(t, [*self._canon, *self._aliases], n=limit * 3, cutoff=0.75):
+            name = self._canon.get(key) or self._aliases[key]
+            if name not in out:
+                out.append(name)
+        return out[:limit]
 
     def match(self, raw: str) -> str | None:
         t = _clean(raw)

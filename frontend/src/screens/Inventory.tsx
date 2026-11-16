@@ -6,7 +6,7 @@ import { Guide, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
 import { CloseIcon, ScanIcon } from "../Icons";
 
-type Feedback = { added: string[]; unknown: string[] } | { error: string };
+type Feedback = { added: string[]; unknown: string[]; suggestions: Record<string, string[]> } | { error: string };
 
 export function Inventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -36,8 +36,27 @@ export function Inventory() {
       // comma-separated batch entry supported
       const parts = raw.split(",").map((s) => s.trim()).filter(Boolean);
       const res = await api.addInventory(parts);
-      setFeedback({ added: res.added, unknown: res.unknown });
+      setFeedback({ added: res.added, unknown: res.unknown, suggestions: res.suggestions ?? {} });
       setInput("");
+      await refresh();
+    } catch (e) {
+      setFeedback({ error: String(e) });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** D46: the user picked a "Did you mean…?" suggestion for something typed. */
+  async function addSuggestion(typed: string, name: string) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await api.addInventory([pretty(name)]);
+      setFeedback((f) =>
+        f && !("error" in f)
+          ? { added: [...f.added, ...res.added], unknown: f.unknown.filter((u) => u !== typed), suggestions: f.suggestions }
+          : f,
+      );
       await refresh();
     } catch (e) {
       setFeedback({ error: String(e) });
@@ -186,10 +205,34 @@ export function Inventory() {
           ) : (
             <>
               {feedback.added.length > 0 && <p>Added {feedback.added.map(pretty).join(", ")}.</p>}
-              {feedback.unknown.length > 0 && (
+              {feedback.unknown
+                .filter((u) => feedback.suggestions[u]?.length)
+                .map((u) => (
+                  <div key={u} className="did-you-mean">
+                    <p>Couldn't match “{u}”. Add instead:</p>
+                    <div className="suggest-chips">
+                      {feedback.suggestions[u].map((name) => (
+                        <button
+                          key={name}
+                          type="button"
+                          className="suggest-chip"
+                          disabled={busy}
+                          onClick={() => addSuggestion(u, name)}
+                        >
+                          + {pretty(name)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              {feedback.unknown.some((u) => !feedback.suggestions[u]?.length) && (
                 <p className="error">
-                  Couldn't match {feedback.unknown.map((u) => `“${u}”`).join(", ")}. Try a simpler name, like
-                  "chicken" instead of a brand.
+                  Couldn't match{" "}
+                  {feedback.unknown
+                    .filter((u) => !feedback.suggestions[u]?.length)
+                    .map((u) => `“${u}”`)
+                    .join(", ")}
+                  . Try a simpler name, like "chicken" instead of a brand.
                 </p>
               )}
             </>

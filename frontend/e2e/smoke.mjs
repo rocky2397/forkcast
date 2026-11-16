@@ -72,6 +72,9 @@ async function run(page) {
       await page.getByLabel("Weight (kg)").fill("72");
       await page.getByLabel("Activity").selectOption("moderate");
       await page.getByLabel("Goal weight in kg (optional)").fill("66");
+      // Plain words, with the formula's study one click away for the curious.
+      const study = page.getByRole("link", { name: "the study behind it" });
+      if ((await study.getAttribute("href")) !== "https://doi.org/10.1093/ajcn/51.2.241") throw new Error("study link missing");
       // D44: the pace is a share of body weight, shown with its kilos.
       await expectText(page.getByLabel("Pace").locator("option:checked"), /0\.75% of your weight a week \(about 0\.54 kg\)/, "pace option", "attached");
       await page.getByRole("button", { name: "Save and work out my targets" }).click();
@@ -85,9 +88,17 @@ async function run(page) {
     ["stock the kitchen by name", async () => {
       await tab(page, "Kitchen").click();
       const field = page.getByPlaceholder("e.g. chicken breasts");
-      await field.fill("chicken breast, rice, onion, garlic, tomato");
+      await field.fill("chicken breast, rice, onion, garlic, skyr");
       await page.getByRole("button", { name: "Add", exact: true }).click();
       await expectText(page.locator(".kitchen-group").filter({ hasText: /onion/i }), /onion/i, "kitchen list");
+      // D46: skyr is yogurt, and a misspelling gets "Did you mean…?".
+      await expectText(page.locator(".kitchen-group").filter({ hasText: /yogurt/i }), /yogurt/i, "skyr as yogurt");
+      await field.fill("tomatoe");
+      await page.getByRole("button", { name: "Add", exact: true }).click();
+      await expectText(page.locator(".did-you-mean"), /Couldn't match “tomatoe”\. Add instead/, "did you mean");
+      await audit(page, "kitchen, did you mean");
+      await page.locator(".did-you-mean").getByRole("button", { name: "+ tomato", exact: true }).click();
+      await expectText(page.locator(".kitchen-group").filter({ hasText: /tomato/i }), /tomato/i, "suggestion added");
       await audit(page, "kitchen");
     }],
     ["the recipe feed and a recipe", async () => {
@@ -95,6 +106,14 @@ async function run(page) {
       const card = page.locator(".recipe-card").first();
       await card.waitFor({ timeout: 15_000 });
       await audit(page, "recipes");
+      // Worth buying: three, then two more on request, the first three unchanged.
+      const picks = page.locator(".shopping-item .shopping-name");
+      await picks.nth(2).waitFor({ timeout: 30_000 });
+      const firstThree = await picks.allTextContents();
+      await page.getByRole("button", { name: "Show 2 more" }).click();
+      await picks.nth(4).waitFor({ timeout: 30_000 });
+      const five = await picks.allTextContents();
+      if (five.slice(0, 3).join() !== firstThree.join()) throw new Error(`worth buying changed: ${firstThree} -> ${five}`);
       const name = (await card.locator(".recipe-title").innerText()).trim();
       cooked = name;
       await card.click();
@@ -125,6 +144,8 @@ async function run(page) {
       await page.getByRole("spinbutton", { name: "Protein g" }).fill("18");
       await page.getByRole("button", { name: "Log meal" }).click();
       await expectText(page.locator(".meal-list"), /Smoke test salad/, "meal list");
+      await expectText(page.locator(".meal-list li").filter({ hasText: "Smoke test salad" }).locator(".rate-note"),
+        /only recipes you cook teach the feed/, "why a typed meal has no rating");
     }],
     ["Done for today", async () => {
       await page.getByRole("button", { name: "Done for today" }).click();

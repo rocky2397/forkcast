@@ -65,3 +65,11 @@ def test_truncation_is_reported_not_hidden(db, monkeypatch):
     monkeypatch.setattr(shopping, "POOL_LIMIT", 1)
     _, truncated = shopping.suggest(db, basket_size=1)
     assert truncated is True
+
+
+def test_showing_more_keeps_the_first_picks(db):
+    """The app's "Show 2 more" asks for five: the first three must not change."""
+    con = db
+    three = [i["canonical"] for i in shopping.suggest(con, basket_size=3)[0]]
+    five = [i["canonical"] for i in shopping.suggest(con, basket_size=5)[0]]
+    assert five[: len(three)] == three

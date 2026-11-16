@@ -197,3 +197,38 @@ def test_d35_scanned_products(d35, raw, expected):
     from app.normalize import packaged
 
     assert packaged(d35, raw) == expected
+
+
+# --- D46: skyr, and "Did you mean…?" for what isn't recognised ---
+
+@pytest.fixture
+def n46():
+    return Normalizer(VOCAB + ["yogurt", "zucchini", "mozzarella_cheese", "chicken_broth", "chicken_fat"])
+
+
+@pytest.mark.parametrize("raw", ["skyr", "Skyr", "skyr natural", "vanilla skyr"])
+def test_skyr_is_yogurt(n46, raw):
+    assert n46.match(raw) == "yogurt"
+
+
+@pytest.mark.parametrize("raw, first", [
+    ("tomatoe", "tomato"),
+    ("zuchini", "zucchini"),
+    ("mozarella", "mozzarella_cheese"),
+    # Each word corrected first, then matched as usual: chicken, not broth or fat.
+    ("chiken breast", "chicken"),
+    ("yougurt", "yogurt"),
+])
+def test_a_misspelling_gets_the_right_suggestion_first(n46, raw, first):
+    assert n46.match(raw) is None
+    assert n46.suggest(raw)[0] == first
+
+
+@pytest.mark.parametrize("raw", ["Arla", "Müller Corner", "xyz", ""])
+def test_nothing_close_gets_no_guess(n46, raw):
+    assert n46.suggest(raw) == []
+
+
+def test_at_most_three_suggestions_without_repeats(n46):
+    got = n46.suggest("chiken")
+    assert len(got) <= 3 and len(got) == len(set(got))

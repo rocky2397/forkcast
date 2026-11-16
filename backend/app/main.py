@@ -265,7 +265,9 @@ def add_inventory(body: InventoryAdd):
         con.commit()
     for canonical in added:
         stats.event("ingredient_added", item=canonical, stage="added")
-    return {"added": added, "unknown": unknown}
+    # D46: "Did you mean…?" for what wasn't recognised (never counted or stored).
+    suggestions = {raw: normalizer.suggest(raw) for raw in unknown}
+    return {"added": added, "unknown": unknown, "suggestions": {k: v for k, v in suggestions.items() if v}}
 
 
 @app.delete("/api/inventory/{name}")

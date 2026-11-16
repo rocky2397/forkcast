@@ -273,11 +273,11 @@ export function Today() {
             },
             {
               term: "Your targets",
-              text: "Worked out from your profile: a standard formula (Mifflin-St Jeor) for your body, then your activity level and goal. After about two weeks of complete days and weigh-ins, Forkcast learns what you really burn from them and uses that instead (the Weight card says which). With a goal weight, the line under the ring says how much less or more than you burn to eat, and roughly how long it takes. Change them under Edit profile.",
+              text: "Worked out from your profile: a widely used estimate of what your body burns from your sex, age, height and weight, then your activity level and goal. After about two weeks of complete days and weigh-ins, Forkcast learns what you really burn from them and uses that instead (the Weight card says which). With a goal weight, the line under the ring says how much less or more than you burn to eat, and roughly how long it takes. Change them under Edit profile.",
             },
             {
               term: "Liked · Not for me",
-              text: "Rate the recipes you cook. Recipes close to the dishes you cook move up the feed; ones you mark Not for me stop counting.",
+              text: "Rate the recipes you cook. Recipes close to the dishes you cook move up the feed; ones you mark Not for me stop counting. Meals you type in can't be rated: they aren't recipes, so there's nothing for the feed to learn from.",
             },
             {
               term: "Weight",
@@ -332,7 +332,7 @@ export function Today() {
                     {fmt(m.calories ?? 0)} kcal · {fmt(m.protein_g ?? 0)} g protein · {fmt(m.carbs_g ?? 0)} g carbs ·{" "}
                     {fmt(m.fat_g ?? 0)} g fat
                   </span>
-                  {m.recipe_id !== null && (
+                  {m.recipe_id !== null ? (
                     <span className="rate" role="group" aria-label={`Rate ${m.name}`}>
                       <button className="pill" aria-pressed={m.liked === 1} onClick={() => rate(m, true)}>
                         Liked
@@ -341,6 +341,10 @@ export function Today() {
                         Not for me
                       </button>
                     </span>
+                  ) : (
+                    // A tester asked why these have no Liked button: ratings teach the
+                    // recipe feed, and a typed meal isn't a recipe it can learn from.
+                    <span className="rate-note">No rating: only recipes you cook teach the feed what you like.</span>
                   )}
                 </div>
                 <button className="remove" onClick={() => removeMeal(m.id)} aria-label={`Remove ${m.name}`}>
