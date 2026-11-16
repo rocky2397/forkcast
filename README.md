@@ -331,7 +331,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 354 pytest tests in about three seconds, offline and without the
+- **Tests:** 362 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 48 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
