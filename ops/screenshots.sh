@@ -30,8 +30,10 @@ trap cleanup EXIT
 
 (cd frontend && npm run build --silent >/dev/null)
 
-FORKCAST_DATA_DIR="$DATA" FORKCAST_CORPUS_DB="$CORPUS" \
-  "$PY" -m uvicorn app.main:app --app-dir backend --port "$PORT" --log-level warning &
+# The server with a settable "today" for the "plan redraws itself" strip;
+# otherwise the same app (backend/scripts/serve_for_screenshots.py).
+FORKCAST_DATA_DIR="$DATA" FORKCAST_CORPUS_DB="$CORPUS" FORKCAST_SHOT_CLOCK="$DATA/clock" \
+  "$PY" backend/scripts/serve_for_screenshots.py "$PORT" &
 SERVER=$!
 
 for _ in $(seq 1 60); do
@@ -42,7 +44,7 @@ curl -fs "http://localhost:$PORT/health" >/dev/null || { echo "backend did not s
 
 # The progress screens need weeks of history the API can't backdate: the
 # screenshot script writes sample personas (D43) straight into the database.
-(cd frontend && FORKCAST_SHOT_DB="$DATA/forkcast.db" FORKCAST_SHOT_PY="$PY_ABS" \
+(cd frontend && FORKCAST_SHOT_DB="$DATA/forkcast.db" FORKCAST_SHOT_PY="$PY_ABS" FORKCAST_SHOT_CLOCK="$DATA/clock" \
   node scripts/screenshots.mjs "http://localhost:$PORT" ../docs/screenshots "$DATA/video")
 
 # The walkthrough GIFs for the README: 12 fps, 360 px wide, one shared palette.

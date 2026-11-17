@@ -116,6 +116,20 @@ if you ate 2,000 kcal a day and your weight stayed level, you burn about
 2,000. The more data, the more it trusts yours over the formula; it never
 moves more than 15% from it, and the Weight card says which number it uses.
 
+**By the way, the plan redraws itself.** Here is the same made-up person at
+weeks 1, 3 and 6 of the same six weeks:
+
+| Week 1 | Week 3 | Week 6 |
+|:-:|:-:|:-:|
+| <img src="docs/screenshots/replan-week1.jpg" width="250" alt="Weight card at week 1: a few weigh-ins at 73.2 kg and a dashed line to the 64 kg goal ending 13 February; what she burns, about 2,292 kcal a day, from the formula, with 7 of 10 complete days so far"> | <img src="docs/screenshots/replan-week3.jpg" width="250" alt="Weight card at week 3: three weeks of weigh-ins, trend 72.8 kg, on track at minus 0.4 kg a week, the dashed line now ending 2 March; what she burns, about 2,139 kcal a day, learned from her meals and weigh-ins, against 2,285 from the formula"> | <img src="docs/screenshots/replan-week6.jpg" width="250" alt="Weight card at week 6: six weeks of weigh-ins, trend 71.6 kg, on track, the dashed line ending 26 February; what she burns, about 2,290 kcal a day, learned, against 2,267 from the formula"> |
+| Too little data to learn from: the formula's 2,292 kcal, goal in mid February. | The first estimate from her own meals and weigh-ins is lower, 2,139 kcal. Her daily target drops from 1,719 to 1,604 kcal and the goal moves to early March. | More data, a steadier estimate: 2,290 kcal. The goal moves back to late February. |
+
+Each weigh-in redraws the dashed line from where her trend is now. The low estimate in week 3 is what a few noisy
+weeks look like, and why the estimate leans on the formula until there's more
+data. She is made up (see [the note above](#goals-and-progress)), so these
+cards show *how* the plan adapts. Test 6 below measures how close the learned
+number gets to the truth.
+
 Each recipe gets a score
 from 0 to 1 for how well its mix of protein, carbs and fat matches what is
 still missing today. When you are short on protein, high-protein dishes move up.
@@ -332,7 +346,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 415 pytest tests in about three seconds, offline and without the
+- **Tests:** 416 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 48 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
