@@ -89,16 +89,40 @@ SUM_TOLERANCE = 0.20
 SUM_MIN_GAP_KCAL = 40
 
 
+MISREADINGS = (
+    "The usual misreadings are kJ instead of kcal, a lost decimal comma or a value from the next row."
+)
+KCAL_PER_G = {"protein": 4, "carbs": 4, "fat": 9}
+
+
+def _names(names: list[str]) -> str:
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
 def label_check(calories, protein_g, carbs_g, fat_g) -> str | None:
     """A warning for values read off a label that are missing or don't add up."""
-    if None in (calories, protein_g, carbs_g, fat_g):
-        return "Some values couldn't be read from the photo. Please check them against the label."
-    expected = 9 * fat_g + 4 * (protein_g + carbs_g)
-    gap = abs(calories - expected)
-    if gap > SUM_TOLERANCE * max(calories, expected) and gap > SUM_MIN_GAP_KCAL:
+    if calories is None:
+        return "The calories couldn't be read from the photo. Please check them against the label."
+    values = {"protein": protein_g, "carbs": carbs_g, "fat": fat_g}
+    missing = [n for n, v in values.items() if v is None]
+    read = [n for n, v in values.items() if v is not None]
+    expected = sum(KCAL_PER_G[n] * values[n] for n in read)
+    # With a value missing, the ones read are only a lower bound: they can
+    # still give away a misreading by making more kcal than the label has.
+    gap = max(expected - calories, 0) if missing else abs(calories - expected)
+    adds_up = not (gap > SUM_TOLERANCE * max(calories, expected) and gap > SUM_MIN_GAP_KCAL)
+    if not missing:
+        if adds_up:
+            return None
         return (
             f"These numbers don't add up: {round(calories)} kcal, but the fat, carbs and protein "
-            f"make about {round(expected)} kcal. Please check them against the label. The usual "
-            "misreadings are kJ instead of kcal, a lost decimal comma or a value from the next row."
+            f"make about {round(expected)} kcal. Please check them against the label. {MISREADINGS}"
         )
-    return None
+    unread = _names(missing).capitalize()
+    if adds_up:
+        return f"{unread} couldn't be read from the photo. Please check against the label."
+    return (
+        f"{unread} couldn't be read from the photo, and the rest don't add up: {round(calories)} kcal "
+        f"is less than the {_names(read)} alone would give (about {round(expected)} kcal). "
+        f"Please check them against the label. {MISREADINGS}"
+    )

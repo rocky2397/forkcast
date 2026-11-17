@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS products (
     protein_g_100g REAL,
     carbs_g_100g   REAL,
     fat_g_100g     REAL,
-    source         TEXT NOT NULL,               -- 'openfoodfacts' | 'label'
+    source         TEXT NOT NULL,               -- 'openfoodfacts' | 'saved' (D48: read off a label)
     fetched_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

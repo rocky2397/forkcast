@@ -192,7 +192,8 @@ export interface Product {
   protein_g_100g: number | null;
   carbs_g_100g: number | null;
   fat_g_100g: number | null;
-  source: "openfoodfacts" | "label";
+  /** label: just read off a photo; saved: a label reading remembered for its barcode (D48). */
+  source: "openfoodfacts" | "label" | "saved";
   /** D36: a warning when label values are missing or don't add up. */
   check?: string | null;
 }
@@ -271,6 +272,9 @@ function rememberKitchen(res: Response) {
  *  validation problems ("weight_kg: Input should be less than or equal to 250"). */
 function errorText(detail: unknown): string | null {
   if (typeof detail === "string") return detail;
+  if (detail && typeof detail === "object" && typeof (detail as { message?: unknown }).message === "string") {
+    return (detail as { message: string }).message;
+  }
   if (Array.isArray(detail)) {
     const parts = detail.map((d) => {
       const field = Array.isArray(d?.loc) ? d.loc[d.loc.length - 1] : null;
@@ -279,6 +283,16 @@ function errorText(detail: unknown): string | null {
     return parts.join("; ") || null;
   }
   return null;
+}
+
+/** An API error that keeps the server's detail, for errors that carry more
+ *  than a message (D48: a scan that found a barcode says which). */
+export class ApiError extends Error {
+  detail: unknown;
+  constructor(message: string, detail: unknown) {
+    super(message);
+    this.detail = detail;
+  }
 }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
@@ -290,7 +304,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(errorText(body.detail) ?? `${res.status} ${res.statusText}`);
+    throw new ApiError(errorText(body.detail) ?? `${res.status} ${res.statusText}`, body.detail);
   }
   return res.json();
 }
@@ -408,11 +422,29 @@ export const api = {
     }),
   barcodeLookup: (code: string) =>
     req<{ product: Product }>(`/api/nutrition/barcode/${encodeURIComponent(code)}`),
-  scanProduct: (file: File) => {
+  /** `barcode`: one the app already has for this product (D48), so a label
+   *  photo without its own barcode can be remembered under it. */
+  scanProduct: (file: File, barcode?: string | null) => {
     const form = new FormData();
     form.append("photo", file);
+    if (barcode) form.append("barcode", barcode);
     return req<{ product: Product }>("/api/nutrition/scan", { method: "POST", body: form });
   },
+  saveProduct: (p: Product) =>
+    req<{ product: Product }>("/api/nutrition/products", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        barcode: p.barcode,
+        name: p.name,
+        calories_100g: p.calories_100g,
+        protein_g_100g: p.protein_g_100g,
+        carbs_g_100g: p.carbs_g_100g,
+        fat_g_100g: p.fat_g_100g,
+      }),
+    }),
+  forgetProduct: (code: string) =>
+    req<{ forgotten: string }>(`/api/nutrition/products/${encodeURIComponent(code)}`, { method: "DELETE" }),
   recipe: (id: number) => req<RecipeDetail>(`/api/recipes/${id}`),
   logCooked: (id: number, usedUp: string[] = []) =>
     req<{ logged: boolean; meal_log_id: number; removed: string[] }>(`/api/recipes/${id}/cooked`, {
