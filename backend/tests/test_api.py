@@ -192,6 +192,8 @@ def test_a_scanned_juice_carton_is_fruit_juice_not_the_fruit(client, monkeypatch
     ((443, 16.0, 70.0, 7.4), False),   # Mars rows swapped: adds up anyway (a known blind spot)
     ((109, 26.0, 0.0, 0.5), False),    # tuna
     ((14, 0.5, 0.0, None), True),      # a value missing
+    ((50, None, 69.0, None), True),    # a tester's scan: 69 g carbs alone is ~276 kcal, more than 50
+    ((50, None, 6.9, None), True),     # the same with the comma read: still warns, values are missing
     ((15, 0.5, 0.0, 1.1), False),      # tiny values: under the 40 kcal floor
 ])
 def test_label_sum_check(read, warns):
@@ -199,6 +201,118 @@ def test_label_sum_check(read, warns):
     from app import nutrition
 
     assert (nutrition.label_check(*read) is not None) is warns
+
+
+def test_missing_values_are_named_and_the_rest_still_checked():
+    """D48: a value missing no longer hides a reading that can't be right."""
+    from app import nutrition
+
+    impossible = nutrition.label_check(50, None, 69.0, None)
+    assert impossible.startswith("Protein and fat couldn't be read")
+    assert "50 kcal is less than the carbs alone would give (about 276 kcal)" in impossible
+    plausible = nutrition.label_check(50, None, 6.9, None)
+    assert plausible.startswith("Protein and fat couldn't be read") and "less than" not in plausible
+    assert nutrition.label_check(None, 1, 2, 3).startswith("The calories couldn't be read")
+
+
+def _scan(client, monkeypatch, scan, off=None, barcode=None):
+    """POST a photo with the label reader and Open Food Facts stubbed."""
+    from app import nutrition, vision
+
+    monkeypatch.setattr(vision, "extract_product", lambda raw, media_type: scan)
+
+    def fake_off(code):
+        if isinstance(off, Exception):
+            raise off
+        return off
+
+    monkeypatch.setattr(nutrition, "fetch_off", fake_off)
+    data = {"barcode": barcode} if barcode else None
+    return client.post("/api/nutrition/scan", files={"photo": ("p.jpg", b"\xff\xd8\xff", "image/jpeg")}, data=data)
+
+
+def test_a_barcode_that_isnt_on_open_food_facts_says_so(client, monkeypatch):
+    """D48: the tester's bag. The barcode was read; the product just isn't listed."""
+    from app import vision
+
+    r = _scan(client, monkeypatch, vision.ProductScan(barcode="4306188068372"))
+    assert r.status_code == 404
+    detail = r.json()["detail"]
+    assert detail["barcode"] == "4306188068372"
+    assert "isn't on Open Food Facts yet" in detail["message"] and "nutrition table" in detail["message"]
+
+
+def test_scan_errors_say_what_was_found(client, monkeypatch):
+    from app import nutrition, vision
+
+    down = _scan(client, monkeypatch, vision.ProductScan(barcode="4306188068372"), off=nutrition.OffUnavailable("timeout"))
+    assert "couldn't be reached" in down.json()["detail"]["message"]
+    nothing = _scan(client, monkeypatch, vision.ProductScan())
+    assert nothing.json()["detail"] == {
+        "message": "Couldn't find a barcode or a nutrition table in the photo. Try a closer, sharper photo of either one.",
+        "barcode": None,
+    }
+
+
+def test_a_label_photo_is_returned_under_the_barcode_from_the_earlier_photo(client, monkeypatch):
+    """D48: the table is often on another side of the pack than the barcode."""
+    from app import vision
+
+    label = vision.NutritionPer100g(calories=350, protein_g=10, carbs_g=61, fat_g=2.6)
+    r = _scan(client, monkeypatch, vision.ProductScan(per_100g=label), barcode="4306188068372")
+    product = r.json()["product"]
+    assert product["barcode"] == "4306188068372" and product["source"] == "label" and product["check"] is None
+    # a barcode on the label photo itself wins over the one carried over
+    r = _scan(client, monkeypatch, vision.ProductScan(barcode="4000000000017", per_100g=label), barcode="4306188068372")
+    assert r.json()["product"]["barcode"] == "4000000000017"
+
+
+def test_a_saved_label_reading_fills_in_from_the_barcode_and_can_be_forgotten(client, monkeypatch):
+    from app import nutrition
+
+    monkeypatch.setattr(nutrition, "fetch_off", lambda code: None)
+    body = {"barcode": "4306188068372", "name": "Tortilla chips", "calories_100g": 490,
+            "protein_g_100g": 6.5, "carbs_g_100g": 61, "fat_g_100g": 24}
+    assert client.get("/api/nutrition/barcode/4306188068372").status_code == 404
+    assert client.post("/api/nutrition/products", json=body).status_code == 200
+    product = client.get("/api/nutrition/barcode/4306188068372").json()["product"]
+    assert product["source"] == "saved" and product["calories_100g"] == 490 and product["name"] == "Tortilla chips"
+    assert client.delete("/api/nutrition/products/4306188068372").status_code == 200
+    assert client.get("/api/nutrition/barcode/4306188068372").status_code == 404
+
+
+def test_saving_never_overwrites_open_food_facts_values(client, monkeypatch):
+    from app import nutrition
+
+    listed = {"barcode": "4000000000017", "name": "Listed", "brand": None, "calories_100g": 100,
+              "protein_g_100g": 1, "carbs_g_100g": 20, "fat_g_100g": 1, "source": "openfoodfacts"}
+    monkeypatch.setattr(nutrition, "fetch_off", lambda code: listed)
+    assert client.get("/api/nutrition/barcode/4000000000017").status_code == 200
+    body = {"barcode": "4000000000017", "calories_100g": 1, "protein_g_100g": 0, "carbs_g_100g": 0, "fat_g_100g": 0}
+    assert client.post("/api/nutrition/products", json=body).status_code == 409
+    assert client.delete("/api/nutrition/products/4000000000017").status_code == 200
+    assert client.get("/api/nutrition/barcode/4000000000017").json()["product"]["calories_100g"] == 100
+
+
+def test_listed_without_values_can_be_filled_from_a_label(client, monkeypatch):
+    from app import nutrition
+
+    empty = {"barcode": "4000000000024", "name": "Listed, no values", "brand": None, "calories_100g": None,
+             "protein_g_100g": None, "carbs_g_100g": None, "fat_g_100g": None, "source": "openfoodfacts"}
+    monkeypatch.setattr(nutrition, "fetch_off", lambda code: empty)
+    client.get("/api/nutrition/barcode/4000000000024")
+    body = {"barcode": "4000000000024", "calories_100g": 52, "protein_g_100g": 0.3, "carbs_g_100g": 12, "fat_g_100g": 0.2}
+    assert client.post("/api/nutrition/products", json=body).status_code == 200
+    assert client.get("/api/nutrition/barcode/4000000000024").json()["product"]["source"] == "saved"
+
+
+@pytest.mark.parametrize("bad", [
+    {"barcode": "abc", "calories_100g": 1, "protein_g_100g": 0, "carbs_g_100g": 0, "fat_g_100g": 0},
+    {"barcode": "4306188068372", "calories_100g": 1, "protein_g_100g": 0, "carbs_g_100g": 0},
+    {"barcode": "4306188068372", "calories_100g": 1, "protein_g_100g": 0, "carbs_g_100g": 150, "fat_g_100g": 0},
+])
+def test_saving_needs_a_barcode_and_all_four_values(client, bad):
+    assert client.post("/api/nutrition/products", json=bad).status_code == 422
 
 
 def test_a_label_reading_that_doesnt_add_up_comes_with_a_warning(client, monkeypatch):

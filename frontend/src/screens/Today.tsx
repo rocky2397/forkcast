@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   api,
+  ApiError,
   isDemo,
   scansOn,
   type DayMeal,
@@ -28,6 +29,8 @@ const GOAL_WORDS: Record<Profile["goal"], string> = {
 };
 
 const fmt = (n: number) => Math.round(n).toLocaleString("en");
+/** A value read off a label, or "?" when it couldn't be read (never a 0 that looks real). */
+const shown = (n: number | null) => (n == null ? "?" : fmt(n));
 
 /** Calories as a ring: eaten against the daily target, what's left in the middle. */
 function CalorieRing({ eaten, target }: { eaten: number; target: number }) {
@@ -122,6 +125,9 @@ export function Today() {
   const [grams, setGrams] = useState("100");
   const [scanBusy, setScanBusy] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
+  // D48: a barcode found on a pack that Open Food Facts doesn't have; the next
+  // photo (the nutrition table) is read and remembered under it.
+  const [pendingBarcode, setPendingBarcode] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const guide = useGuide("forkcast.todayguide.v1");
 
@@ -187,21 +193,38 @@ export function Today() {
     try {
       // barcode-first (D9): on-device detection costs nothing when supported
       const code = await detectBarcode(file);
-      const res = code
-        ? await api.barcodeLookup(code).catch(() => api.scanProduct(file))
-        : await api.scanProduct(file);
+      const listed = code ? await api.barcodeLookup(code).catch(() => null) : null;
+      const res =
+        listed && listed.product.calories_100g != null
+          ? listed
+          : await api.scanProduct(file, code ?? pendingBarcode);
       setProduct(res.product);
+      setPendingBarcode(null);
       setGrams("100");
     } catch (e) {
-      setScanError(String(e));
+      const found = e instanceof ApiError ? (e.detail as { barcode?: string | null } | null)?.barcode : null;
+      if (found) setPendingBarcode(found);
+      setScanError(e instanceof Error ? e.message : String(e));
     } finally {
       setScanBusy(false);
       if (fileRef.current) fileRef.current.value = "";
     }
   }
 
-  function useProduct() {
+  /** D48: a label reading for a barcode Open Food Facts doesn't have, complete
+   *  and adding up (D36), is remembered for that barcode when it's used. */
+  function savable(p: Product): boolean {
+    return (
+      p.source === "label" &&
+      Boolean(p.barcode) &&
+      !p.check &&
+      [p.calories_100g, p.protein_g_100g, p.carbs_g_100g, p.fat_g_100g].every((v) => v != null)
+    );
+  }
+
+  async function useProduct() {
     if (!product) return;
+    if (savable(product)) await api.saveProduct(product).catch(() => null);
     const factor = (Number(grams) || 0) / 100;
     const scale = (v: number | null) => (v == null ? "" : String(Math.round(v * factor)));
     setMeal({
@@ -212,6 +235,14 @@ export function Today() {
       fat_g: scale(product.fat_g_100g),
     });
     setProduct(null);
+  }
+
+  async function forgetProduct() {
+    if (!product?.barcode) return;
+    await api.forgetProduct(product.barcode).catch(() => null);
+    setPendingBarcode(product.barcode);
+    setProduct(null);
+    setScanError(null);
   }
 
   if (loadError && !loaded) {
@@ -373,9 +404,25 @@ export function Today() {
               />
               <button type="button" className="scan-btn" onClick={() => fileRef.current?.click()} disabled={scanBusy}>
                 <ScanIcon size={20} />
-                {scanBusy ? "Reading the product…" : "Scan a barcode or nutrition label"}
+                {scanBusy
+                  ? "Reading the product…"
+                  : pendingBarcode
+                    ? "Photograph the nutrition table"
+                    : "Scan a barcode or nutrition label"}
               </button>
-              <p className="field-hint">Or type it in. Packaged food fills in by itself from the barcode.</p>
+              {pendingBarcode ? (
+                <p className="field-hint">
+                  The next photo is read as the nutrition table for barcode {pendingBarcode}.{" "}
+                  <button type="button" className="link-button" onClick={() => setPendingBarcode(null)}>
+                    Different product
+                  </button>
+                </p>
+              ) : (
+                <p className="field-hint">
+                  Products on Open Food Facts fill in from the barcode. For anything else, photograph the
+                  nutrition table. Or type it in below.
+                </p>
+              )}
               {isDemo() && scansOn() && (
                 <p className="field-hint">
                   A label without a barcode is read by Anthropic's Claude; Forkcast doesn't keep the photo.
@@ -387,16 +434,42 @@ export function Today() {
                   <div className="product-head">
                     <strong>{product.name ?? "Unnamed product"}</strong>
                     <span className="product-source">
-                      {product.source === "openfoodfacts" ? "from Open Food Facts" : "read from the label"}
+                      {product.source === "openfoodfacts"
+                        ? "from Open Food Facts"
+                        : product.source === "saved"
+                          ? "saved from your earlier scan"
+                          : "read from the label"}
                     </span>
                   </div>
                   <p className="product-macros">
-                    Per 100 g: {fmt(product.calories_100g ?? 0)} kcal · {fmt(product.protein_g_100g ?? 0)} g protein ·{" "}
-                    {fmt(product.carbs_g_100g ?? 0)} g carbs · {fmt(product.fat_g_100g ?? 0)} g fat
+                    Per 100 g: {shown(product.calories_100g)} kcal · {shown(product.protein_g_100g)} g protein ·{" "}
+                    {shown(product.carbs_g_100g)} g carbs · {shown(product.fat_g_100g)} g fat
                   </p>
                   {product.check && (
                     <p className="feedback warning" role="alert">
                       {product.check}
+                    </p>
+                  )}
+                  {savable(product) && (
+                    <p className="field-hint product-note">
+                      Barcode {product.barcode} isn't on Open Food Facts yet. When you tap Use, Forkcast remembers
+                      these values for it, so the barcode alone works next time.{" "}
+                      <a
+                        href={`https://world.openfoodfacts.org/product/${product.barcode}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Add it to Open Food Facts
+                      </a>{" "}
+                      to make it work for everyone.
+                    </p>
+                  )}
+                  {product.source === "saved" && (
+                    <p className="field-hint product-note">
+                      You scanned this label before.{" "}
+                      <button type="button" className="link-button" onClick={forgetProduct}>
+                        Wrong? Forget these values
+                      </button>
                     </p>
                   )}
                   <div className="product-use">

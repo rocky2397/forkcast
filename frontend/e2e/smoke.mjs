@@ -24,6 +24,13 @@ const require = createRequire(import.meta.url);
 const AXE = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
 const problems = [];
+// API errors a step provokes on purpose (a route it fakes), not counted as problems.
+const expectedErrors = new Set();
+// A 1×1 PNG: the "photo" for the faked label reader. It has no barcode in it.
+const PHOTO = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+  "base64",
+);
 
 async function audit(page, screen) {
   await page.addScriptTag({ content: AXE });
@@ -149,6 +156,53 @@ async function run(page) {
       await expectText(page.locator(".meal-list li").filter({ hasText: "Smoke test salad" }).locator(".rate-note"),
         /only recipes you cook teach the feed/, "why a typed meal has no rating");
     }],
+    ["a product that isn't on Open Food Facts (D48)", async () => {
+      // Only the label reader (Claude) is faked; saving and the barcode lookup are real.
+      const code = "4306188068372";
+      const replies = [
+        // 1. a label read with protein and fat missing: shown as "?", never 0
+        { status: 200, body: { product: { barcode: null, name: null, brand: null, calories_100g: 50, protein_g_100g: null,
+          carbs_g_100g: 69, fat_g_100g: null, source: "label", check: "Protein and fat couldn't be read from the photo, and the rest don't add up." } } },
+        // 2. a photo of the barcode alone: found, but not listed
+        { status: 404, body: { detail: { message: `Found barcode ${code}, but this product isn't on Open Food Facts yet.`, barcode: code } } },
+        // 3. the nutrition table from the back of the pack
+        { status: 200, body: { product: { barcode: code, name: "Smoke test chips", brand: null, calories_100g: 490,
+          protein_g_100g: 6.5, carbs_g_100g: 61, fat_g_100g: 24, source: "label", check: null } } },
+      ];
+      const sent = [];
+      await page.route("**/api/nutrition/scan", async (route) => {
+        sent.push(route.request().postDataBuffer()?.toString("latin1") ?? "");
+        const reply = replies[sent.length - 1];
+        if (reply.status >= 400) expectedErrors.add("/api/nutrition/scan");
+        await route.fulfill({ status: reply.status, contentType: "application/json", body: JSON.stringify(reply.body) });
+      });
+      const photo = () => page.locator('form input[type="file"]').setInputFiles({ name: "p.png", mimeType: "image/png", buffer: PHOTO });
+      await page.getByRole("button", { name: "Log a meal" }).click();
+
+      await photo();
+      await expectText(page.locator(".product-macros"), /50 kcal · \? g protein · 69 g carbs · \? g fat/, "unread values as ?");
+      if (await page.locator(".product-note").count()) throw new Error("an incomplete reading offered to be remembered");
+
+      await photo();
+      await expectText(page.locator(".feedback.error"), new RegExp(`Found barcode ${code}, but this product isn't on Open Food Facts`), "barcode not listed");
+      await page.getByRole("button", { name: "Photograph the nutrition table" }).waitFor();
+      await expectText(page.locator(".field-hint").filter({ hasText: "next photo" }), new RegExp(`nutrition table for barcode ${code}`), "carried barcode");
+
+      await photo();
+      await expectText(page.locator(".product-note"), /isn't on Open Food Facts yet\. When you tap Use, Forkcast remembers/, "remember note");
+      if (!sent[2].includes(code)) throw new Error("the label photo was sent without the barcode from the photo before");
+      const add = page.getByRole("link", { name: "Add it to Open Food Facts" });
+      if ((await add.getAttribute("href")) !== `https://world.openfoodfacts.org/product/${code}`) throw new Error("Open Food Facts link wrong");
+      await audit(page, "today, product read from a label");
+      await page.getByRole("button", { name: "Use", exact: true }).click();
+      await page.getByRole("button", { name: "Log meal" }).click();
+      await expectText(page.locator(".meal-list"), /Smoke test chips, 100 g/, "scanned meal logged");
+      await page.unroute("**/api/nutrition/scan");
+
+      // Next time the barcode alone fills it in, from the saved reading.
+      const saved = await page.evaluate(async (c) => (await fetch(`/api/nutrition/barcode/${c}`)).json(), code);
+      if (saved.product?.source !== "saved" || saved.product.calories_100g !== 490) throw new Error(`not remembered: ${JSON.stringify(saved)}`);
+    }],
     ["Done for today", async () => {
       await page.getByRole("button", { name: "Done for today" }).click();
       await expectText(page.locator(".day-check-done"), /Today is marked complete/, "day check");
@@ -188,9 +242,14 @@ async function main() {
   });
   const page = await ctx.newPage();
   page.on("pageerror", (e) => problems.push(`JavaScript error: ${e.message}`));
-  page.on("console", (m) => m.type() === "error" && problems.push(`console error: ${m.text()}`));
+  const expected = (url) => [...expectedErrors].some((path) => url.includes(path));
+  page.on("console", (m) => {
+    if (m.type() === "error" && !expected(m.location().url ?? "")) problems.push(`console error: ${m.text()}`);
+  });
   page.on("response", (r) => {
-    if (r.url().includes("/api/") && r.status() >= 400) problems.push(`API ${r.status()}: ${r.request().method()} ${r.url()}`);
+    if (r.url().includes("/api/") && r.status() >= 400 && !expected(r.url())) {
+      problems.push(`API ${r.status()}: ${r.request().method()} ${r.url()}`);
+    }
   });
 
   let failed = null;

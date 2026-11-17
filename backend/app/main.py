@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager, suppress
 from datetime import date as _date
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, Query, Request, Response, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
@@ -789,13 +789,22 @@ def barcode_lookup(code: str):
     return {"product": product}
 
 
+def _barcode(code: str | None) -> str | None:
+    return code if code and code.isdigit() and 6 <= len(code) <= 14 else None
+
+
 @app.post("/api/nutrition/scan")
-async def nutrition_scan(photo: UploadFile = File(...)):
+async def nutrition_scan(photo: UploadFile = File(...), barcode: str | None = Form(None)):
     """Product photo -> per-100g nutrition.
 
     Haiku reads the printed barcode digits and/or the Nährwerttabelle; a
     resolvable barcode makes Open Food Facts authoritative (and caches the
     product), otherwise the label values are returned as proposals.
+
+    `barcode` (D48) is one the app already has for this product: read on the
+    device from this photo, or from an earlier photo of the same pack whose
+    product isn't on Open Food Facts. A label read without a barcode of its
+    own is returned under it, so the app can remember it.
     """
     if demo.enabled():
         stats.event("label_scan_tried")
@@ -812,26 +821,25 @@ async def nutrition_scan(photo: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(502, f"vision extraction failed: {e}")
 
-    product = None
-    if scan.barcode and scan.barcode.isdigit() and 6 <= len(scan.barcode) <= 14:
+    code = _barcode(scan.barcode) or _barcode(barcode)
+    product, off_down = None, False
+    if code:
         with connect() as con:
             try:
-                product = nutrition.lookup(con, scan.barcode)
+                product = nutrition.lookup(con, code)
             except nutrition.OffUnavailable:
-                product = None  # fall back to the label values
+                off_down = True  # fall back to the label values
     if product is not None and product["calories_100g"] is not None:
         return {"product": product}
 
     label = scan.per_100g
     if label is None or label.calories is None:
-        raise HTTPException(
-            404, "could not read a barcode or nutrition table from the photo"
-        )
+        raise HTTPException(404, {"message": _no_label_message(code, product, off_down), "barcode": code})
     return {
         "product": {
-            "barcode": scan.barcode,
-            "name": scan.product_name,
-            "brand": None,
+            "barcode": code,
+            "name": scan.product_name or (product or {}).get("name"),
+            "brand": (product or {}).get("brand"),
             "calories_100g": label.calories,
             "protein_g_100g": label.protein_g,
             "carbs_g_100g": label.carbs_g,
@@ -841,6 +849,53 @@ async def nutrition_scan(photo: UploadFile = File(...)):
             "check": nutrition.label_check(label.calories, label.protein_g, label.carbs_g, label.fat_g),
         }
     }
+
+
+def _no_label_message(code: str | None, product: dict | None, off_down: bool) -> str:
+    """D48: say what was found, and what photo to take next."""
+    table = "Take a photo of the nutrition table instead (often on the back or side of the pack)"
+    if code is None:
+        return (
+            "Couldn't find a barcode or a nutrition table in the photo. "
+            "Try a closer, sharper photo of either one."
+        )
+    if off_down:
+        return f"Found barcode {code}, but Open Food Facts couldn't be reached just now. {table}."
+    if product is not None:
+        return f"Found barcode {code} on Open Food Facts, but it has no nutrition values there yet. {table}."
+    return f"Found barcode {code}, but this product isn't on Open Food Facts yet. {table}."
+
+
+class SavedProduct(BaseModel):
+    """D48: label values the user chose to use, kept under the product's barcode."""
+
+    barcode: str = Field(pattern=r"^\d{6,14}$")
+    name: str | None = Field(None, max_length=200)
+    calories_100g: float = Field(ge=0, le=900)
+    protein_g_100g: float = Field(ge=0, le=100)
+    carbs_g_100g: float = Field(ge=0, le=100)
+    fat_g_100g: float = Field(ge=0, le=100)
+
+
+@app.post("/api/nutrition/products")
+def save_product(body: SavedProduct):
+    """Remember a label reading for a barcode Open Food Facts doesn't have (D48)."""
+    product = body.model_dump() | {"brand": None, "source": "saved"}
+    with connect() as con:
+        existing = nutrition.cached(con, body.barcode)
+        if existing is not None and existing["source"] == "openfoodfacts" and existing["calories_100g"] is not None:
+            raise HTTPException(409, "this barcode is already on Open Food Facts")
+        nutrition.cache(con, product)
+    return {"product": product}
+
+
+@app.delete("/api/nutrition/products/{code}")
+def forget_product(code: str):
+    """Forget a remembered label reading (D48); Open Food Facts entries stay."""
+    with connect() as con:
+        con.execute("DELETE FROM products WHERE barcode = ? AND source = 'saved'", (code,))
+        con.commit()
+    return {"forgotten": code}
 
 
 @app.get("/api/taste")

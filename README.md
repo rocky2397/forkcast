@@ -46,8 +46,9 @@ comparison.
 1. **Your kitchen.** You type items (in English or German), photograph your groceries or scan a
    barcode. A photo goes to a small vision model (Claude Haiku), which returns
    a list you confirm before anything is saved. A barcode is looked up in Open
-   Food Facts, with a photo of the nutrition label as the fallback. Every item
-   is then matched to the ingredient list.
+   Food Facts, with a photo of the nutrition label as the fallback; a product
+   Open Food Facts doesn't have is remembered under its barcode once its label
+   has been read. Every item is then matched to the ingredient list.
 2. **The recipes.** The 87,861 food.com recipes were matched to the same list
    once, ahead of time. A recipe with a line that can't be matched is left out
    of the suggestions, because the app couldn't tell whether you have it.
@@ -331,7 +332,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 403 pytest tests in about three seconds, offline and without the
+- **Tests:** 415 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 48 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -360,7 +361,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 47 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 48 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -425,7 +426,8 @@ ops/e2e.sh            # needs Google Chrome, the corpus and the Epicure weights
 
 It starts the app on an empty data dir and makes a first visit in Chrome:
 a profile with a goal weight, the kitchen, the recipe feed, a cooked recipe
-and what ran out, a typed meal, "Done for today", a weigh-in and a reload.
+and what ran out, a typed meal, a product that isn't on Open Food Facts (the
+label reader faked, the rest real), "Done for today", a weigh-in and a reload.
 It fails if a screen doesn't show what it should, on any JavaScript or
 console error, on any API error, and on a serious accessibility problem
 (axe-core) on any screen. Breaking the app on purpose (a renamed API field,
