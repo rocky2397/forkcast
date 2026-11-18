@@ -53,14 +53,25 @@ def _stamp(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def seed_history(con: sqlite3.Connection, persona: str, now: datetime, days: int = DAYS, seed: int | None = None) -> dict:
+def seed_history(con: sqlite3.Connection, persona: str, now: datetime, days: int = DAYS, seed: int | None = None,
+                 upto: int | None = None) -> dict:
     """Replace the profile goal, weigh-ins and past days with the persona's.
 
     now is UTC; today's own meals are left alone. Returns the profile written.
+
+    upto keeps only the first upto days of the same history, on the same
+    dates: the README's "the plan redraws itself" strip shows one person at
+    weeks 1, 3 and 6, each screenshot taken with the app's clock set to the
+    day after the last day kept (backend/scripts/serve_for_screenshots.py).
+    The history is generated in full either way, so the days kept are the
+    same days, not a new person.
     """
     p = PERSONAS[persona]
     rnd = random.Random(f"{persona}-{p['seed'] if seed is None else seed}")
+    upto = days if upto is None else max(1, min(upto, days))
+    skipped = days - upto  # the last days of the full history, not written
     today = now.date()
+    as_of = today - timedelta(days=skipped)  # the day after the last day kept
 
     # Weigh-ins: most mornings, about half a kilo of day-to-day swing.
     con.execute("DELETE FROM weight_log")
@@ -70,11 +81,14 @@ def seed_history(con: sqlite3.Connection, persona: str, now: datetime, days: int
             kg = p["start_kg"] + p["kg_per_week"] * (days - ago) / 7 + rnd.gauss(0, 0.35)
             when = datetime.combine(today - timedelta(days=ago), datetime.min.time()) + timedelta(hours=6, minutes=rnd.randint(0, 50))
             weigh_ins.append((when, round(kg, 1)))
-    con.executemany("INSERT INTO weight_log (logged_at, weight_kg) VALUES (?, ?)", [(_stamp(w), kg) for w, kg in weigh_ins])
+    kept = [(w, kg) for w, kg in weigh_ins if w.date() < as_of]
+    con.executemany("INSERT INTO weight_log (logged_at, weight_kg) VALUES (?, ?)", [(_stamp(w), kg) for w, kg in kept])
 
     from .weight import trend  # the same smoothing the app uses
-    now_kg = round(trend(weigh_ins)[-1], 1)
-    profile = dict(p["profile"], weight_kg=now_kg)
+    # Days are generated against the full history's targets, so the days kept
+    # are identical whatever upto is; the profile weight is where the trend is.
+    full = dict(p["profile"], weight_kg=round(trend(weigh_ins)[-1], 1))
+    profile = dict(p["profile"], weight_kg=round(trend(kept)[-1], 1))
     con.execute("DELETE FROM profile")
     con.execute(
         """INSERT INTO profile (id, sex, age, height_cm, weight_kg, activity, goal, goal_weight_kg, pace)
@@ -82,9 +96,9 @@ def seed_history(con: sqlite3.Connection, persona: str, now: datetime, days: int
         profile,
     )
 
-    target = goals.targets(profile)
-    burn = goals.burn(profile)
-    con.execute("DELETE FROM meal_log WHERE date(logged_at) < ?", (today.isoformat(),))
+    target = goals.targets(full)
+    burn = goals.burn(full)
+    con.execute("DELETE FROM meal_log WHERE date(logged_at) < ?", (now.date().isoformat(),))
     con.execute("DELETE FROM day_check")
     for ago in range(days, 0, -1):
         day = today - timedelta(days=ago)
@@ -100,6 +114,8 @@ def seed_history(con: sqlite3.Connection, persona: str, now: datetime, days: int
             spread = 0.06 if ago <= 5 else 0.09
             kcal, meals = target["calories"] * (1 + rnd.uniform(-spread, spread)), MEALS
         protein = target["protein_g"] * rnd.uniform(0.85, 1.05) * kcal / target["calories"]
+        if ago <= skipped:  # after the day this history stops (randomness already drawn)
+            continue
         share_total = sum(s for _, _, s in meals)
         for name, hour, share in meals:
             k = share / share_total

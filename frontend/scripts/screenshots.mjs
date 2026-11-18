@@ -31,10 +31,17 @@ const TYPED_MEAL = DEMO.typed_meal;
 // backdate, so a sample person is written straight into the database.
 const SHOT_DB = process.env.FORKCAST_SHOT_DB;
 const SHOT_PY = process.env.FORKCAST_SHOT_PY || "python3";
-function persona(name) {
+const SHOT_CLOCK = process.env.FORKCAST_SHOT_CLOCK;
+/** days: keep only the first days of the same six weeks, and set the app's
+ *  "today" to the day after them, so the "plan redraws itself" strip shares
+ *  one calendar. Without days the app's clock is the real one. */
+function persona(name, days) {
   if (!SHOT_DB) throw new Error("FORKCAST_SHOT_DB not set (run ops/screenshots.sh)");
   const script = new URL("../../backend/scripts/sample_history.py", import.meta.url).pathname;
-  console.log("  " + execFileSync(SHOT_PY, [script, SHOT_DB, name], { encoding: "utf8" }).trim());
+  const args = [script, SHOT_DB, name, ...(days ? [String(days)] : [])];
+  const out = execFileSync(SHOT_PY, args, { encoding: "utf8" }).trim();
+  console.log("  " + out);
+  if (SHOT_CLOCK) writeFileSync(SHOT_CLOCK, days ? out.match(/as of (\d{4}-\d{2}-\d{2})/)[1] : "");
 }
 
 async function api(path, body, method = body ? "POST" : "GET") {
@@ -329,6 +336,28 @@ async function progressShot(page, name, label) {
   console.log(`  ${name}.jpg`);
 }
 
+/** The Weight card from its title to the burn line: one frame of the "plan redraws itself" strip. */
+async function replanShot(page, name, label) {
+  await page.reload();
+  await tab(page, "Today").click();
+  await page.locator(".weight-card .burn-line").waitFor();
+  await page.waitForTimeout(500);
+  const box = await page.evaluate(() => {
+    const card = document.querySelector(".weight-card").getBoundingClientRect();
+    const burn = document.querySelector(".weight-card .burn-line").getBoundingClientRect();
+    return { x: card.left + scrollX, y: card.top + scrollY, width: card.width, height: burn.bottom - card.top };
+  });
+  await page.screenshot({
+    path: join(outDir, `${name}.jpg`),
+    type: "jpeg",
+    quality: 86,
+    fullPage: true,
+    clip: { x: box.x - 12, y: box.y - 12, width: box.width + 24, height: box.height + 24 },
+  });
+  await audit(page, label);
+  console.log(`  ${name}.jpg`);
+}
+
 async function main() {
   mkdirSync(outDir, { recursive: true });
   await seed();
@@ -377,7 +406,11 @@ async function main() {
     await progressShot(prog, "progress-lose", "progress, losing (phone)");
     persona("gain");
     await progressShot(prog, "progress-gain", "progress, gaining (phone)");
-    persona("lose");
+    // The same losing person at weeks 1, 3 and 6: the plan redrawn as data comes in.
+    for (const [week, days] of [[1, 7], [3, 21], [6, null]]) {
+      persona("lose", days);
+      await replanShot(prog, `replan-week${week}`, `the plan at week ${week} (phone)`);
+    }
 
     if (videoDir) {
       await recordDemo(browser, videoDir);
