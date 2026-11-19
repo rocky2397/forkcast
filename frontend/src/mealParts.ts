@@ -11,6 +11,14 @@ export interface Part {
   cooked: boolean;
   /** D51: a scanned product, with where its values came from. */
   product?: { barcode: string | null; source: Product["source"] };
+  /** D54: the amount is the one from last time, untouched so far. */
+  fromLast?: boolean;
+}
+
+/** D54: an amount in grams as a row's amount, in a portion when one weighs exactly that. */
+export function amountOf(grams: number, portions: { grams: number }[]): { amount: string; unit: number } {
+  const k = portions.findIndex((o) => Math.abs(o.grams - grams) < 0.05);
+  return k >= 0 ? { amount: "1", unit: k } : { amount: String(Math.round(grams * 10) / 10), unit: -1 };
 }
 
 /** Whether a scanned product has all four values, so it can join a meal (D51). */
@@ -45,11 +53,12 @@ export function productPart(p: Product, grams: string): Part {
     cooked: null,
   };
   const product = { barcode: p.barcode, source: p.source };
+  const fromLast = p.last_grams != null && Number(grams) === p.last_grams;
   const serving = food.portions.findIndex((o) => o.label === "1 serving");
   if (serving >= 0 && Number(grams) === food.portions[serving].grams) {
-    return { food, amount: "1", unit: serving, cooked: false, product };
+    return { food, amount: "1", unit: serving, cooked: false, product, fromLast };
   }
-  return { food, amount: grams, unit: -1, cooked: false, product };
+  return { food, amount: grams, unit: -1, cooked: false, product, fromLast };
 }
 
 /** What the server is sent for a product row. */

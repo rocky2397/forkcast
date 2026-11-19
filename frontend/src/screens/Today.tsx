@@ -230,8 +230,9 @@ export function Today() {
           : await api.scanProduct(file, code ?? pendingBarcode);
       setProduct(res.product);
       setPendingBarcode(null);
-      // D52: one serving to start with, when Open Food Facts knows it (a 30 g scoop, not 100 g).
-      setGrams(String(res.product.serving_g ?? 100));
+      // D54: what you had last time; D52: else one serving, when Open Food Facts
+      // knows it (a 30 g scoop, not 100 g); else 100 g.
+      setGrams(String(res.product.last_grams ?? res.product.serving_g ?? 100));
     } catch (e) {
       const found = e instanceof ApiError ? (e.detail as { barcode?: string | null } | null)?.barcode : null;
       if (found) setPendingBarcode(found);
@@ -350,7 +351,7 @@ export function Today() {
             },
             {
               term: "Log a meal",
-              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there.",
+              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference. Each food starts at the amount you had last time, once you've logged it. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there.",
             },
             {
               term: "Liked · Not for me",
@@ -530,7 +531,11 @@ export function Today() {
                       </button>
                     </p>
                   )}
-                  {(product.serving_g || product.pack_g) && (
+                  {product.last_grams != null ? (
+                    <p className="field-hint product-note">
+                      Starts at {fmt(product.last_grams)} g, what you had last time. Change it to what you had.
+                    </p>
+                  ) : (product.serving_g || product.pack_g) && (
                     <p className="field-hint product-note">
                       {/* D52: a suggestion from Open Food Facts, not a fixed amount. */}
                       {product.serving_g

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { api, type Food, type FoodLookup } from "../api";
 import { CloseIcon } from "../Icons";
-import { cap, formOf, partTotals, totalsOf, type Part } from "../mealParts";
+import { amountOf, cap, formOf, partTotals, totalsOf, type Part } from "../mealParts";
 
 const fmt = (n: number) => Math.round(n).toLocaleString("en");
 
@@ -11,8 +11,14 @@ const PRODUCT_SOURCE = {
   saved: "saved from your earlier scan",
 } as const;
 
-/** A whole piece where the USDA has one (1 medium banana, 1 large egg), else 100 g. */
+/** D54: what you had last time; else a whole piece where the USDA has one
+ *  (1 medium banana, 1 large egg); else 100 g. */
 function newPart(food: Food): Part {
+  if (food.last) {
+    const cooked = food.last.cooked && food.cooked !== null;
+    const form = cooked && food.cooked ? food.cooked : food;
+    return { food, ...amountOf(food.last.grams, form.portions), cooked, fromLast: true };
+  }
   const piece = food.portions.findIndex((p) => /^1 (medium|large)$/.test(p.label));
   return piece >= 0 ? { food, amount: "1", unit: piece, cooked: false } : { food, amount: "100", unit: -1, cooked: false };
 }
@@ -44,7 +50,8 @@ export function MealBuilder({ parts, onChange }: { parts: Part[]; onChange: (par
   }
 
   function update(i: number, change: Partial<Part>) {
-    onChange(parts.map((p, j) => (j === i ? { ...p, ...change } : p)));
+    // Any change makes it your amount now, not last time's (D54).
+    onChange(parts.map((p, j) => (j === i ? { ...p, ...change, fromLast: false } : p)));
   }
 
   const total = totalsOf(parts);
@@ -149,6 +156,7 @@ export function MealBuilder({ parts, onChange }: { parts: Part[]; onChange: (par
                     </select>
                   )}
                 </div>
+                {p.fromLast && <span className="builder-last">Same as last time. Change it to what you had.</span>}
                 <span className="builder-source">
                   {p.product ? (
                     `Per 100 g ${PRODUCT_SOURCE[p.product.source]}`

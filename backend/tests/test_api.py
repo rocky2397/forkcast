@@ -705,3 +705,29 @@ def test_a_products_serving_is_kept_with_it(client, monkeypatch):
     assert (first["serving_g"], first["pack_g"]) == (30.0, 1000.0)
     assert (again["serving_g"], again["pack_g"]) == (30.0, 1000.0)  # from the cache
     assert len(calls) == 1
+
+
+# D54: the amount from last time.
+
+def test_a_typed_food_remembers_the_amount_from_last_time(foods_client):
+    assert foods_client.get("/api/foods", params={"q": "rice"}).json()["food"]["last"] is None
+    foods_client.post("/api/meals", json={"name": "Rice", "ingredients": [{"canonical": "rice", "grams": 200, "cooked": True}]})
+    foods_client.post("/api/meals", json={"name": "Bowl", "ingredients": [{"canonical": "rice", "grams": 150, "cooked": True},
+                                                                          {"canonical": "egg", "grams": 50}]})
+    assert foods_client.get("/api/foods", params={"q": "Reis"}).json()["food"]["last"] == {"grams": 150, "cooked": True}
+
+
+def test_a_typed_meal_or_a_deleted_one_doesnt_count(foods_client):
+    mid = foods_client.post("/api/meals", json={"name": "Rice", "ingredients": [{"canonical": "rice", "grams": 80}]}).json()["meal_log_id"]
+    foods_client.delete(f"/api/meals/{mid}")
+    assert foods_client.get("/api/foods", params={"q": "rice"}).json()["food"]["last"] is None
+
+
+def test_a_scanned_product_remembers_its_grams_by_barcode(foods_client, monkeypatch):
+    from app import nutrition
+    monkeypatch.setattr(nutrition, "fetch_off", lambda code: {**SKYR, "brand": None, "source": "openfoodfacts",
+                                                              "barcode": code, "serving_g": 150.0, "pack_g": 450.0})
+    code = SKYR["barcode"]
+    assert foods_client.get(f"/api/nutrition/barcode/{code}").json()["product"]["last_grams"] is None
+    foods_client.post("/api/meals", json={"name": "Skyr", "products": [{**SKYR, "grams": 200}]})
+    assert foods_client.get(f"/api/nutrition/barcode/{code}").json()["product"]["last_grams"] == 200
