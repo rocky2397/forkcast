@@ -248,7 +248,8 @@ def get_inventory():
     with connect() as con:
         rows = con.execute("SELECT canonical, added_at FROM inventory ORDER BY canonical").fetchall()
     # family: the food class (D28), so the kitchen screen can group and colour items
-    return {"items": [{**dict(r), "family": NAME_TO_CLASS.get(r["canonical"])} for r in rows]}
+    return {"items": [{**dict(r), "family": NAME_TO_CLASS.get(r["canonical"]),
+                       "name": foods.kitchen_label(r["canonical"])} for r in rows]}
 
 
 @app.post("/api/inventory")
@@ -256,7 +257,7 @@ def add_inventory(body: InventoryAdd):
     added, unknown = [], []
     with connect() as con:
         for raw in body.items:
-            canonical = normalizer.match(raw)
+            canonical = foods.kitchen_match(normalizer, raw)
             if canonical is None:
                 unknown.append(raw)
                 continue
@@ -267,7 +268,8 @@ def add_inventory(body: InventoryAdd):
         stats.event("ingredient_added", item=canonical, stage="added")
     # D46: "Did you mean…?" for what wasn't recognised (never counted or stored).
     suggestions = {raw: normalizer.suggest(raw) for raw in unknown}
-    return {"added": added, "unknown": unknown, "suggestions": {k: v for k, v in suggestions.items() if v}}
+    return {"added": added, "added_names": [foods.kitchen_label(c) for c in added], "unknown": unknown,
+            "suggestions": {k: v for k, v in suggestions.items() if v}}
 
 
 @app.delete("/api/inventory/{name}")
@@ -330,6 +332,42 @@ def recipe_detail(recipe_id: int):
 
 class CookedIn(BaseModel):
     used_up: list[str] = Field(default_factory=list, max_length=50)
+    servings: float = Field(1, gt=0, le=10)  # D56
+    logged_at: str | None = None  # D56: ISO time with offset; now when left out
+
+
+SERVING_MACROS = ("calories", "protein_g", "carbs_g", "fat_g")
+
+
+def _scaled(con, recipe_id: int, servings: float) -> tuple:
+    """D56: a recipe's macros times the servings eaten, or NULLs for exactly one
+    (then the recipe's own numbers are read, as before)."""
+    if servings == 1:
+        return (None, None, None, None, None)
+    r = con.execute("SELECT calories, protein_g, carbs_g, fat_g FROM recipes WHERE id = ?", (recipe_id,)).fetchone()
+    return (*(None if r[k] is None else round(r[k] * servings, 1) for k in SERVING_MACROS), servings)
+
+
+def _logged_at(value: str | None) -> str | None:
+    """D56: an ISO time with its offset ("2026-11-18T12:00:00+01:00") -> UTC as
+    SQLite's datetime('now') writes it, or None for now. Not in the future,
+    not more than 60 days back."""
+    if value is None:
+        return None
+    from datetime import datetime, timedelta, timezone
+    try:
+        t = datetime.fromisoformat(value)
+    except ValueError:
+        raise HTTPException(422, "That time couldn't be read.") from None
+    if t.tzinfo is None:
+        raise HTTPException(422, "The time needs its offset from UTC.")
+    utc = t.astimezone(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if utc > now + timedelta(minutes=10):
+        raise HTTPException(422, "A meal can't be logged in the future.")
+    if utc < now - timedelta(days=60):
+        raise HTTPException(422, "Meals can be logged up to 60 days back.")
+    return utc.strftime("%Y-%m-%d %H:%M:%S")
 
 
 @app.post("/api/recipes/{recipe_id:int}/cooked")
@@ -339,12 +377,18 @@ def log_cooked(recipe_id: int, body: CookedIn | None = None):
     used_up entries not currently in the inventory are ignored, so a stale
     checklist (item already removed on another device) can't fail the log.
     """
-    used_up = body.used_up if body else []
+    body = body or CookedIn()
+    used_up = body.used_up
+    when = _logged_at(body.logged_at)
     with connect() as con:
         if con.execute("SELECT 1 FROM recipes WHERE id = ?", (recipe_id,)).fetchone() is None:
             raise HTTPException(404, f"no recipe {recipe_id}")
         stats.event("recipe_cooked", item=recipe_id, stage="cooked")
-        cur = con.execute("INSERT INTO meal_log (recipe_id) VALUES (?)", (recipe_id,))
+        cur = con.execute(
+            "INSERT INTO meal_log (recipe_id, calories, protein_g, carbs_g, fat_g, servings, logged_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')))",
+            (recipe_id, *_scaled(con, recipe_id, body.servings), when),
+        )
         removed = [
             c for c in dict.fromkeys(used_up)
             if con.execute("DELETE FROM inventory WHERE canonical = ?", (c,)).rowcount
@@ -386,7 +430,7 @@ def cookable_recipes(
                     r["macro_fit"] = round(fit, 3)
         if profile is not None or budget:
             results.sort(key=lambda r: (r["ingredients_missing"], -_rank_score(r)))
-            results = results[:limit]
+        results = _distinct(results)[:limit]
         if profile is not None:
             _annotate_like_your(con, results, matches, profile)
         _annotate_subs(con, results)
@@ -411,11 +455,15 @@ def shopping_suggestions(
     """
     with connect() as con:
         profile = taste.taste_profile(con)
+        me = con.execute("SELECT goal FROM profile WHERE id = 1").fetchone()
+        losing = me is not None and me["goal"] == "cut"
         items, truncated = shopping.suggest(
-            con, profile=profile, basket_size=basket, max_missing=max_missing
+            con, profile=profile, basket_size=basket, max_missing=max_missing,
+            leave_out_sweet=losing,  # D59
         )
     return {
         "personalized": profile is not None,
+        "without_desserts": losing,
         "unlocks_total": sum(i["unlocks"] for i in items),
         # True means the candidate pool hit its ceiling, so the basket is the
         # best over a subset — not over every near-miss recipe.
@@ -428,6 +476,21 @@ def shopping_suggestions(
 # within-day nudge — the feed should stay recognizably yours on a protein day.
 TASTE_WEIGHT = 0.6
 MACRO_WEIGHT = 0.4
+
+
+def _distinct(results: list[dict]) -> list[dict]:
+    """D59: one of each recipe that food.com has twice under two names (same
+    calories, protein, carbs, fat and ingredients), the first as ranked."""
+    seen: set[tuple] = set()
+    out = []
+    for r in results:
+        key = (r.get("calories"), r.get("protein_g"), r.get("carbs_g"), r.get("fat_g"),
+               r.get("ingredients_needed"), tuple(r.get("missing") or ()))
+        if key[0] is not None and key in seen:
+            continue
+        seen.add(key)
+        out.append(r)
+    return out
 
 
 def _annotate_like_your(con, results: list[dict], matches: dict, profile) -> None:
@@ -635,14 +698,39 @@ def find_food(q: str = Query(..., min_length=1, max_length=100)):
     return out
 
 
+@app.get("/api/foods/line")
+def read_food_line(q: str = Query(..., min_length=1, max_length=200)):
+    """A typed line -> the foods it adds, with their amounts (D61) and dishes (D62).
+
+    "2 Eier, 150 g Reis gekocht" adds two rows at once. A part without a typed
+    amount carries last time's, as /api/foods does (D54).
+    """
+    out = foods.parse(normalizer, q)
+    with connect() as con:
+        for part in out["parts"]:
+            part["food"]["last"] = _last_ingredient(con, part["food"]["canonical"])
+    return out
+
+
+@app.get("/api/foods/{key}")
+def food_by_key(key: str):
+    """D56: one food by its key, as a logged meal names it, to edit that meal."""
+    found = foods.food(key)
+    if found is None:
+        raise HTTPException(404, f"no values for {key}")
+    with connect() as con:
+        found["last"] = _last_ingredient(con, key)
+    return {"food": found}
+
+
 def _last_ingredient(con, canonical: str) -> dict | None:
     """D54: the amount of an ingredient in the latest meal that had it."""
     row = con.execute(
-        """SELECT mi.grams, mi.cooked FROM meal_ingredients mi JOIN meal_log ml ON ml.id = mi.meal_id
+        """SELECT mi.grams, mi.cooked, mi.canned FROM meal_ingredients mi JOIN meal_log ml ON ml.id = mi.meal_id
            WHERE mi.canonical = ? ORDER BY ml.logged_at DESC, ml.id DESC, mi.rowid DESC LIMIT 1""",
         (canonical,),
     ).fetchone()
-    return {"grams": row["grams"], "cooked": bool(row["cooked"])} if row else None
+    return {"grams": row["grams"], "cooked": bool(row["cooked"]), "canned": bool(row["canned"])} if row else None
 
 
 def _with_last(product: dict) -> dict:
@@ -664,6 +752,7 @@ class MealIngredient(BaseModel):
     canonical: str = Field(min_length=1, max_length=80)
     grams: float = Field(gt=0, le=5000)
     cooked: bool = False
+    canned: bool = False  # D64: from a can, drained
 
 
 class MealProduct(BaseModel):
@@ -697,10 +786,12 @@ class MealAdd(BaseModel):
     ingredients: list[MealIngredient] | None = Field(None, min_length=1, max_length=30)
     # D51: and packaged products, with their own values per 100 g.
     products: list["MealProduct"] | None = Field(None, min_length=1, max_length=10)
+    # D56: when it was eaten, for a meal logged later; now when left out.
+    logged_at: str | None = None
 
 
-@app.post("/api/meals")
-def add_meal(body: MealAdd):
+def _meal_values(body: "MealAdd") -> tuple[dict, list[dict], list[dict]]:
+    """(calories and macros, ingredients, products) for a meal as sent."""
     items = [i.model_dump() for i in body.ingredients or []]
     products = [p.model_dump() for p in body.products or []]
     if items or products:
@@ -709,7 +800,7 @@ def add_meal(body: MealAdd):
         except KeyError as e:
             raise HTTPException(422, f"No nutrition values for {foods.label(e.args[0])}.") from None
         except ValueError as e:
-            raise HTTPException(422, f"{foods.label(e.args[0]).capitalize()} has no cooked form.") from None
+            raise HTTPException(422, f"{foods.label(e.args[0]).capitalize()} has no {e.args[1]} form.") from None
         extra = _product_totals(products)
         values = {k: round(values[k] + extra[k], 1) for k in foods.MACROS}
         if values["calories"] > 5000:
@@ -719,27 +810,85 @@ def add_meal(body: MealAdd):
         if missing:
             raise HTTPException(422, "Give the meal's calories, protein, carbs and fat, or its ingredients.")
         values = {k: getattr(body, k) for k in foods.MACROS}
-    with connect() as con:
-        cur = con.execute(
-            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g) VALUES (?, ?, ?, ?, ?)",
-            (body.name, *(values[k] for k in foods.MACROS)),
+    return values, items, products
+
+
+def _write_parts(con, meal_id: int, items: list[dict], products: list[dict]) -> None:
+    """A built meal's ingredients and products (D49, D51)."""
+    con.executemany(
+            "INSERT INTO meal_ingredients (meal_id, canonical, grams, cooked, canned) VALUES (?, ?, ?, ?, ?)",
+            [(meal_id, i["canonical"], i["grams"], int(i["cooked"]), int(i.get("canned", False))) for i in items],
         )
-        con.executemany(
-            "INSERT INTO meal_ingredients (meal_id, canonical, grams, cooked) VALUES (?, ?, ?, ?)",
-            [(cur.lastrowid, i["canonical"], i["grams"], int(i["cooked"])) for i in items],
-        )
-        con.executemany(
+    con.executemany(
             """INSERT INTO meal_products (meal_id, name, barcode, grams, calories_100g, protein_g_100g,
                                           carbs_g_100g, fat_g_100g, canonical)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            [(cur.lastrowid, p["name"], p["barcode"], p["grams"], p["calories_100g"], p["protein_g_100g"],
+            [(meal_id, p["name"], p["barcode"], p["grams"], p["calories_100g"], p["protein_g_100g"],
               p["carbs_g_100g"], p["fat_g_100g"],
               packaged(normalizer, p["name"]) if normalizer else None)  # D35: a product's name
              for p in products],
         )
+
+
+@app.post("/api/meals")
+def add_meal(body: MealAdd):
+    values, items, products = _meal_values(body)
+    when = _logged_at(body.logged_at)
+    with connect() as con:
+        cur = con.execute(
+            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g, logged_at)"
+            " VALUES (?, ?, ?, ?, ?, COALESCE(?, datetime('now')))",
+            (body.name, *(values[k] for k in foods.MACROS), when),
+        )
+        _write_parts(con, cur.lastrowid, items, products)
         con.commit()
     stats.event("meal_built" if items or products else "meal_typed")  # how, never what
     return {"logged": True, "meal_log_id": cur.lastrowid, **values}
+
+
+@app.put("/api/meals/{meal_id:int}")
+def edit_meal(meal_id: int, body: MealAdd):
+    """D56: change a typed or built meal: its name, numbers or ingredients.
+
+    The time stays unless a new one is sent; the rating stays.
+    """
+    values, items, products = _meal_values(body)
+    when = _logged_at(body.logged_at)
+    with connect() as con:
+        row = con.execute("SELECT recipe_id FROM meal_log WHERE id = ?", (meal_id,)).fetchone()
+        if row is None:
+            raise HTTPException(404, f"no logged meal {meal_id}")
+        if row["recipe_id"] is not None:
+            raise HTTPException(422, "A cooked recipe is changed by its servings.")
+        con.execute(
+            "UPDATE meal_log SET name = ?, calories = ?, protein_g = ?, carbs_g = ?, fat_g = ?,"
+            " logged_at = COALESCE(?, logged_at) WHERE id = ?",
+            (body.name, *(values[k] for k in foods.MACROS), when, meal_id),
+        )
+        con.execute("DELETE FROM meal_ingredients WHERE meal_id = ?", (meal_id,))
+        con.execute("DELETE FROM meal_products WHERE meal_id = ?", (meal_id,))
+        _write_parts(con, meal_id, items, products)
+        con.commit()
+    return {"edited": meal_id, **values}
+
+
+class Servings(BaseModel):
+    servings: float = Field(gt=0, le=10)
+
+
+@app.put("/api/meals/{meal_id:int}/servings")
+def set_servings(meal_id: int, body: Servings):
+    """D56: how much of a cooked recipe was eaten."""
+    with connect() as con:
+        row = con.execute("SELECT recipe_id FROM meal_log WHERE id = ?", (meal_id,)).fetchone()
+        if row is None or row["recipe_id"] is None:
+            raise HTTPException(404, f"no cooked recipe logged as {meal_id}")
+        con.execute(
+            "UPDATE meal_log SET calories = ?, protein_g = ?, carbs_g = ?, fat_g = ?, servings = ? WHERE id = ?",
+            (*_scaled(con, row["recipe_id"], body.servings), meal_id),
+        )
+        con.commit()
+    return {"id": meal_id, "servings": body.servings}
 
 
 RECENT_DAYS = 30  # D50: how far back "Log again" looks; favourites always show
@@ -782,8 +931,12 @@ def recent_meals(limit: int = Query(8, ge=1, le=20)):
     return {"meals": out}
 
 
+class Again(BaseModel):
+    logged_at: str | None = None  # D56: log it on another day
+
+
 @app.post("/api/meals/{meal_id:int}/again")
-def log_again(meal_id: int):
+def log_again(meal_id: int, body: Again | None = None):
     """Log a copy of a typed or built meal now, with its ingredients (D50)."""
     with connect() as con:
         m = con.execute(
@@ -793,12 +946,13 @@ def log_again(meal_id: int):
         if m is None:
             raise HTTPException(404, f"no typed or built meal {meal_id}")
         cur = con.execute(
-            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g) VALUES (?, ?, ?, ?, ?)",
-            tuple(m),
+            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g, logged_at)"
+            " VALUES (?, ?, ?, ?, ?, COALESCE(?, datetime('now')))",
+            (*tuple(m), _logged_at(body.logged_at if body else None)),
         )
         con.execute(
-            """INSERT INTO meal_ingredients (meal_id, canonical, grams, cooked)
-               SELECT ?, canonical, grams, cooked FROM meal_ingredients WHERE meal_id = ? ORDER BY rowid""",
+            """INSERT INTO meal_ingredients (meal_id, canonical, grams, cooked, canned)
+               SELECT ?, canonical, grams, cooked, canned FROM meal_ingredients WHERE meal_id = ? ORDER BY rowid""",
             (cur.lastrowid, meal_id),
         )
         con.execute(
@@ -855,14 +1009,59 @@ def rate_meal(meal_id: int, body: MealRating):
 
 @app.delete("/api/meals/{meal_id:int}")
 def delete_meal(meal_id: int):
+    """Delete a logged meal; the answer carries everything about it, so the app
+    can offer Undo (D56) by sending it back to /api/meals/restore."""
     with connect() as con:
-        cur = con.execute("DELETE FROM meal_log WHERE id = ?", (meal_id,))
+        row = con.execute(
+            "SELECT recipe_id, logged_at, liked, name, calories, protein_g, carbs_g, fat_g, servings"
+            " FROM meal_log WHERE id = ?", (meal_id,),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(404, f"no logged meal {meal_id}")
+        snapshot = dict(row)
+        snapshot["ingredients"] = [dict(r) for r in con.execute(
+            "SELECT canonical, grams, cooked, canned FROM meal_ingredients WHERE meal_id = ? ORDER BY rowid", (meal_id,))]
+        snapshot["products"] = [dict(r) for r in con.execute(
+            "SELECT name, barcode, grams, calories_100g, protein_g_100g, carbs_g_100g, fat_g_100g, canonical"
+            " FROM meal_products WHERE meal_id = ? ORDER BY rowid", (meal_id,))]
+        con.execute("DELETE FROM meal_log WHERE id = ?", (meal_id,))
         con.execute("DELETE FROM meal_ingredients WHERE meal_id = ?", (meal_id,))
         con.execute("DELETE FROM meal_products WHERE meal_id = ?", (meal_id,))
         con.commit()
-    if cur.rowcount == 0:
-        raise HTTPException(404, f"no logged meal {meal_id}")
-    return {"deleted": meal_id}
+    return {"deleted": meal_id, "meal": snapshot}
+
+
+class Snapshot(BaseModel):
+    """D56: a deleted meal, as DELETE /api/meals/{id} gave it, to put back."""
+
+    recipe_id: int | None = None
+    logged_at: str = Field(pattern=r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
+    liked: int | None = Field(None, ge=0, le=1)
+    name: str | None = Field(None, max_length=200)
+    calories: float | None = Field(None, ge=0, le=5000)
+    protein_g: float | None = Field(None, ge=0, le=500)
+    carbs_g: float | None = Field(None, ge=0, le=1000)
+    fat_g: float | None = Field(None, ge=0, le=500)
+    servings: float | None = Field(None, gt=0, le=10)
+    ingredients: list[dict] = Field(default_factory=list, max_length=30)
+    products: list[dict] = Field(default_factory=list, max_length=10)
+
+
+@app.post("/api/meals/restore")
+def restore_meal(body: Snapshot):
+    """D56: Undo a delete: the meal back as it was, at its own time."""
+    items = [MealIngredient(**i).model_dump() for i in body.ingredients]
+    products = [MealProduct(**p).model_dump() for p in body.products]
+    with connect() as con:
+        cur = con.execute(
+            "INSERT INTO meal_log (recipe_id, logged_at, liked, name, calories, protein_g, carbs_g, fat_g, servings)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (body.recipe_id, body.logged_at, body.liked, body.name, body.calories, body.protein_g,
+             body.carbs_g, body.fat_g, body.servings),
+        )
+        _write_parts(con, cur.lastrowid, items, products)
+        con.commit()
+    return {"restored": cur.lastrowid}
 
 
 @app.get("/api/day")
@@ -888,7 +1087,8 @@ def day_summary(
                       COALESCE(ml.calories, r.calories)   AS calories,
                       COALESCE(ml.protein_g, r.protein_g) AS protein_g,
                       COALESCE(ml.carbs_g, r.carbs_g)     AS carbs_g,
-                      COALESCE(ml.fat_g, r.fat_g)         AS fat_g
+                      COALESCE(ml.fat_g, r.fat_g)         AS fat_g,
+                      ml.servings
                FROM meal_log ml
                LEFT JOIN recipes r ON r.id = ml.recipe_id
                WHERE date(ml.logged_at, ?) = ?
@@ -905,6 +1105,8 @@ def day_summary(
         m["rateable"] = m["recipe_id"] is not None or foods.teaches_taste(
             [i["canonical"] for i in m["ingredients"] if i["canonical"]]
         )
+        # D60: why not, said for this meal ("Skyr, banana" isn't a single food).
+        m["rate_note"] = None if m["rateable"] else foods.rate_note(m["ingredients"])
     totals = {
         key: round(sum(m[key] or 0.0 for m in meals), 1)
         for key in ("calories", "protein_g", "carbs_g", "fat_g")
@@ -924,22 +1126,27 @@ def _meal_ingredients(con, ids: list[int]) -> dict[int, list[dict]]:
         return {}
     out: dict[int, list[dict]] = {}
     for r in con.execute(
-        f"SELECT meal_id, canonical, grams, cooked FROM meal_ingredients"
+        f"SELECT meal_id, canonical, grams, cooked, canned FROM meal_ingredients"
         f" WHERE meal_id IN ({','.join('?' * len(ids))}) ORDER BY rowid",
         ids,
     ):
         out.setdefault(r["meal_id"], []).append(
             {"canonical": r["canonical"], "name": foods.label(r["canonical"]),
-             "grams": r["grams"], "cooked": bool(r["cooked"]), "product": False}
+             "grams": r["grams"], "cooked": bool(r["cooked"]), "canned": bool(r["canned"]), "product": False}
         )
     for r in con.execute(  # D51: products after the USDA ingredients
-        f"SELECT meal_id, name, grams, canonical FROM meal_products"
+        f"SELECT meal_id, name, barcode, grams, canonical, calories_100g, protein_g_100g, carbs_g_100g,"
+        f" fat_g_100g FROM meal_products"
         f" WHERE meal_id IN ({','.join('?' * len(ids))}) ORDER BY rowid",
         ids,
     ):
         out.setdefault(r["meal_id"], []).append(
             {"canonical": r["canonical"], "name": r["name"], "grams": r["grams"],
-             "cooked": False, "product": True}
+             "cooked": False, "canned": False, "product": True,
+             # D56: what's needed to edit the meal again
+             "barcode": r["barcode"], "per_100g": {
+                 "calories": r["calories_100g"], "protein_g": r["protein_g_100g"],
+                 "carbs_g": r["carbs_g_100g"], "fat_g": r["fat_g_100g"]}}
         )
     return out
 

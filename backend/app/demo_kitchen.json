@@ -1,12 +1,62 @@
 {
-  "_note": "The demo kitchen: README screenshots and the public demo (D32). Recipe ids belong to corpus release corpus-20261114-d29.",
+  "_note": "The demo kitchen every visitor starts from (D32), and the README screenshots. Recipe ids belong to corpus release corpus-20261114-d29. D57: no profile (each visitor sets their own), nothing logged today and no ratings; two dishes cooked earlier in the week, so the recipe feed can show how it learns taste.",
   "kitchen": [
-    "basil", "bell pepper", "carrots", "chicken breasts", "chickpeas", "cumin", "eggs",
-    "feta", "garlic", "ginger", "honey", "lemons", "milk", "oats", "paprika", "parmesan",
-    "pasta", "potatoes", "red onion", "rice", "soy sauce", "spinach", "tomatoes",
-    "greek yogurt", "zucchini"
+    "basil",
+    "bell pepper",
+    "carrots",
+    "chicken breasts",
+    "chickpeas",
+    "cumin",
+    "eggs",
+    "feta",
+    "garlic",
+    "ginger",
+    "honey",
+    "lemons",
+    "milk",
+    "oats",
+    "paprika",
+    "parmesan",
+    "pasta",
+    "potatoes",
+    "red onion",
+    "rice",
+    "soy sauce",
+    "spinach",
+    "tomatoes",
+    "greek yogurt",
+    "zucchini"
   ],
-  "profile": {"sex": "f", "age": 29, "height_cm": 168, "weight_kg": 63, "activity": "moderate", "goal": "maintain"},
-  "cooked_and_liked": [49644, 21529],
-  "typed_meal": {"name": "Oats with yogurt and honey", "calories": 420, "protein_g": 18, "carbs_g": 64, "fat_g": 9}
+  "cooked_earlier": [
+    {
+      "recipe_id": 49644,
+      "days_ago": 2
+    },
+    {
+      "recipe_id": 21529,
+      "days_ago": 4
+    }
+  ],
+  "readme": {
+    "_note": "Only for the README screenshots (frontend/scripts/screenshots.mjs), never seeded into the demo: a sample profile, two cooked and liked dishes and a typed meal.",
+    "profile": {
+      "sex": "f",
+      "age": 29,
+      "height_cm": 168,
+      "weight_kg": 63,
+      "activity": "moderate",
+      "goal": "maintain"
+    },
+    "cooked_and_liked": [
+      49644,
+      21529
+    ],
+    "typed_meal": {
+      "name": "Oats with yogurt and honey",
+      "calories": 420,
+      "protein_g": 18,
+      "carbs_g": 64,
+      "fat_g": 9
+    }
+  }
 }

@@ -134,7 +134,7 @@ def test_the_deficit_never_goes_below_the_safe_minimum():
     p = goals.plan(small)
     floor = max(goals.bmr("f", 30, 160, 55), 1200)
     assert p["calories"] >= floor - 1
-    assert p["change"] < 550 and "safe minimum" in p["limited"]
+    assert p["change"] < 550 and "safe minimum" in p["limited"] and p["limited_warn"] is True
 
 
 def test_the_deficit_is_capped_at_a_quarter_of_the_burn():
@@ -143,6 +143,7 @@ def test_the_deficit_is_capped_at_a_quarter_of_the_burn():
                goal_weight_kg=95, pace="steady")
     p = goals.plan(big)
     assert p["change"] == round(0.25 * p["burn"]) and "a quarter" in p["limited"]
+    assert p["limited_warn"] is False  # D60: a rule, not a problem
     assert p["weeks"] == round(25 / p["kg_per_week"] + 0.5)  # held back: a straight line
 
 
@@ -151,6 +152,7 @@ def test_no_deficit_when_the_burn_is_already_at_the_minimum():
                 goal_weight_kg=45, pace="steady")
     p = goals.plan(tiny)
     assert p["change"] == 0 and p["weeks"] is None and "doctor or dietitian" in p["limited"]
+    assert p["limited_warn"] is True
 
 
 def test_a_goal_below_a_healthy_weight_is_refused():

@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import {
   api,
   ApiError,
+  localToday,
+  noonOf,
+  type MealIn,
+  type MealIngredient,
+  type MealSnapshot,
   isDemo,
   scansOn,
   type DayMeal,
@@ -19,12 +24,12 @@ import { WeightCard } from "./Weight";
 import { ProfileForm } from "./ProfileForm";
 import { detectBarcode } from "../barcode";
 import { displayName } from "../format";
-import { Guide, HelpButton } from "../Guide";
+import { Guide, GuideHint, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
 import { BackIcon, CloseIcon, ScanIcon } from "../Icons";
 import { MealBuilder } from "./MealBuilder";
 import { LogAgain } from "./LogAgain";
-import { asMealProduct, complete, defaultName, gramsOf, productPart, type Part } from "../mealParts";
+import { amountOf, asMealProduct, complete, defaultName, gramsOf, productPart, type Part } from "../mealParts";
 
 const GOAL_WORDS: Record<Profile["goal"], string> = {
   cut: "losing fat",
@@ -83,7 +88,7 @@ function PlanLine({ plan }: { plan: WeightPlan }) {
   return (
     <p className="plan-line">
       {text}
-      {plan.limited && <span className="plan-limited"> {plan.limited}</span>}
+      {plan.limited && <span className={plan.limited_warn ? "plan-limited" : "plan-note"}> {plan.limited}</span>}
     </p>
   );
 }
@@ -111,6 +116,33 @@ function MacroBar({ label, value, target }: { label: string; value: number; targ
 
 const EMPTY_MEAL = { name: "", calories: "", protein_g: "", carbs_g: "", fat_g: "" };
 
+/** "Wednesday, 18 November" for a local YYYY-MM-DD. */
+function dayLabel(day: string, opts: Intl.DateTimeFormatOptions = { weekday: "long", day: "numeric", month: "long" }) {
+  return new Date(`${day}T12:00:00`).toLocaleDateString("en", opts);
+}
+
+function shiftDay(day: string, by: number): string {
+  const d = new Date(`${day}T12:00:00`);
+  d.setDate(d.getDate() + by);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const SERVINGS = [0.5, 1, 1.5, 2, 3];
+const servingsText = (n: number) => `${n === 0.5 ? "½" : n === 1.5 ? "1½" : n} serving${n > 1 ? "s" : ""}`;
+
+/** D56: a product row of a logged meal, back in the form to edit it. */
+function partFromLogged(i: MealIngredient): Part {
+  const v = i.per_100g ?? { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 };
+  const part = productPart(
+    {
+      barcode: i.barcode ?? null, name: i.name, brand: null, source: "openfoodfacts",
+      calories_100g: v.calories, protein_g_100g: v.protein_g, carbs_g_100g: v.carbs_g, fat_g_100g: v.fat_g,
+    },
+    String(i.grams),
+  );
+  return { ...part, product: { barcode: i.barcode ?? null, source: "logged" } };
+}
+
 function mealTime(m: DayMeal): string {
   // logged_at is SQLite datetime('now'): UTC, space-separated.
   const d = new Date(m.logged_at.replace(" ", "T") + "Z");
@@ -130,6 +162,9 @@ export function Today() {
   // D49: a meal built from ingredients and amounts instead of typed numbers.
   const [parts, setParts] = useState<Part[]>([]);
   const [mealError, setMealError] = useState<string | null>(null);
+  // D58: the calories-and-macros fields, behind a link, so the form opens on
+  // one box rather than two that look alike.
+  const [typing, setTyping] = useState(false);
   const [busy, setBusy] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [grams, setGrams] = useState("100");
@@ -142,9 +177,19 @@ export function Today() {
   const guide = useGuide("forkcast.todayguide.v1");
 
   const [loadError, setLoadError] = useState<string | null>(null);
+  // D56: the day being looked at (today, or an earlier one to fill in),
+  // the meal being edited, and the last one removed, for Undo.
+  const [viewDay, setViewDay] = useState(localToday);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [undo, setUndo] = useState<{ name: string; meal: MealSnapshot } | null>(null);
+  const isToday = viewDay === localToday();
+  const loggedAt = isToday ? undefined : noonOf(viewDay);
 
-  const refresh = () =>
-    Promise.all([api.day(), api.profile(), api.progress(), api.weight(), api.recentMeals().catch(() => ({ meals: [] }))])
+  const refresh = (d: string = viewDay) =>
+    Promise.all([
+      api.day(d === localToday() ? undefined : d), api.profile(), api.progress(), api.weight(),
+      api.recentMeals().catch(() => ({ meals: [] })),
+    ])
       .then(([d, p, g, w, r]) => {
         setRecent(r.meals);
         setDay(d);
@@ -156,8 +201,14 @@ export function Today() {
       })
       .catch((e) => setLoadError(String(e)));
   useEffect(() => {
-    refresh();
-  }, []);
+    refresh(viewDay);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewDay]);
+  useEffect(() => {
+    if (!undo) return;
+    const t = setTimeout(() => setUndo(null), 10000);
+    return () => clearTimeout(t);
+  }, [undo]);
 
   function onSaved(p: Profile, _targets: Targets) {
     setProfile(p);
@@ -170,29 +221,31 @@ export function Today() {
     setBusy(true);
     setMealError(null);
     try {
+      let body: MealIn;
       if (parts.length > 0) {
         // The server works the numbers out from the ingredients (D49).
         const ingredients = parts
           .filter((p) => !p.product)
-          .map((p) => ({ canonical: p.food.canonical, grams: gramsOf(p), cooked: p.cooked }));
+          .map((p) => ({ canonical: p.food.canonical, grams: gramsOf(p), cooked: p.cooked, canned: Boolean(p.canned) }));
         const products = parts.filter((p) => p.product).map(asMealProduct);
-        await api.addMeal({
+        body = {
           name: meal.name.trim() || defaultName(parts),
           ...(ingredients.length > 0 && { ingredients }),
           ...(products.length > 0 && { products }),
-        });
+        };
       } else {
-        await api.addMeal({
+        body = {
           name: meal.name.trim(),
           calories: Number(meal.calories) || 0,
           protein_g: Number(meal.protein_g) || 0,
           carbs_g: Number(meal.carbs_g) || 0,
           fat_g: Number(meal.fat_g) || 0,
-        });
+        };
       }
-      setMeal(EMPTY_MEAL);
-      setParts([]);
-      setAdding(false);
+      // D56: an edit keeps its time; a new meal on an earlier day goes at noon.
+      if (editingId !== null) await api.editMeal(editingId, body);
+      else await api.addMeal({ ...body, ...(loggedAt && { logged_at: loggedAt }) });
+      closeForm();
       await refresh();
     } catch (e) {
       setMealError(e instanceof Error ? e.message : String(e));
@@ -203,8 +256,67 @@ export function Today() {
 
   const partsReady = parts.length > 0 && parts.every((p) => gramsOf(p) > 0);
 
-  async function removeMeal(id: number) {
-    await api.deleteMeal(id);
+  function closeForm() {
+    setMeal(EMPTY_MEAL);
+    setParts([]);
+    setAdding(false);
+    setEditingId(null);
+    setTyping(false);
+    setProduct(null);
+    setScanError(null);
+    setMealError(null);
+  }
+
+  /** D60: from the button under the ring, the form opens further down: go there. */
+  function openForm() {
+    setAdding(true);
+    requestAnimationFrame(() => {
+      document.querySelector(".meal-form")?.scrollIntoView({ block: "start", behavior: "smooth" });
+      document.querySelector<HTMLInputElement>("#builder-query")?.focus({ preventScroll: true });
+    });
+  }
+
+  async function removeMeal(m: DayMeal) {
+    const res = await api.deleteMeal(m.id);
+    // D56: a mis-tap costs nothing: Undo puts it back as it was.
+    setUndo({ name: m.name ? (m.recipe_id !== null ? displayName(m.name) : m.name) : "the meal", meal: res.meal });
+    await refresh();
+  }
+
+  async function undoRemove() {
+    if (!undo) return;
+    await api.restoreMeal(undo.meal);
+    setUndo(null);
+    await refresh();
+  }
+
+  /** D56: back into the form, filled in, to change and save over. */
+  async function startEdit(m: DayMeal) {
+    closeForm();
+    if (m.ingredients.length > 0) {
+      const rows = await Promise.all(
+        m.ingredients.map(async (i): Promise<Part> => {
+          if (i.product || !i.canonical) return partFromLogged(i);
+          const { food } = await api.foodByKey(i.canonical);
+          const canned = Boolean(i.canned && food.canned);
+          const form = canned && food.canned ? food.canned : i.cooked && food.cooked ? food.cooked : food;
+          return { food, ...amountOf(i.grams, form.portions), cooked: i.cooked, canned };
+        }),
+      );
+      setParts(rows);
+      setMeal({ ...EMPTY_MEAL, name: m.name ?? "" });
+    } else {
+      const v = (n: number | null) => (n == null ? "" : String(Math.round(n * 10) / 10));
+      setMeal({ name: m.name ?? "", calories: v(m.calories), protein_g: v(m.protein_g), carbs_g: v(m.carbs_g), fat_g: v(m.fat_g) });
+      setTyping(true);
+    }
+    setEditingId(m.id);
+    setAdding(true);
+    requestAnimationFrame(() => document.querySelector(".meal-form")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  }
+
+  async function changeServings(m: DayMeal, servings: number) {
+    await api.setServings(m.id, servings);
     await refresh();
   }
 
@@ -270,6 +382,7 @@ export function Today() {
     const factor = (Number(grams) || 0) / 100;
     // One decimal: 30 g of something with 6.5 g protein per 100 g is 2 g, not 0 or 1.95.
     const scale = (v: number | null) => (v == null ? "" : String(Math.round(v * factor * 10) / 10));
+    setTyping(true);
     setMeal({
       name: [product.name, `${Number(grams) || 0} g`].filter(Boolean).join(", "),
       calories: scale(product.calories_100g),
@@ -293,11 +406,16 @@ export function Today() {
       <div className="screen">
         <p className="empty">Couldn't reach the Forkcast server.</p>
         <p className="feedback">{loadError}</p>
-        <button className="btn" onClick={refresh}>Try again</button>
+        <button className="btn" onClick={() => refresh()}>Try again</button>
       </div>
     );
   }
-  if (!loaded) return <div className="screen" aria-busy="true" />;
+  if (!loaded)
+    return (
+      <div className="screen" aria-busy="true">
+        <p className="empty-note">Loading your day…</p>
+      </div>
+    );
 
   if (!profile || editing) {
     return (
@@ -312,16 +430,33 @@ export function Today() {
     );
   }
 
+  // D56: only the day in the heading: right after switching, the last day's
+  // meals would otherwise show under the new day's name until it loads.
+  const ready = day?.date === viewDay;
   const t = day?.targets;
-  const totals = day?.totals;
-  const date = new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" });
-  const meals = day?.meals ?? [];
+  const totals = ready ? day?.totals : undefined;
+  const date = dayLabel(viewDay);
+  const short = dayLabel(viewDay, { weekday: "short", day: "numeric", month: "short" });
+  const meals = ready ? (day?.meals ?? []) : [];
 
   return (
     <div className="screen">
-      <p className="kicker">{date}</p>
+      {/* D56: earlier days, to fill in a meal you forgot. */}
+      <nav className="day-nav" aria-label="Day">
+        <button className="link-button" onClick={() => setViewDay(shiftDay(viewDay, -1))}>
+          ‹ Earlier
+        </button>
+        <p className="kicker">{date}</p>
+        {isToday ? (
+          <span className="day-nav-spacer" />
+        ) : (
+          <button className="link-button" onClick={() => setViewDay(shiftDay(viewDay, 1))}>
+            Later ›
+          </button>
+        )}
+      </nav>
       <div className="title-row">
-        <h1 className="display">Today</h1>
+        <h1 className="display">{isToday ? "Today" : dayLabel(viewDay, { weekday: "long" })}</h1>
         <HelpButton open={guide.open} onToggle={guide.toggle} label="How this page works" controls="today-guide" />
       </div>
       <p className="lead">
@@ -329,8 +464,17 @@ export function Today() {
         <button className="link" onClick={() => setEditing(true)}>
           Edit profile
         </button>
+        {!isToday && (
+          <>
+            {" "}
+            <button className="link" onClick={() => setViewDay(localToday())}>
+              Back to today
+            </button>
+          </>
+        )}
       </p>
 
+      {guide.hint && <GuideHint onOpen={guide.show} onDismiss={guide.dismiss} />}
       {guide.open && (
         <Guide
           id="today-guide"
@@ -351,7 +495,7 @@ export function Today() {
             },
             {
               term: "Log a meal",
-              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference. Each food starts at the amount you had last time, once you've logged it. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there.",
+              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference; beans and peas can also come from a can, drained. Each food starts at the amount you had last time, once you've logged it. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there.",
             },
             {
               term: "Liked · Not for me",
@@ -375,11 +519,17 @@ export function Today() {
 
       <div className="today-layout">
         {t && totals && (
-          <section className="today-summary" aria-label="Today's totals">
+          <section className="today-summary" aria-label={isToday ? "Today's totals" : `Totals for ${date}`}>
             <CalorieRing eaten={totals.calories} target={t.calories} />
             <p className="ring-caption">
               {fmt(totals.calories)} of {fmt(t.calories)} kcal eaten
             </p>
+            {/* D60: on a phone the meals start a screen further down; logging starts here. */}
+            {!adding && (
+              <button className="btn secondary log-btn log-btn-phone" onClick={openForm}>
+                Log a meal
+              </button>
+            )}
             {day?.plan && <PlanLine plan={day.plan} />}
             <div className="macros">
               <MacroBar label="Protein" value={totals.protein_g} target={t.protein_g} />
@@ -391,59 +541,16 @@ export function Today() {
 
         <div className="today-main">
         <section aria-labelledby="meals-title">
-          <h2 id="meals-title" className="section-title">Today's meals</h2>
-          {meals.length === 0 && (
+          <h2 id="meals-title" className="section-title">{isToday ? "Today's meals" : `Meals on ${short}`}</h2>
+          {!ready && <p className="empty-note" aria-busy="true">Loading…</p>}
+          {ready && meals.length === 0 && (
             <p className="empty-note">
-              Nothing logged yet. Cook a recipe and tap "I cooked this", or log a meal below.
+              {isToday
+                ? 'Nothing logged yet. Cook a recipe and tap "I cooked this", or log a meal.'
+                : `Nothing logged on ${short}. Log what you ate that day.`}
             </p>
           )}
-          <ol className="meal-list">
-            {meals.map((m) => (
-              <li key={m.id} className="meal">
-                <span className="meal-time">{mealTime(m)}</span>
-                <div className="meal-main">
-                  <span className="meal-name">
-                    {/* Clean up corpus recipe names; what you typed stays as typed. */}
-                    {m.name ? (m.recipe_id !== null ? displayName(m.name) : m.name) : "Unnamed meal"}
-                  </span>
-                  <span className="meal-macros">
-                    {fmt(m.calories ?? 0)} kcal · {fmt(m.protein_g ?? 0)} g protein · {fmt(m.carbs_g ?? 0)} g carbs ·{" "}
-                    {fmt(m.fat_g ?? 0)} g fat
-                  </span>
-                  {m.ingredients.length > 0 && (
-                    <span className="meal-ingredients">
-                      {m.ingredients
-                        .map((i) => `${i.name} ${fmt(i.grams)} g${i.cooked ? " cooked" : ""}`)
-                        .join(" · ")}
-                    </span>
-                  )}
-                  {m.rateable ? (
-                    <span className="rate" role="group" aria-label={`Rate ${m.name}`}>
-                      <button className="pill" aria-pressed={m.liked === 1} onClick={() => rate(m, true)}>
-                        Liked
-                      </button>
-                      <button className="pill" aria-pressed={m.liked === 0} onClick={() => rate(m, false)}>
-                        Not for me
-                      </button>
-                    </span>
-                  ) : (
-                    // A tester asked why these have no Liked button: ratings teach the
-                    // recipe feed, which needs a dish to learn from (D46, D49).
-                    <span className="rate-note">
-                      {m.ingredients.length > 0
-                        ? "No rating: a single food doesn't say what you like to cook. Meals with two or more ingredients can be rated."
-                        : "No rating: Forkcast can't tell what's in a meal typed as numbers. Add it by ingredients to rate it."}
-                    </span>
-                  )}
-                </div>
-                <button className="remove" onClick={() => removeMeal(m.id)} aria-label={`Remove ${m.name}`}>
-                  <CloseIcon size={18} />
-                </button>
-              </li>
-            ))}
-          </ol>
-
-          {!adding && <LogAgain meals={recent} onChange={refresh} />}
+          {!adding && <LogAgain meals={recent} onChange={() => refresh()} loggedAt={loggedAt} />}
           {adding ? (
             <form
               className="meal-form"
@@ -452,7 +559,9 @@ export function Today() {
                 addMeal();
               }}
             >
-              <h3 className="form-title">Log a meal</h3>
+              <h3 className="form-title">
+                {editingId !== null ? "Edit meal" : isToday ? "Log a meal" : `Log a meal for ${short}`}
+              </h3>
               <input
                 ref={fileRef}
                 type="file"
@@ -477,14 +586,10 @@ export function Today() {
                   </button>
                 </p>
               ) : (
+                // D58: one line; the guide has the rest.
                 <p className="field-hint">
-                  Products on Open Food Facts fill in from the barcode. For anything else, photograph the
-                  nutrition table. A scanned product joins the ingredients below, so it can go into a homemade meal too.
-                </p>
-              )}
-              {isDemo() && scansOn() && (
-                <p className="field-hint">
-                  A label without a barcode is read by Anthropic's Claude; Forkcast doesn't keep the photo.
+                  A packed food: scan its barcode or nutrition table.
+                  {isDemo() && scansOn() && " Labels are read by Anthropic's Claude; the photo isn't kept."}
                 </p>
               )}
               {scanError && <p className="feedback error">{scanError}</p>}
@@ -562,7 +667,17 @@ export function Today() {
                   </div>
                 </div>
               )}
-              <MealBuilder parts={parts} onChange={setParts} />
+              <MealBuilder
+                parts={parts}
+                onChange={setParts}
+                onDish={(dish) => setMeal((m) => (m.name.trim() ? m : { ...m, name: dish }))}
+              />
+              {parts.length === 0 && !typing && (
+                <button type="button" className="link-button type-numbers" onClick={() => setTyping(true)}>
+                  Or type the calories yourself
+                </button>
+              )}
+              {(parts.length > 0 || typing) && (
               <label className="field">
                 {parts.length > 0 ? "Name it (optional)" : "What did you eat?"}
                 <input
@@ -571,7 +686,8 @@ export function Today() {
                   onChange={(e) => setMeal({ ...meal, name: e.target.value })}
                 />
               </label>
-              {parts.length === 0 && (
+              )}
+              {parts.length === 0 && typing && (
               <div className="meal-form-grid">
                 <label className="field">
                   kcal
@@ -592,42 +708,111 @@ export function Today() {
               </div>
               )}
               {mealError && <p className="feedback error">{mealError}</p>}
+              {/* D58: say why Log meal can't be pressed yet, rather than grey it silently. */}
+              {parts.length > 0 && !partsReady && (
+                <p className="field-hint">Every ingredient needs an amount above 0.</p>
+              )}
+              {parts.length === 0 && typing && (!meal.name.trim() || !meal.calories) && (
+                <p className="field-hint">Give the meal a name and its calories.</p>
+              )}
               <div className="form-actions">
                 <button
                   type="submit"
                   className="btn"
-                  disabled={busy || (parts.length > 0 ? !partsReady : !meal.name.trim() || !meal.calories)}
+                  disabled={busy || (parts.length > 0 ? !partsReady : !typing || !meal.name.trim() || !meal.calories)}
                 >
-                  Log meal
+                  {editingId !== null ? "Save changes" : "Log meal"}
                 </button>
-                <button
-                  type="button"
-                  className="btn secondary"
-                  onClick={() => {
-                    setAdding(false);
-                    setProduct(null);
-                    setScanError(null);
-                    setParts([]);
-                    setMealError(null);
-                  }}
-                >
+                <button type="button" className="btn secondary" onClick={closeForm}>
                   Cancel
                 </button>
               </div>
             </form>
           ) : (
-            <button className="btn secondary log-btn" onClick={() => setAdding(true)}>
+            <button className="btn secondary log-btn log-btn-wide" onClick={() => setAdding(true)}>
               Log a meal
             </button>
           )}
+          <ol className="meal-list">
+            {meals.map((m) => (
+              <li key={m.id} className="meal">
+                <span className="meal-time">{mealTime(m)}</span>
+                <div className="meal-main">
+                  <span className="meal-name">
+                    {/* Clean up corpus recipe names; what you typed stays as typed. */}
+                    {m.name ? (m.recipe_id !== null ? displayName(m.name) : m.name) : "Unnamed meal"}
+                  </span>
+                  <span className="meal-macros">
+                    {m.servings != null && `${servingsText(m.servings)} · `}
+                    {fmt(m.calories ?? 0)} kcal · {fmt(m.protein_g ?? 0)} g protein · {fmt(m.carbs_g ?? 0)} g carbs ·{" "}
+                    {fmt(m.fat_g ?? 0)} g fat
+                  </span>
+                  {m.ingredients.length > 0 && (
+                    <span className="meal-ingredients">
+                      {m.ingredients
+                        .map((i) => `${i.name} ${fmt(i.grams)} g${i.cooked ? " cooked" : i.canned ? " canned" : ""}`)
+                        .join(" · ")}
+                    </span>
+                  )}
+                  {m.rateable ? (
+                    <span className="rate" role="group" aria-label={`Rate ${m.name}`}>
+                      <button className="pill" aria-pressed={m.liked === 1} onClick={() => rate(m, true)}>
+                        Liked
+                      </button>
+                      <button className="pill" aria-pressed={m.liked === 0} onClick={() => rate(m, false)}>
+                        Not for me
+                      </button>
+                    </span>
+                  ) : (
+                    // A tester asked why these have no Liked button: ratings teach the
+                    // recipe feed, which needs a dish to learn from (D46, D49).
+                    <span className="rate-note">{m.rate_note}</span>
+                  )}
+                  {m.recipe_id !== null ? (
+                    <label className="servings">
+                      How much did you eat?
+                      <select
+                        value={m.servings ?? 1}
+                        onChange={(e) => changeServings(m, Number(e.target.value))}
+                        aria-label={`Servings of ${m.name}`}
+                      >
+                        {SERVINGS.map((n) => (
+                          <option key={n} value={n}>
+                            {servingsText(n)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <button className="link-button meal-edit" onClick={() => startEdit(m)} aria-label={`Edit ${m.name}`}>
+                      Edit
+                    </button>
+                  )}
+                </div>
+                <button className="remove" onClick={() => removeMeal(m)} aria-label={`Remove ${m.name}`}>
+                  <CloseIcon size={18} />
+                </button>
+              </li>
+            ))}
+          </ol>
+
         </section>
-        {progress && <DayCheck progress={progress} onChange={refresh} />}
-        {weight && profile && (
-          <WeightCard key={`${weight.entries.length}:${weight.trend_kg}`} initial={weight} onChange={refresh} />
+        {/* About now: shown on today, not on an earlier day being filled in. */}
+        {isToday && progress && <DayCheck progress={progress} onChange={() => refresh()} />}
+        {isToday && weight && profile && (
+          <WeightCard key={`${weight.entries.length}:${weight.trend_kg}`} initial={weight} onChange={() => refresh()} />
         )}
-        {progress && <ProgressCard progress={progress} />}
+        {isToday && progress && <ProgressCard progress={progress} />}
         </div>
       </div>
+      {undo && (
+        <div className="undo-bar" role="status">
+          <span>Removed {undo.name}.</span>
+          <button className="link-button" onClick={undoRemove}>
+            Undo
+          </button>
+        </div>
+      )}
     </div>
   );
 }

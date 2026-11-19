@@ -22,6 +22,33 @@ from . import recipes, taste
 POOL_LIMIT = 20000
 EXAMPLES_PER_ITEM = 3
 
+# D59: for someone losing weight, desserts don't count towards what to buy:
+# yeast, vanilla and baking powder topped the list for a calorie-counting
+# tester, with cookies and icing as the examples. A dessert here is a recipe
+# with an added-sweet ingredient that gets a quarter or more of its calories
+# from sugar (about 27k of 88k recipes; a few glazed savoury dishes too).
+SWEET = ("sugar", "brown_sugar", "powdered_sugar", "vanilla", "chocolate", "milk_chocolate",
+         "white_chocolate", "cocoa_powder", "marshmallow", "corn_syrup", "whipped_topping",
+         "ice_cream", "condensed_milk", "frosting", "sprinkles", "candy", "caramel", "butterscotch")
+SWEET_SHARE = 0.25
+_sweet_cache: dict[tuple, frozenset[int]] = {}
+
+
+def sweet_ids(con: sqlite3.Connection) -> frozenset[int]:
+    n, top = con.execute("SELECT COUNT(*), COALESCE(MAX(id), 0) FROM recipes").fetchone()
+    key = (n, top)
+    if key not in _sweet_cache:
+        _sweet_cache.clear()
+        _sweet_cache[key] = frozenset(r[0] for r in con.execute(
+            f"""SELECT r.id FROM recipes r
+                WHERE r.calories > 0 AND r.sugar_g * 4 >= ? * r.calories
+                  AND r.id IN (SELECT recipe_id FROM recipe_ingredients
+                               WHERE canonical IN ({','.join('?' * len(SWEET))}))""",
+            (SWEET_SHARE, *SWEET),
+        ))
+    return _sweet_cache[key]
+
+
 # A recipe at the bottom of the taste range still counts half — the profile is
 # a hint about what to buy, not a veto on recipes you simply haven't cooked yet.
 TASTE_FLOOR = 0.5
@@ -52,10 +79,14 @@ def suggest(
     profile=None,
     basket_size: int = 3,
     max_missing: int = 3,
+    leave_out_sweet: bool = False,
 ) -> tuple[list[dict], bool]:
     """(up to basket_size ingredients to buy, whether the pool was truncated)."""
     pool = recipes.missing_sets(con, max_missing=max_missing, limit=POOL_LIMIT)
     truncated = len(pool) >= POOL_LIMIT
+    if leave_out_sweet:
+        sweet = sweet_ids(con)
+        pool = [r for r in pool if r["id"] not in sweet]
     if not pool:
         return [], truncated
     weight = _weights(con, pool, profile)

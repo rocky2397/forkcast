@@ -36,6 +36,13 @@ async function deleteMyData() {
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("today");
+  // D58: tapping the tab you're on starts it over (a recipe back to the list).
+  const [tabKey, setTabKey] = useState(0);
+  function go(id: Tab) {
+    if (id === tab) setTabKey((k) => k + 1);
+    else setTab(id);
+    window.scrollTo(0, 0); // a new screen starts at its top, not where the last one was
+  }
   const [gate, setGate] = useState<Gate>("checking");
   // Remounts the tabs after login so screens refetch with the session cookie.
   const [sessionKey, setSessionKey] = useState(0);
@@ -99,40 +106,48 @@ export default function App() {
           {/* Desktop navigation; phones get the tab bar at the bottom. */}
           <nav className="topnav" aria-label="Main">
             {TABS.map(({ id, label }) => (
-              <button key={id} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}>
+              <button key={id} aria-current={tab === id ? "page" : undefined} onClick={() => go(id)}>
                 {label}
               </button>
             ))}
           </nav>
         </div>
-        {isDemo() && (
-          <p className="demo-banner">
-            {savesKitchens()
-              ? "Demo: your kitchen is private to you, saved for this browser only, and deleted 30 days after your last visit. "
-              : "Demo: your changes are private to you and reset after a day. "}
-            {savesKitchens() && (
-              <>
-                <button type="button" className="link-button" onClick={deleteMyData}>
-                  Delete my data
-                </button>
-                {" · "}
-              </>
-            )}
-            {keepsStats() && (
-              <>
-                <a href="/stats">Usage totals</a> are anonymous.{" "}
-              </>
-            )}
-            <a href="https://github.com/rocky2397/forkcast">Code on GitHub</a>
-          </p>
-        )}
       </header>
+      {isDemo() && (
+        // D58: one short line that scrolls away, rather than three pinned to the top.
+        <p className="demo-banner">
+          {savesKitchens()
+            ? "Demo: private to this browser, deleted after 30 days unused. "
+            : "Demo: private to you, reset after a day. "}
+          {savesKitchens() && (
+            <>
+              <button type="button" className="link-button" onClick={deleteMyData}>
+                Delete my data
+              </button>
+              {" · "}
+            </>
+          )}
+          {keepsStats() && (
+            <>
+              <a href="/stats">Anonymous usage</a>
+              {" · "}
+            </>
+          )}
+          <a href="https://github.com/rocky2397/forkcast">Code</a>
+        </p>
+      )}
       <main className="main">
-        {tab === "today" ? <Today /> : tab === "inventory" ? <Inventory /> : <Recipes />}
+        {tab === "today" ? (
+          <Today key={tabKey} />
+        ) : tab === "inventory" ? (
+          <Inventory key={tabKey} />
+        ) : (
+          <Recipes key={tabKey} />
+        )}
       </main>
       <nav className="tabbar" aria-label="Main">
         {TABS.map(({ id, label, Icon }) => (
-          <button key={id} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}>
+          <button key={id} aria-current={tab === id ? "page" : undefined} onClick={() => go(id)}>
             <Icon />
             {label}
           </button>

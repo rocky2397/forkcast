@@ -108,7 +108,8 @@ CREATE TABLE IF NOT EXISTS meal_ingredients (
     meal_id   INTEGER NOT NULL,   -- meal_log.id
     canonical TEXT NOT NULL,
     grams     REAL NOT NULL,
-    cooked    INTEGER NOT NULL DEFAULT 0   -- 1: weighed cooked (rice, pasta, beans...)
+    cooked    INTEGER NOT NULL DEFAULT 0,  -- 1: weighed cooked (rice, pasta, beans...)
+    canned    INTEGER NOT NULL DEFAULT 0   -- D64: 1: from a can, drained (chickpeas, kidney beans...)
 );
 CREATE INDEX IF NOT EXISTS idx_mi_meal ON meal_ingredients(meal_id);
 
@@ -160,6 +161,7 @@ _MEAL_LOG_ADDED = {
     "protein_g": "REAL",
     "carbs_g": "REAL",
     "fat_g": "REAL",
+    "servings": "REAL",  # D56: a cooked recipe eaten as more or less than one serving
 }
 
 
@@ -169,10 +171,13 @@ _PROFILE_ADDED = {"goal_weight_kg": "REAL", "pace": "TEXT"}
 # D52: serving and pack sizes for scanned products.
 _PRODUCTS_ADDED = {"serving_g": "REAL", "pack_g": "REAL"}
 
+# D64: beans and peas from a can.
+_MEAL_INGREDIENTS_ADDED = {"canned": "INTEGER NOT NULL DEFAULT 0"}
+
 
 def _migrate(con: sqlite3.Connection) -> None:
     for table, added in (("meal_log", _MEAL_LOG_ADDED), ("profile", _PROFILE_ADDED),
-                         ("products", _PRODUCTS_ADDED)):
+                         ("products", _PRODUCTS_ADDED), ("meal_ingredients", _MEAL_INGREDIENTS_ADDED)):
         have = {row["name"] for row in con.execute(f"PRAGMA table_info({table})")}
         for col, typ in added.items():
             if col not in have:

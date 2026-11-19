@@ -51,7 +51,7 @@ function BurnLine({ b }: { b: BurnEstimate }) {
       <p className="weight-status burn-line">
         <strong>What you burn: about {kcal(b.formula)} a day</strong>, from a formula for your body and activity. After
         about two weeks of complete days and weigh-ins, Forkcast learns your real number from them. So far:{" "}
-        {days} of {b.needed_days} complete days, weigh-ins over {span} of {b.needed_span} days.
+        {days} of {b.needed_days} complete days, and weigh-ins spread over {span} of the {b.needed_span} days it needs.
       </p>
     );
   }
@@ -139,6 +139,11 @@ export function WeightCard({ initial, onChange }: { initial: WeightSummary; onCh
   async function save() {
     const n = Number(value.replace(",", "."));
     if (!n) return;
+    // D58: the app's own words, not the browser's (which spoke German in an English app).
+    if (n < 35 || n > 250) {
+      setError("Enter a weight between 35 and 250 kg.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -186,6 +191,7 @@ export function WeightCard({ initial, onChange }: { initial: WeightSummary; onCh
       )}
       <form
         className="weigh-in-form"
+        noValidate
         onSubmit={(e) => {
           e.preventDefault();
           save();

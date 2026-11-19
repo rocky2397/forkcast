@@ -16,6 +16,8 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
   const [busy, setBusy] = useState(false);
   const [cooking, setCooking] = useState(false);
   const [moreText, setMoreText] = useState(false);
+  // D56: how much of it was eaten; one serving unless said otherwise.
+  const [servings, setServings] = useState(1);
 
   useEffect(() => {
     api.recipe(id).then(setRecipe);
@@ -49,15 +51,24 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
 
   async function logCooked() {
     if (busy || cooked) return;
-    if (!confirming && depletable.length > 0) {
+    if (!confirming) {
+      // D56/D58: ask how much was eaten (and what ran out) in a panel brought into view.
       setConfirming(true);
+      requestAnimationFrame(() =>
+        document.querySelector(".cook-confirm")?.scrollIntoView({ block: "center", behavior: "smooth" }),
+      );
       return;
     }
     setBusy(true);
     try {
-      await api.logCooked(id, [...usedUp]);
+      await api.logCooked(id, [...usedUp], servings);
       setCooked(true);
       setConfirming(false);
+      // D60: what ran out is off the kitchen list now; show the recipe against what's left.
+      if (usedUp.size > 0) {
+        setUsedUp(new Set());
+        api.recipe(id).then(setRecipe);
+      }
     } finally {
       setBusy(false);
     }
@@ -130,6 +141,11 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
       <div className="detail-columns">
         <section aria-labelledby="ingredients">
           <h2 id="ingredients" className="section-title">Ingredients</h2>
+          {/* D59: food.com lists ingredients without amounts; say so rather than leave people looking. */}
+          <p className="field-hint amounts-note">
+            The recipe source lists ingredients without amounts; the method gives most of them. Calories are for
+            one serving.
+          </p>
           <IngredientGroup label="In your kitchen" kind="have" items={have} />
           <IngredientGroup label="Missing" kind="missing" items={missing} />
           {swaps.map(([food, sub]) => (
@@ -149,7 +165,20 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
           </ol>
 
           {confirming && !cooked ? (
-            <div>
+            <div className="cook-confirm">
+              <h3>How much did you eat?</h3>
+              <label className="servings">
+                <select value={servings} onChange={(e) => setServings(Number(e.target.value))} aria-label="Servings eaten">
+                  {[0.5, 1, 1.5, 2, 3].map((n) => (
+                    <option key={n} value={n}>
+                      {n === 0.5 ? "½" : n === 1.5 ? "1½" : n} serving{n > 1 ? "s" : ""}
+                      {recipe.calories != null ? ` (${Math.round(recipe.calories * n)} kcal)` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {depletable.length > 0 && (
+                <>
               <h3>Did anything run out?</h3>
               <p className="feedback">Tick what's used up and it comes off your kitchen list.</p>
               <ul className="scan-list">
@@ -169,9 +198,13 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
                   </li>
                 ))}
               </ul>
+                </>
+              )}
               <div className="detail-actions">
                 <button className="btn" onClick={logCooked} disabled={busy}>
-                  {usedUp.size > 0 ? `Log cook, remove ${usedUp.size}` : "Log cook, nothing ran out"}
+                  {usedUp.size > 0
+                    ? `Log it and remove ${usedUp.size} from your kitchen`
+                    : "Log it"}
                 </button>
                 <button className="btn secondary" onClick={() => setConfirming(false)} disabled={busy}>
                   Cancel

@@ -94,6 +94,7 @@ chicken,,171077
 chicken,cooked,171477
 chicken_broth,,174536
 chickpea,,173756
+chickpea,canned,173800
 chickpea,cooked,173757
 chili_pepper,,170106
 chili_powder,,171319
@@ -162,6 +163,7 @@ eggplant,,169228
 enchilada_sauce,,174074
 english_muffin,,174093
 epazote,,169398
+espresso,,171891
 evaporated_milk,,172194
 fennel,,169385
 fennel_seed,,171323
@@ -178,6 +180,7 @@ flour,,168894
 flour_tortilla,,167535
 fontina_cheese,,170843
 food_coloring,,
+french_fries,,169264
 fruit,,
 fruit_juice,,169098
 fruit_preserves,,169641
@@ -190,8 +193,10 @@ ginger,,169231
 ginkgo_nut,,170584
 goat_cheese,,173435
 graham_cracker,,174957
+granola,,171646
 grape,,174683
 gravy,,171564
+greek_yogurt,,171304
 green_bean,,169961
 green_chili,,170497
 green_olive,,169096
@@ -200,6 +205,7 @@ gruyere_cheese,,171242
 guinea_hen,,174471
 ham,,173864
 hazelnut,,170581
+hazelnut_spread,,168000
 hearts_of_palm,,167714
 herb,,
 hoisin_sauce,,172886
@@ -219,6 +225,7 @@ jam,,169641
 kale,,168421
 ketchup,,168556
 kidney_bean,,173744
+kidney_bean,canned,174285
 kidney_bean,cooked,175194
 kiwi,,168153
 lamb,,174370
@@ -289,6 +296,7 @@ pasta,cooked,169737
 pasta_sauce,,171192
 pastry,,
 pea,,170419
+pea,canned,170013
 peach,,169928
 peanut,,172430
 peanut_butter,,174266
@@ -304,7 +312,10 @@ pigeon_pea,,172436
 pine_nut,,170591
 pineapple,,168193
 pinto_bean,,175199
+pinto_bean,canned,174286
 pinto_bean,cooked,175200
+pita_bread,,174915
+pizza,,170317
 pizza_sauce,,172880
 plum,,169949
 pollock,,173725
@@ -315,6 +326,7 @@ potato,,170026
 potato,cooked,170438
 poultry_seasoning,,171331
 prosciutto,,167875
+protein_powder,,173180
 provolone_cheese,,170850
 prune,,168162
 pudding,,168782
@@ -357,6 +369,7 @@ sauerkraut,,169279
 sausage,,171620
 sazon,,172242
 scallion,,170005
+scrambled_egg,,172187
 sesame_oil,,171016
 sesame_seed,,170150
 shallot,,170499
@@ -364,6 +377,7 @@ sherry,,175112
 shiitake_mushroom,,169242
 shortening,,173584
 shrimp,,175179
+skim_milk,,171269
 smoked_cheese,,
 sole,,174196
 somen_noodle,,168909
@@ -395,6 +409,7 @@ tea,,173227
 tempeh,,174272
 tequila,,174815
 thyme,,173470
+toast,,174925
 tofu,,172475
 tomato,,170457
 tortilla,,167535
@@ -427,6 +442,7 @@ white_pepper,,170933
 white_vinegar,,172237
 white_wine,,174837
 white_wine_vinegar,,172240
+whole_wheat_bread,,172688
 whole_wheat_flour,,168893
 wine,,173190
 worcestershire_sauce,,171610

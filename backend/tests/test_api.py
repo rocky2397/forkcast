@@ -452,10 +452,26 @@ def test_german_names_can_be_added_to_the_kitchen(client, db):
     assert r["added"] == ["onion", "chicken"] and r["unknown"] == []
 
 
+def test_the_kitchen_knows_the_logging_words_and_says_oats(client, monkeypatch):
+    # D60: "Leinsamen" found nothing in the kitchen, though Log a meal knew it;
+    # and the kitchen listed "Oat". English "paprika" stays the spice there.
+    vocab = VOCAB + ["flaxseed", "oat", "paprika", "bell_pepper"]
+    main.normalizer = Normalizer(vocab)
+    r = client.post("/api/inventory", json={"items": ["Leinsamen", "oat", "paprika"]}).json()
+    assert r["added"] == ["flaxseed", "oat", "paprika"] and r["unknown"] == []
+    assert r["added_names"] == ["flaxseeds", "oats", "paprika"]
+    names = {i["canonical"]: i["name"] for i in client.get("/api/inventory").json()["items"]}
+    assert names["oat"] == "oats" and names["flaxseed"] == "flaxseeds"
+
+
 # D49: meals built from ingredients and grams, with USDA values per ingredient.
 
-FOOD_VOCAB = VOCAB + ["banana", "quark", "oat"]
+FOOD_VOCAB = VOCAB + ["banana", "garam_masala", "oat", "chickpea"]
 KCAL = {c: r["kcal"] for c, r in foods.table().items()}
+
+
+REAL_TEACHES_TASTE = foods.teaches_taste
+REAL_TASTE_INGREDIENTS = foods.taste_ingredients
 
 
 @pytest.fixture
@@ -464,6 +480,7 @@ def foods_client(client, monkeypatch):
     # Whether a meal can be rated needs the Epicure weights; test_taste checks
     # the real rule. Here: two or more non-staples, so these tests stay offline.
     monkeypatch.setattr(foods, "teaches_taste", lambda cs: len(set(cs) - STAPLES) >= 2)
+    monkeypatch.setattr(foods, "taste_ingredients", lambda cs: [c for c in dict.fromkeys(cs) if c and c not in STAPLES])
     return client
 
 
@@ -490,9 +507,9 @@ def test_german_names_find_the_food(foods_client):
 
 
 def test_a_known_ingredient_without_values_says_which_it_is(foods_client):
-    body = foods_client.get("/api/foods", params={"q": "Magerquark"}).json()
-    assert body["canonical"] == "quark"
-    assert body["food"] is None  # the USDA table has no quark
+    body = foods_client.get("/api/foods", params={"q": "garam masala"}).json()
+    assert body["canonical"] == "garam_masala"
+    assert body["food"] is None  # no good USDA food: left without values
 
 
 def test_an_unknown_food_finds_nothing(foods_client):
@@ -525,10 +542,10 @@ def test_cooked_rice_counts_as_cooked_rice(foods_client):
 
 def test_an_ingredient_without_values_is_refused_by_name(foods_client):
     res = foods_client.post("/api/meals", json={
-        "name": "Quark bowl", "ingredients": [{"canonical": "quark", "grams": 250}],
+        "name": "Curry", "ingredients": [{"canonical": "garam_masala", "grams": 5}],
     })
     assert res.status_code == 422
-    assert res.json()["detail"] == "No nutrition values for quark."
+    assert res.json()["detail"] == "No nutrition values for garam masala."
 
 
 def test_a_cooked_form_that_doesnt_exist_is_refused(foods_client):
@@ -557,6 +574,21 @@ def test_typed_meals_and_single_foods_cant_be_rated(foods_client):
     meals = foods_client.get("/api/day").json()["meals"]
     assert [m["rateable"] for m in meals] == [False, False]
     assert meals[0]["ingredients"] == []
+    assert "typed as numbers" in meals[0]["rate_note"]
+    assert "single food" in meals[1]["rate_note"]
+
+
+def test_a_two_food_meal_says_which_food_counts(foods_client, monkeypatch):
+    # D60: "Skyr, banana" has two foods, but skyr isn't a recipe ingredient.
+    monkeypatch.setattr(foods, "teaches_taste", REAL_TEACHES_TASTE)
+    monkeypatch.setattr(foods, "taste_ingredients", REAL_TASTE_INGREDIENTS)
+    monkeypatch.setattr(embeddings, "ingredient_vector", lambda c, model: [1.0] if c != "skyr" else None)
+    foods_client.post("/api/meals", json={"name": "Skyr, banana", "ingredients": [
+        {"canonical": "skyr", "grams": 150}, {"canonical": "banana", "grams": 118}]})
+    meal = foods_client.get("/api/day").json()["meals"][0]
+    assert meal["rateable"] is False
+    assert "single food" not in meal["rate_note"]
+    assert "only banana is a recipe ingredient" in meal["rate_note"]
 
 
 def test_deleting_a_built_meal_deletes_what_it_was_made_of(foods_client, db):
@@ -714,7 +746,8 @@ def test_a_typed_food_remembers_the_amount_from_last_time(foods_client):
     foods_client.post("/api/meals", json={"name": "Rice", "ingredients": [{"canonical": "rice", "grams": 200, "cooked": True}]})
     foods_client.post("/api/meals", json={"name": "Bowl", "ingredients": [{"canonical": "rice", "grams": 150, "cooked": True},
                                                                           {"canonical": "egg", "grams": 50}]})
-    assert foods_client.get("/api/foods", params={"q": "Reis"}).json()["food"]["last"] == {"grams": 150, "cooked": True}
+    assert foods_client.get("/api/foods", params={"q": "Reis"}).json()["food"]["last"] == {"grams": 150, "cooked": True,
+                                                                                         "canned": False}
 
 
 def test_a_typed_meal_or_a_deleted_one_doesnt_count(foods_client):
@@ -731,3 +764,110 @@ def test_a_scanned_product_remembers_its_grams_by_barcode(foods_client, monkeypa
     assert foods_client.get(f"/api/nutrition/barcode/{code}").json()["product"]["last_grams"] is None
     foods_client.post("/api/meals", json={"name": "Skyr", "products": [{**SKYR, "grams": 200}]})
     assert foods_client.get(f"/api/nutrition/barcode/{code}").json()["product"]["last_grams"] == 200
+
+
+# D55-D59: from the UX review.
+
+def test_everyday_words_find_the_food_people_mean(client, monkeypatch):
+    from app import foods
+    main.normalizer = Normalizer(VOCAB + ["oat", "bell_pepper", "paprika", "coffee", "quark", "oat_milk"])
+    def food(q):
+        return client.get("/api/foods", params={"q": q}).json()["food"]
+    assert food("Paprika")["canonical"] == "bell_pepper"  # the vegetable, in a meal
+    assert food("Paprikapulver")["canonical"] == "paprika"
+    assert food("Proteinpulver")["canonical"] == "protein_powder"
+    assert food("Whey")["canonical"] == "protein_powder"
+    assert food("Kaffee")["canonical"] == "coffee"
+    assert food("Haferdrink")["source"] == "openfoodfacts"
+    assert food("Magerquark")["per_100g"]["protein_g"] > 10
+    assert food("Reis gekocht")["start_cooked"] is True
+    assert food("rice")["start_cooked"] is False
+    assert {"label": "1 glass", "grams": 250.0} in food("Milch")["portions"]
+    assert food("Haferflocken")["name"] == "oats"
+
+
+def test_a_meal_can_be_logged_for_yesterday_but_not_tomorrow(foods_client):
+    from datetime import datetime, timedelta, timezone
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    meal = {"name": "Toast", "calories": 200, "protein_g": 6, "carbs_g": 30, "fat_g": 6}
+    assert foods_client.post("/api/meals", json={**meal, "logged_at": yesterday}).status_code == 200
+    day = (datetime.now(timezone.utc) - timedelta(days=1)).date().isoformat()
+    assert [m["name"] for m in foods_client.get("/api/day", params={"date": day, "tz": 0}).json()["meals"]] == ["Toast"]
+    tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+    assert foods_client.post("/api/meals", json={**meal, "logged_at": tomorrow}).status_code == 422
+    assert foods_client.post("/api/meals", json={**meal, "logged_at": "2026-01-01T12:00:00"}).status_code == 422
+
+
+def test_a_meal_can_be_edited_in_place(foods_client):
+    mid = foods_client.post("/api/meals", json={"name": "Porridge", "ingredients": [{"canonical": "oat", "grams": 50}]}).json()["meal_log_id"]
+    foods_client.post(f"/api/meals/{mid}/rate", json={"liked": True})
+    res = foods_client.put(f"/api/meals/{mid}", json={"name": "Big porridge", "ingredients": [{"canonical": "oat", "grams": 80}]})
+    assert res.status_code == 200
+    meal = foods_client.get("/api/day").json()["meals"][0]
+    assert (meal["id"], meal["name"], meal["ingredients"][0]["grams"], meal["liked"]) == (mid, "Big porridge", 80, 1)
+
+
+def test_a_deleted_meal_comes_back_with_undo(foods_client):
+    mid = foods_client.post("/api/meals", json={
+        "name": "Skyr bowl", "ingredients": [{"canonical": "banana", "grams": 118}], "products": [{**SKYR, "grams": 150}],
+    }).json()["meal_log_id"]
+    before = foods_client.get("/api/day").json()["meals"][0]
+    snapshot = foods_client.delete(f"/api/meals/{mid}").json()["meal"]
+    assert foods_client.get("/api/day").json()["meals"] == []
+    assert foods_client.post("/api/meals/restore", json=snapshot).status_code == 200
+    after = foods_client.get("/api/day").json()["meals"][0]
+    assert (after["name"], after["calories"], after["logged_at"], after["ingredients"]) == \
+        (before["name"], before["calories"], before["logged_at"], before["ingredients"])
+
+
+def test_a_cooked_recipe_can_count_two_servings(client):
+    r = client.post("/api/recipes/1/cooked", json={"servings": 2}).json()
+    meal = client.get("/api/day").json()["meals"][0]
+    assert (meal["calories"], meal["servings"]) == (1000.0, 2.0)  # recipe 1: 500 kcal a serving
+    client.put(f"/api/meals/{r['meal_log_id']}/servings", json={"servings": 1})
+    meal = client.get("/api/day").json()["meals"][0]
+    assert (meal["calories"], meal["servings"]) == (500.0, None)
+    assert client.put(f"/api/meals/{r['meal_log_id']}", json={"name": "x", "calories": 1, "protein_g": 1,
+                                                              "carbs_g": 1, "fat_g": 1}).status_code == 422
+
+
+def test_worth_buying_leaves_out_desserts_when_losing_weight(client, db, monkeypatch):
+    from app import shopping
+    monkeypatch.setattr(shopping, "sweet_ids", lambda con: frozenset({3, 4, 5}))  # the yeast recipes
+    assert client.get("/api/shopping").json()["items"][0]["canonical"] == "yeast"
+    db.execute("INSERT INTO profile (id, sex, age, height_cm, weight_kg, activity, goal) VALUES (1,'f',30,170,70,'moderate','cut')")
+    db.commit()
+    body = client.get("/api/shopping").json()
+    assert body["without_desserts"] is True
+    assert "yeast" not in [i["canonical"] for i in body["items"]]
+
+
+def test_a_typed_line_adds_several_foods_with_amounts(foods_client):
+    # D61: "Banana, 2 eggs" is two rows; banana carries last time's amount (D54).
+    foods_client.post("/api/meals", json={"name": "Banana", "ingredients": [{"canonical": "banana", "grams": 150}]})
+    body = foods_client.get("/api/foods/line", params={"q": "Banana, 2 eggs, Blubberkraut"}).json()
+    banana, egg = body["parts"]
+    assert banana["food"]["canonical"] == "banana" and banana["food"]["last"]["grams"] == 150
+    assert egg["food"]["canonical"] == "egg" and egg["count"] == 2 and egg["portion"] == "1 large"
+    assert [m["query"] for m in body["missing"]] == ["Blubberkraut"]
+    # D62: a dish is its parts, and logging them gives the dish's values.
+    capp = foods_client.get("/api/foods/line", params={"q": "Cappuccino"}).json()
+    assert capp["dishes"] == ["Cappuccino"] and [p["dish"] for p in capp["parts"]] == ["Cappuccino"] * 2
+
+
+def test_a_canned_ingredient_is_logged_kept_and_put_back(foods_client):
+    # D64: canned chickpeas have their own values, come back as last time's
+    # form, and survive an undo.
+    mid = foods_client.post("/api/meals", json={"name": "Salad", "ingredients": [
+        {"canonical": "chickpea", "grams": 200, "canned": True}, {"canonical": "banana", "grams": 100}]}).json()["meal_log_id"]
+    meal = foods_client.get("/api/day").json()["meals"][0]
+    assert meal["ingredients"][0]["canned"] is True
+    expect = round(2 * foods.table()["chickpea"]["canned"]["kcal"] + foods.table()["banana"]["kcal"], 0)
+    assert abs(meal["calories"] - expect) <= 1
+    last = foods_client.get("/api/foods", params={"q": "chickpeas"}).json()["food"]["last"]
+    assert last == {"grams": 200, "cooked": False, "canned": True}
+    snap = foods_client.delete(f"/api/meals/{mid}").json()["meal"]
+    foods_client.post("/api/meals/restore", json=snap)
+    assert foods_client.get("/api/day").json()["meals"][0]["ingredients"][0]["canned"] is True
+    bad = foods_client.post("/api/meals", json={"name": "x", "ingredients": [{"canonical": "banana", "grams": 1, "canned": True}]})
+    assert bad.status_code == 422 and "no canned form" in bad.json()["detail"]

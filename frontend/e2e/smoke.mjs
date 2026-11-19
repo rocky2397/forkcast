@@ -67,12 +67,21 @@ async function run(page) {
     ["the welcome screen", async () => {
       await page.goto(base);
       await page.getByRole("button", { name: "Get started" }).waitFor();
+      // D57: the welcome says what the app is now: cooking, and logging what you eat.
+      await expectText(page.locator(".intro"), /Cook what fits[\s\S]*Log what you eat/, "welcome steps");
       await audit(page, "welcome");
       await page.getByRole("button", { name: "Get started" }).click();
     }],
     ["a new profile with a goal weight", async () => {
       await page.getByRole("heading", { name: "Your daily targets" }).waitFor();
       await audit(page, "profile form");
+      // D60: a new profile starts empty, so nobody saves sample numbers as theirs,
+      // and saving an empty one stays on the form.
+      for (const field of ["Age", "Height (cm)", "Weight (kg)"]) {
+        if ((await page.getByLabel(field).inputValue()) !== "") throw new Error(`${field} starts filled in`);
+      }
+      await page.getByRole("button", { name: "Save and work out my targets" }).click();
+      await expectText(page.locator(".profile-form .error"), /Choose your sex/, "the app's own words for what's missing");
       await page.getByLabel("Sex").selectOption("f");
       await page.getByLabel("Age").fill("31");
       await page.getByLabel("Height (cm)").fill("170");
@@ -83,7 +92,9 @@ async function run(page) {
       const study = page.getByRole("link", { name: "the study behind it" });
       if ((await study.getAttribute("href")) !== "https://doi.org/10.1093/ajcn/51.2.241") throw new Error("study link missing");
       // D44: the pace is a share of body weight, shown with its kilos.
-      await expectText(page.getByLabel("Pace").locator("option:checked"), /0\.75% of your weight a week \(about 0\.54 kg\)/, "pace option", "attached");
+      // D58: short enough for a phone; the share of body weight is in the hint below.
+      await expectText(page.getByLabel("Pace").locator("option:checked"), /Steady: about 0\.54 kg a week/, "pace option", "attached");
+      await expectText(page.locator(".profile-form"), /gentle is 0\.5% a week, steady 0\.75%/, "pace hint");
       await page.getByRole("button", { name: "Save and work out my targets" }).click();
     }],
     ["Today shows the targets and the plan", async () => {
@@ -94,7 +105,7 @@ async function run(page) {
     }],
     ["stock the kitchen by name", async () => {
       await tab(page, "Kitchen").click();
-      const field = page.getByPlaceholder("e.g. chicken breasts");
+      const field = page.getByPlaceholder("e.g. chicken, rice");
       await field.fill("chicken breast, rice, onion, garlic, skyr, Zitrone");
       await page.getByRole("button", { name: "Add", exact: true }).click();
       await expectText(page.locator(".kitchen-group").filter({ hasText: /onion/i }), /onion/i, "kitchen list");
@@ -134,8 +145,10 @@ async function run(page) {
       const first = page.locator(".scan-list li").first();
       usedUp = (await first.locator(".scan-name").innerText()).split("(")[0].trim();
       await first.getByRole("checkbox").check();
-      await page.getByRole("button", { name: "Log cook, remove 1" }).click();
+      await page.getByRole("button", { name: "Log it and remove 1 from your kitchen" }).click();
       await page.getByRole("button", { name: "Logged. Enjoy!" }).waitFor();
+      // D60: the recipe now reads against what's left: what ran out is missing.
+      await expectText(page.locator(".recipe-detail"), /1 ingredient away/i, "recipe after cooking");
     }],
     ["what ran out left the kitchen", async () => {
       await tab(page, "Kitchen").click();
@@ -148,6 +161,7 @@ async function run(page) {
       await page.locator(".ring").waitFor();
       await expectText(page.locator(".meal-list"), new RegExp(cooked.slice(0, 12).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "cooked recipe on Today");
       await page.getByRole("button", { name: "Log a meal" }).click();
+      await page.getByRole("button", { name: "Or type the calories yourself" }).click();
       await page.getByPlaceholder("e.g. Skyr with berries").fill("Smoke test salad");
       await page.getByRole("spinbutton", { name: "kcal", exact: true }).fill("420");
       await page.getByRole("spinbutton", { name: "Protein g" }).fill("18");
@@ -197,8 +211,8 @@ async function run(page) {
       await page.getByRole("button", { name: "Add to meal" }).click();
       // D51: the product is a row of the meal, next to a USDA ingredient.
       await expectText(page.locator(".builder-source").first(), /Per 100 g read from the label/, "product row");
-      await page.getByPlaceholder("e.g. banana, Haferflocken, rice").fill("banana");
-      await page.getByPlaceholder("e.g. banana, Haferflocken, rice").press("Enter");
+      await page.getByPlaceholder("e.g. 2 eggs, 50 g oats").fill("banana");
+      await page.getByPlaceholder("e.g. 2 eggs, 50 g oats").press("Enter");
       await page.getByLabel("How much banana").waitFor();
       await expectText(page.locator(".builder-total"), /Together: 600 kcal/, "chips and a banana"); // 490 + 110
       await page.getByRole("button", { name: "Log meal" }).click();
@@ -231,28 +245,34 @@ async function run(page) {
     ["a meal built from ingredients (D49)", async () => {
       await page.getByRole("button", { name: "Log a meal" }).click();
       const add = async (name) => {
-        await page.getByPlaceholder("e.g. banana, Haferflocken, rice").fill(name);
-        await page.getByPlaceholder("e.g. banana, Haferflocken, rice").press("Enter");
+        await page.getByPlaceholder("e.g. 2 eggs, 50 g oats").fill(name);
+        await page.getByPlaceholder("e.g. 2 eggs, 50 g oats").press("Enter");
       };
       await add("Haferflocken"); // German, found as oats
-      await page.getByLabel("How much oat").waitFor();
+      await page.getByLabel("How much oats").waitFor();
       await add("Milch");
       await page.getByLabel("How much milk").waitFor();
       await add("banana"); // a whole piece by default: 1 medium, 118 g
+      // D60: short enough for a phone's unit menu.
+      await expectText(page.getByLabel("Unit for banana").locator("option:checked"), /^× medium \(118 g\)$/, "short unit", "attached");
       await page.getByLabel("How much banana").waitFor();
-      await page.getByLabel("How much oat").fill("50");
+      await page.getByLabel("How much oats").fill("50");
       await page.getByLabel("How much milk").fill("200");
+      // D60: a big number next to a portion is checked: 20 bananas is 2,360 g.
+      await page.getByLabel("How much banana").fill("20");
+      await expectText(page.locator(".builder-item").filter({ hasText: "Banana" }), /That's 2,360 g\. Meant 20 g\?/, "grams guard");
+      await page.getByLabel("How much banana").fill("1");
       // 50 g oats 181 + 200 g milk 122 + 1 medium banana 110 (EU values, D53)
       await expectText(page.locator(".builder-total"), /Together: 413 kcal/, "built meal total");
       await expectText(page.locator(".builder-source").first(), /USDA: Cereals, oats/, "which USDA food");
-      await add("Magerquark"); // a known ingredient the USDA table doesn't have
-      await expectText(page.locator(".builder .feedback"), /No nutrition values for quark yet/, "quark");
+      await add("Garam Masala"); // a known ingredient with no good USDA food
+      await expectText(page.locator(".builder .feedback"), /No nutrition values for garam masala yet/, "garam masala");
       await audit(page, "today, meal built from ingredients");
       await page.getByLabel("Name it (optional)").fill("Smoke test porridge");
       await page.getByRole("button", { name: "Log meal" }).click();
       const meal = page.locator(".meal-list li").filter({ hasText: "Smoke test porridge" });
       await expectText(meal.locator(".meal-macros"), /413 kcal/, "server total");
-      await expectText(meal.locator(".meal-ingredients"), /oat 50 g · milk 200 g · banana 118 g/, "what it was made of");
+      await expectText(meal.locator(".meal-ingredients"), /oats 50 g · milk 200 g · banana 118 g/, "what it was made of");
       await meal.getByRole("button", { name: "Liked" }).click(); // two or more ingredients: it can teach the feed
       await expectText(meal.locator(".rate"), /Liked/, "built meal rated");
     }],
@@ -260,16 +280,81 @@ async function run(page) {
       // The porridge above had 50 g oats and one medium banana.
       await page.getByRole("button", { name: "Log a meal" }).click();
       const add = async (name) => {
-        await page.getByPlaceholder("e.g. banana, Haferflocken, rice").fill(name);
-        await page.getByPlaceholder("e.g. banana, Haferflocken, rice").press("Enter");
+        await page.getByPlaceholder("e.g. 2 eggs, 50 g oats").fill(name);
+        await page.getByPlaceholder("e.g. 2 eggs, 50 g oats").press("Enter");
       };
       await add("Haferflocken");
-      await page.getByLabel("How much oat").waitFor();
-      if ((await page.getByLabel("How much oat").inputValue()) !== "50") throw new Error("oats didn't start at last time's 50 g");
+      await page.getByLabel("How much oats").waitFor();
+      if ((await page.getByLabel("How much oats").inputValue()) !== "50") throw new Error("oats didn't start at last time's 50 g");
       await expectText(page.locator(".builder-last").first(), /Same as last time\. Change it to what you had\./, "last-time note");
-      await page.getByLabel("How much oat").fill("60");
+      await page.getByLabel("How much oats").fill("60");
       if (await page.locator(".builder-last").count()) throw new Error("the note stayed after the amount changed");
       await audit(page, "today, amount from last time");
+      await page.getByRole("button", { name: "Cancel" }).click();
+    }],
+    ["everyday words find the food people mean (D55)", async () => {
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      const add = async (name) => {
+        await page.getByPlaceholder("e.g. 2 eggs, 50 g oats").fill(name);
+        await page.getByPlaceholder("e.g. 2 eggs, 50 g oats").press("Enter");
+      };
+      await add("Paprika"); // the vegetable in a meal, not the spice
+      await page.getByLabel("How much bell pepper").waitFor();
+      await expectText(page.locator(".builder-item").filter({ hasText: "Bell pepper" }).locator(".builder-source"), /USDA: Peppers, sweet, red, raw/, "paprika is the vegetable");
+      await add("Reis gekocht");
+      await page.getByLabel("How much rice").waitFor();
+      if ((await page.getByLabel("Weighed raw or cooked: rice").inputValue()) !== "cooked") throw new Error("Reis gekocht didn't start cooked");
+      await add("Haferdrink");
+      await page.getByLabel("How much oat drink").waitFor();
+      await expectText(page.locator(".builder-item").filter({ hasText: "Oat drink" }).locator(".builder-source"), /Open Food Facts: median of 12 products sold in Germany/, "German-pack values");
+      await expectText(page.getByLabel("Unit for oat drink"), /× glass \(250 g\)/, "a glass for a drink");
+      await audit(page, "today, everyday words");
+      await page.getByRole("button", { name: "Cancel" }).click();
+    }],
+    ["amounts, several foods and dishes in one line (D61, D62)", async () => {
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      const box = page.getByPlaceholder("e.g. 2 eggs, 50 g oats");
+      await box.fill("2 Eier, Haferflocken, 50 g, Blubberkraut");
+      await box.press("Enter");
+      await page.getByLabel("How much egg").waitFor();
+      if ((await page.getByLabel("How much egg").inputValue()) !== "2") throw new Error("the 2 in 2 Eier was lost");
+      await expectText(page.getByLabel("Unit for egg").locator("option:checked"), /^× large \(50 g\)$/, "eggs as pieces", "attached");
+      if ((await page.getByLabel("How much oats").inputValue()) !== "50") throw new Error("Haferflocken, 50 g isn't 50 g");
+      await expectText(page.locator(".builder .feedback"), /Couldn't find "Blubberkraut"/, "what wasn't found");
+      if ((await box.inputValue()) !== "Blubberkraut") throw new Error("the word not found should stay in the box");
+      await page.getByRole("button", { name: "Cancel" }).click();
+      // A dish is its typical parts, and names the meal.
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      await box.fill("Cappuccino");
+      await box.press("Enter");
+      await page.getByLabel("How much espresso").waitFor();
+      await expectText(page.locator(".builder-note"), /A typical cappuccino: espresso, milk\. Change any amount/, "dish note");
+      if ((await page.getByLabel("Name it (optional)").inputValue()) !== "Cappuccino") throw new Error("the dish didn't name the meal");
+      await audit(page, "today, a dish");
+      await page.getByRole("button", { name: "Cancel" }).click();
+      // D63: fat levels: "fettarme Milch" is 1.5% milk, and the row can switch.
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      await box.fill("200 ml fettarme Milch");
+      await box.press("Enter");
+      const fat = page.getByLabel("Fat level: low-fat milk");
+      await fat.waitFor();
+      await expectText(fat.locator("option:checked"), /Low-fat milk, 1\.5% fat/, "1.5% milk", "attached");
+      const kcal = async () => Number((await page.locator(".builder-kcal").first().innerText()).replace(/\D/g, ""));
+      const low = await kcal();
+      await fat.selectOption("milk");
+      await expectText(page.getByLabel("Fat level: milk").locator("option:checked"), /Whole milk, 3\.2% fat/, "whole milk", "attached");
+      await page.getByLabel("Fat level: milk").waitFor();
+      if ((await page.getByLabel("How much milk").inputValue()) !== "200") throw new Error("switching fat level lost the amount");
+      if (!((await kcal()) > low)) throw new Error("whole milk should have more calories than 1.5%");
+      await page.getByRole("button", { name: "Cancel" }).click();
+      // D64: chickpeas from a can, drained: a form of their own.
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      await box.fill("200 g Kichererbsen aus der Dose");
+      await box.press("Enter");
+      const form = page.getByLabel("Weighed raw or cooked: chickpeas");
+      await form.waitFor();
+      if ((await form.inputValue()) !== "canned") throw new Error("Kichererbsen aus der Dose didn't start canned");
+      await expectText(page.locator(".builder-source").first(), /drained/, "canned values");
       await page.getByRole("button", { name: "Cancel" }).click();
     }],
     ["log again, and a favourite (D50)", async () => {
@@ -281,7 +366,99 @@ async function run(page) {
       await page.getByRole("button", { name: "Log Smoke test porridge again" }).click();
       await expectText(page.locator(".meal-list"), /Smoke test porridge[\s\S]*Smoke test porridge/, "logged a second time");
       const copy = page.locator(".meal-list li").filter({ hasText: "Smoke test porridge" }).last();
-      await expectText(copy.locator(".meal-ingredients"), /oat 50 g · milk 200 g · banana 118 g/, "with its ingredients");
+      await expectText(copy.locator(".meal-ingredients"), /oats 50 g · milk 200 g · banana 118 g/, "with its ingredients");
+    }],
+    ["edit, undo, servings and an earlier day (D56)", async () => {
+      // Edit: back into the form, filled in, and saved over.
+      await page.getByRole("button", { name: "Edit Smoke test porridge" }).first().click();
+      await page.getByLabel("How much oats").waitFor();
+      await page.getByLabel("How much oats").fill("60");
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expectText(page.locator(".meal-list"), /oats 60 g · milk 200 g/, "edited meal");
+      // Remove, then Undo.
+      await page.getByRole("button", { name: "Remove Smoke test salad" }).click();
+      await expectText(page.locator(".undo-bar"), /Removed Smoke test salad\./, "undo bar");
+      await page.locator(".undo-bar").getByRole("button", { name: "Undo" }).click();
+      await expectText(page.locator(".meal-list"), /Smoke test salad/, "salad back");
+      // Servings of the cooked recipe.
+      const cookedMeal = page.locator(".meal-list li").filter({ has: page.locator(".servings select") }).first();
+      const kcal = async () => Number((await cookedMeal.locator(".meal-macros").innerText()).match(/([\d,]+) kcal/)[1].replace(",", ""));
+      const one = await kcal();
+      await cookedMeal.locator(".servings select").selectOption("2");
+      await expectText(cookedMeal.locator(".meal-macros"), /^2 servings · /, "2 servings");
+      if (Math.abs((await kcal()) - 2 * one) > 1) throw new Error("two servings didn't double the calories");
+      // An earlier day, filled in afterwards.
+      await page.getByRole("button", { name: "‹ Earlier" }).click();
+      await expectText(page.locator(".empty-note"), /Nothing logged on /, "an empty earlier day");
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      await expectText(page.locator(".form-title"), /Log a meal for /, "logging for that day");
+      await page.getByRole("button", { name: "Or type the calories yourself" }).click();
+      await page.getByPlaceholder("e.g. Skyr with berries").fill("Smoke test yesterday");
+      await page.getByRole("spinbutton", { name: "kcal", exact: true }).fill("300");
+      await page.getByRole("button", { name: "Log meal" }).click();
+      await expectText(page.locator(".meal-list"), /Smoke test yesterday/, "logged on the earlier day");
+      await audit(page, "today, an earlier day");
+      await page.getByRole("button", { name: "Later ›" }).click();
+      await page.getByRole("heading", { name: "Today", exact: true }).waitFor();
+      if ((await page.locator(".meal-list").innerText()).includes("Smoke test yesterday")) throw new Error("yesterday's meal shows today");
+      // A meal logged for yesterday brings the question about yesterday first.
+      await page.getByRole("button", { name: "No, I missed some" }).click();
+    }],
+    ["calmer screens (D58)", async () => {
+      // "Log a meal" sits above the meals, not below them.
+      const above = await page.evaluate(() => {
+        const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Log a meal");
+        const list = document.querySelector(".meal-list");
+        return Boolean(btn && list && btn.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING);
+      });
+      if (!above) throw new Error("Log a meal isn't above the meal list");
+      // D60: on a phone it's on the first screen, under the ring, and it's the only one.
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const logBtn = page.getByRole("button", { name: "Log a meal" });
+      if ((await logBtn.count()) !== 1) throw new Error("more than one Log a meal button shows");
+      const box = await logBtn.boundingBox();
+      if (!box || box.y + box.height > 844) throw new Error(`Log a meal is below the first screen (at ${box?.y})`);
+      // The form opens on one box; the numbers are behind a link, and a greyed
+      // Log meal says why.
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      if (await page.getByRole("spinbutton", { name: "kcal", exact: true }).count()) throw new Error("the number fields show before asked for");
+      await page.getByRole("button", { name: "Or type the calories yourself" }).click();
+      await expectText(page.locator(".meal-form"), /Give the meal a name and its calories\./, "why Log meal is greyed");
+      await page.getByRole("button", { name: "Cancel" }).click();
+      // An impossible weight gets the app's own words.
+      await page.getByPlaceholder("Today's weight, kg").fill("500");
+      await page.getByRole("button", { name: "Log weight" }).click();
+      await expectText(page.locator(".weight-card .feedback.error"), /Enter a weight between 35 and 250 kg\./, "weight message");
+      await page.getByPlaceholder("Today's weight, kg").fill("");
+      // A first visit gets a one-line pointer, not the whole guide.
+      // (the test marks guides seen on every load, so clear it and restart the tab)
+      await page.evaluate(() => localStorage.removeItem("forkcast.todayguide.v1"));
+      await tab(page, "Today").click();
+      await page.locator(".guide-hint").waitFor();
+      if (await page.locator("#today-guide").count()) throw new Error("the guide opened by itself");
+      await page.getByRole("button", { name: "See how this page works" }).click();
+      await page.locator("#today-guide").waitFor();
+      await page.getByRole("button", { name: "Got it" }).click();
+      // Tapping the Recipes tab inside a recipe goes back to the list.
+      await tab(page, "Recipes").click();
+      await page.locator(".recipe-card").first().click();
+      await page.locator(".recipe-detail h1").waitFor();
+      await tab(page, "Recipes").click();
+      await page.locator(".recipe-card").first().waitFor();
+      await audit(page, "recipes, back to the list");
+      await tab(page, "Today").click();
+    }],
+    ["recipe honesty (D59)", async () => {
+      await tab(page, "Recipes").click();
+      await page.locator(".recipe-card").first().click();
+      await expectText(page.locator(".amounts-note"), /without amounts/, "no amounts, said");
+      await page.getByRole("button", { name: "I cooked this" }).click();
+      await expectText(page.locator(".cook-confirm"), /How much did you eat\?/, "servings asked");
+      await page.getByRole("button", { name: "Cancel" }).click();
+      await tab(page, "Recipes").click();
+      // Losing weight (the profile's goal weight): desserts don't count towards what to buy.
+      await expectText(page.locator("section.shopping"), /Desserts aren't counted, since you're losing weight\./, "dessert note");
+      await tab(page, "Today").click();
     }],
     ["Done for today", async () => {
       await page.getByRole("button", { name: "Done for today" }).click();

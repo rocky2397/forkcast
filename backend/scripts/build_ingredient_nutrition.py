@@ -15,7 +15,8 @@ pasta, beans and a few others also get their cooked form.
 Each ingredient gets one USDA food. A word-match picks a candidate (all the
 ingredient's words in the food's name, raw and plain forms first); the picks
 checked by hand live in usda_picks.csv next to this script and win over the
-word-match; a row with form "cooked" adds the cooked form. An empty fdc_id
+word-match; a row with form "cooked" adds the cooked form, "canned" the
+canned and drained one (D64). An empty fdc_id
 means "no good USDA match": the ingredient is left out rather than given the
 wrong food.
 
@@ -37,6 +38,7 @@ from app import embeddings  # noqa: E402
 from app.db import CORPUS_PATH  # noqa: E402
 
 PICKS = HERE / "usda_picks.csv"
+OFF_FOODS = HERE / "off_foods.csv"  # D55: medians of German packs (build_off_foods.py)
 OUT = HERE.parent / "app" / "ingredient_nutrition.json"
 
 NUTRIENTS = {"1008": "kcal", "1003": "protein_g", "1005": "carbs_g", "1004": "fat_g"}
@@ -108,8 +110,8 @@ def load_usda(src: Path):
     foods = {}
     with open(src / "food.csv", newline="") as f:
         for r in csv.DictReader(f):
-            if r["food_category_id"] not in SKIP_CATEGORIES:
-                foods[r["fdc_id"]] = {"description": r["description"], "category": r["food_category_id"]}
+            # Every category: hand picks may come from any (pizza is "Fast Foods").
+            foods[r["fdc_id"]] = {"description": r["description"], "category": r["food_category_id"]}
     values: dict[str, dict] = defaultdict(dict)
     with open(src / "food_nutrient.csv", newline="") as f:
         for r in csv.DictReader(f):
@@ -157,6 +159,8 @@ def candidates(canonical: str, foods: dict) -> list[tuple[float, str]]:
     head = want[-1]
     out = []
     for fdc, food in foods.items():
+        if food["category"] in SKIP_CATEGORIES:  # dishes, brands, baby food: never a word match
+            continue
         desc = food["description"]
         # "without salt" doesn't make a food salty: drop what follows "without".
         words = _words(re.sub(r"\bwithout( added)? [a-z ]+", "", desc.lower()))
@@ -186,18 +190,21 @@ def candidates(canonical: str, foods: dict) -> list[tuple[float, str]]:
     return out
 
 
-def read_picks() -> tuple[dict[str, str | None], dict[str, str]]:
-    """(canonical -> fdc_id or None, canonical -> fdc_id of its cooked form)."""
+def read_picks() -> tuple[dict[str, str | None], dict[str, dict[str, str]]]:
+    """(canonical -> fdc_id or None, form -> canonical -> fdc_id of that form).
+
+    Forms: "cooked" (weighed after boiling) and "canned" (drained, D64).
+    """
     plain: dict[str, str | None] = {}
-    cooked: dict[str, str] = {}
+    forms: dict[str, dict[str, str]] = {"cooked": {}, "canned": {}}
     if PICKS.is_file():
         with open(PICKS, newline="") as f:
             for r in csv.DictReader(f):
-                if r["form"] == "cooked":
-                    cooked[r["canonical"]] = r["fdc_id"]
+                if r["form"] in forms:
+                    forms[r["form"]][r["canonical"]] = r["fdc_id"]
                 else:
                     plain[r["canonical"]] = r["fdc_id"] or None
-    return plain, cooked
+    return plain, forms
 
 
 def usage() -> dict[str, int]:
@@ -214,7 +221,7 @@ def main() -> None:
     src = Path(args[0])
     review = int(args[args.index("--review") + 1]) if "--review" in args else None
     foods, values, portions = load_usda(src)
-    picks, cooked = read_picks()
+    picks, forms = read_picks()
     used = usage()
     vocab = embeddings.vocabulary()
 
@@ -227,6 +234,11 @@ def main() -> None:
         cands = candidates(c, foods)
         if cands:
             chosen[c] = (cands[0][1], "auto")
+    # D55: foods people log that recipes don't use (protein powder, toast,
+    # pizza): hand picks under names outside the ingredient list.
+    for c, fdc in picks.items():
+        if c not in chosen and c not in vocab and fdc:
+            chosen[c] = (fdc, "hand")
 
     if review is not None:
         top = sorted(vocab, key=lambda c: -used.get(c, 0))[:review]
@@ -240,6 +252,7 @@ def main() -> None:
     def food(fdc: str) -> dict:
         return {
             "fdc_id": int(fdc),
+            "source": "usda",
             "usda": foods[fdc]["description"],
             **{k: round(v, 1) for k, v in eu_values(values[fdc]).items()},  # D53
             "portions": portions.get(fdc, [])[:6],
@@ -249,8 +262,22 @@ def main() -> None:
     for c in sorted(chosen):
         fdc, how = chosen[c]
         out[c] = {**food(fdc), "picked": how}
-        if c in cooked:  # rice, pasta, beans...: weighed dry or cooked differ 2-3x
-            out[c]["cooked"] = food(cooked[c])
+        for form, ids in forms.items():  # rice, pasta, beans...: dry, cooked and canned differ 2-3x
+            if c in ids:
+                out[c][form] = food(ids[c])
+    # D55: staples the USDA table lacks, from the labels of German packs.
+    if OFF_FOODS.is_file():
+        with open(OFF_FOODS, newline="") as f:
+            for r in csv.DictReader(f):
+                out[r["canonical"]] = {
+                    "fdc_id": None,
+                    "source": "openfoodfacts",
+                    "usda": f"median of {r['n']} products sold in Germany",
+                    **{k: float(r[k]) for k in ("kcal", "protein_g", "carbs_g", "fat_g", "fibre_g")},
+                    "portions": [],
+                    "picked": "hand",
+                }
+    out = dict(sorted(out.items()))
     with open(OUT, "w") as f:
         f.write("{\n")
         f.write(",\n".join(f"  {json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in out.items()))

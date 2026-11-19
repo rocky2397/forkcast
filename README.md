@@ -6,8 +6,9 @@ ones that suit your taste and today's calorie and protein budget first, and
 tells you what to buy to unlock more.
 
 **[Try the demo](https://rockyyyy2397-forkcast.hf.space)**: you get your own
-copy of a demo kitchen, private to you and saved for your browser, so it is
-still there when you come back. It is deleted 30 days after your last visit,
+copy of a demo kitchen (25 ingredients and two dishes cooked earlier in the
+week), set up your own profile and start with an empty day. It is private to
+you and saved for your browser, so it is still there when you come back. It is deleted 30 days after your last visit,
 or at once with "Delete my data". Photo and label scanning work there too, up
 to 10 scans a day. After two days without visitors the server sleeps, and the
 next visit takes about a minute while it wakes up. Usage is counted only as
@@ -19,7 +20,7 @@ next visit takes about a minute while it wakes up. Usage is counted only as
 
 | Recipes | Recipe | Worth buying | Today | Kitchen |
 |---|---|---|---|---|
-| <img src="docs/screenshots/recipes.jpg" width="160" alt="Recipe feed on a phone: tabs for cookable now, one away and two away; each recipe shows coloured dots for its main ingredients, how many you have, which cooked dish it is like (“Like your Cherry Tomato Pasta”) and whether it fits what's left today"> | <img src="docs/screenshots/recipe.jpg" width="160" alt="Recipe page: title, a three-line author's note with Read more, calories and macros, and the ingredients you already have"> | <img src="docs/screenshots/shopping.jpg" width="160" alt="Worth buying: yeast unlocks 255 recipes, then baking powder 140 more, then onion 99 more, each with example dishes"> | <img src="docs/screenshots/today.jpg" width="160" alt="Today: a ring with calories left, protein, carbs and fat bars with grams to go, and today's meals"> | <img src="docs/screenshots/kitchen.jpg" width="160" alt="Kitchen: a scan button, an add-by-name field and the ingredients grouped by kind"> |
+| <img src="docs/screenshots/recipes.jpg" width="160" alt="Recipe feed on a phone: tabs for cookable now, one away and two away; each recipe shows coloured dots for its main ingredients, how many you have, which cooked dish it is like (“Like your Foil Chicken Casserole for 1”), whether it fits what's left today, and a link down to what is worth buying"> | <img src="docs/screenshots/recipe.jpg" width="160" alt="Recipe page: title, a three-line author's note with Read more, calories and macros, and the ingredients you already have"> | <img src="docs/screenshots/shopping.jpg" width="160" alt="Worth buying, for someone losing weight: yeast unlocks 238 recipes, then onion 90 more, then baking powder 131 more, each with example dishes, and a note that desserts are not counted"> | <img src="docs/screenshots/today.jpg" width="160" alt="Today: a ring with calories left, protein, carbs and fat bars with grams to go, and today's meals"> | <img src="docs/screenshots/kitchen.jpg" width="160" alt="Kitchen: a scan button, an add-by-name field and the ingredients grouped by kind"> |
 | What you can cook, best first | What you have is ticked | Three buys that unlock the most | Calories and macros left | What Forkcast matches against |
 
 ### Goals and progress
@@ -162,12 +163,28 @@ your own amount beats any assumption.
 
 Rating a meal teaches the recipe feed what you like, so a rating needs a
 dish: a cooked recipe, or a meal built from two or more ingredients ("Like
-your oat porridge"). A single food or a meal typed in as numbers can't be
-rated.
+your oat porridge"). A single food, a meal typed in as numbers, or one whose
+foods recipes don't use (skyr, protein powder) can't be rated, and each says
+why.
 
 Meals you typed or built in the last month wait under "Log again", one tap
 each, and a starred one stays at the top: most people eat the same few
 breakfasts and snacks.
+
+Logs can be fixed: a meal can be edited, a removed one comes back with Undo,
+a cooked recipe can count as half a serving or two, and "‹ Earlier" goes back
+to a day you forgot to fill in. Everyday words people type find the food they
+mean: "Paprika" is the vegetable in a meal, "Reis gekocht" starts cooked, and
+foods the USDA table lacks (quark, skyr, oat drink, muesli) use the median of
+12 German packs on Open Food Facts, which the app names as the source.
+
+One line can hold a whole meal: "2 Eier, Haferflocken 50 g, Kaffee mit Milch"
+adds each food with its amount. A cappuccino, a Döner or spaghetti bolognese
+adds the foods of a typical serving, each with its own values, and the app
+says it's a typical one so the part that differs can be changed. Milk and
+yogurt come in the fat levels German shelves have (1.5% milk is 47 kcal,
+whole 61), switchable on each row, and chickpeas and beans can come from a
+can, drained.
 
 ## Evaluation
 
@@ -229,10 +246,12 @@ After converting every value to EU labelling and reading compounds whole
 (D53), calories are within 10% for 76% of held-out products (64% before) and
 carbs within 3 g for 76% (36%). On 12 more kinds fetched later, the carbs
 held up (31% to 50% within 3 g) but calories didn't move: the calorie gain
-came from words the app now finds, not from the new values. What is left: the app has one milk and one
-yogurt where German shelves have several fat levels, and canned beans hold
-more water than boiled ones, and quark has no values yet
-([details](eval/RESULTS-stage7.md)).
+came from words the app now finds, not from the new values. The misses left
+were fat levels (one milk, one yogurt) and canned beans, which hold more water
+than boiled ones. Both were added later (D63, D64): "fettarme Milch" is now
+right for all four products, and canned chickpeas are 11 kcal over the label
+instead of 34, still outside 10% for three of four. Those numbers are no longer
+unseen ([details](eval/RESULTS-stage7.md)).
 
 ### How the tests work
 
@@ -398,7 +417,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 472 pytest tests in about three seconds, offline and without the
+- **Tests:** 492 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -427,7 +446,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 54 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 64 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -493,7 +512,10 @@ ops/e2e.sh            # needs Google Chrome, the corpus and the Epicure weights
 It starts the app on an empty data dir and makes a first visit in Chrome:
 a profile with a goal weight, the kitchen, the recipe feed, a cooked recipe
 and what ran out, a typed meal, a product that isn't on Open Food Facts (the
-label reader faked, the rest real) added to a meal with a banana, a product that starts at one serving, a meal built from ingredients and logged again, "Done for today", a weigh-in and a reload.
+label reader faked, the rest real) added to a meal with a banana, a product that starts at one serving, a meal built from ingredients and logged again,
+everyday words, a line with amounts and a dish, fat levels and a can, editing
+a meal, Undo, servings and an earlier day, the calmer screens and recipe notes
+from the UX reviews, "Done for today", a weigh-in and a reload.
 It fails if a screen doesn't show what it should, on any JavaScript or
 console error, on any API error, and on a serious accessibility problem
 (axe-core) on any screen. Breaking the app on purpose (a renamed API field,

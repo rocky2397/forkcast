@@ -49,3 +49,18 @@ export function Guide({
     </section>
   );
 }
+
+/** D58: the first-visit pointer to a screen's guide, one line instead of the card. */
+export function GuideHint({ onOpen, onDismiss }: { onOpen: () => void; onDismiss: () => void }) {
+  return (
+    <p className="guide-hint">
+      New here?{" "}
+      <button type="button" className="link-button" onClick={onOpen}>
+        See how this page works
+      </button>
+      <button type="button" className="guide-hint-close" onClick={onDismiss} aria-label="Hide this tip">
+        ×
+      </button>
+    </p>
+  );
+}
