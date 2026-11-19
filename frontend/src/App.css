@@ -512,6 +512,8 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .meter-fill.over { background: var(--warn); }
 
 .meal-form { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+/* D60: scrolled to from the button under the ring; clear of the sticky header. */
+.meal-form, .cook-confirm { scroll-margin-top: 72px; }
 .meal-form input { width: 100%; }
 .meal-form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .meal-form-actions { display: flex; gap: 8px; align-items: center; }
@@ -764,6 +766,13 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .meal-list .rate { margin-top: 4px; display: flex; gap: 6px; }
 .meal-list .rate-note { display: block; margin-top: 4px; font-size: 13px; color: var(--ink-2); }
 .log-btn { width: 100%; }
+/* D60: one Log a meal button at a time: under the ring on a phone, above the meals on a laptop. */
+.log-btn-phone { margin: 16px 0 16px; }
+.log-btn-wide { display: none; }
+@media (min-width: 960px) {
+  .log-btn-phone { display: none; }
+  .log-btn-wide { display: block; }
+}
 
 .meal-form {
   display: flex;
@@ -792,6 +801,8 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .builder-amount { display: flex; flex-wrap: wrap; gap: 6px; }
 .meal-form .builder-amount input { width: 84px; }
 .builder-amount select { flex: 1 1 150px; min-width: 0; max-width: 100%; }
+/* D60: raw or cooked gets its own line, so the unit menu isn't squeezed on a phone. */
+.builder-amount .form-select { flex-basis: 100%; }
 .builder-source { font-size: 12px; color: var(--ink-3); }
 .builder-last { font-size: 13px; color: var(--ink-2); }
 .builder-total { margin: 0; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -868,10 +879,10 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 }
 .more-link { margin-top: 6px; min-height: 32px; font-size: 14px; }
 
-/* Public demo (D32): one quiet line under the top bar. */
+/* Public demo (D32): one quiet line under the top bar; scrolls away (D58). */
 .demo-banner {
   margin: 0;
-  padding: 6px 16px;
+  padding: 4px 16px;
   font-size: 13px;
   text-align: center;
   background: var(--herb-soft);
@@ -889,3 +900,25 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
   cursor: pointer;
 }
 .shopping > .link-button { margin-top: 14px; }
+
+/* D56: earlier days, editing, undo */
+.day-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.day-nav .kicker { margin: 0; }
+.day-nav .link-button { font-size: 14px; }
+.day-nav-spacer { width: 52px; }
+.meal-edit { align-self: flex-start; font-size: 14px; }
+.servings { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.servings select { font-size: 14px; padding: 4px 6px; }
+.undo-bar {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom) + 76px); z-index: 30;
+  display: flex; gap: 14px; align-items: center; padding: 10px 16px; border-radius: 999px;
+  background: var(--ink); color: var(--bg); font-size: 14px; box-shadow: 0 6px 20px rgb(0 0 0 / 0.25);
+}
+.undo-bar .link-button { color: var(--bg); font-weight: 600; }
+@media (min-width: 768px) { .undo-bar { bottom: 24px; } }
+
+/* D58: the first-visit pointer to a screen's guide */
+.guide-hint { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; font-size: 14px; color: var(--ink-2); }
+.guide-hint-close { margin-left: auto; padding: 4px 8px; border: 0; background: none; color: var(--ink-3); font-size: 18px; cursor: pointer; }
+.type-numbers { align-self: flex-start; font-size: 14px; }
+.jump-shopping { margin: 0 0 12px; font-size: 14px; }

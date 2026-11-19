@@ -126,19 +126,22 @@ def plan(profile: Mapping) -> dict | None:
     out = {"goal_weight_kg": goal, "burn": round(daily_burn), "healthy_range_kg": healthy_range_kg(profile["height_cm"])}
     if abs(diff) < KEEP_BAND_KG:
         return out | {"direction": "keep", "calories": round(daily_burn), "change": 0,
-                      "kg_per_week": 0.0, "weeks": 0, "limited": None}
+                      "kg_per_week": 0.0, "weeks": 0, "limited": None, "limited_warn": False}
     pace = _opt(profile, "pace") or "steady"
     share = PACE_SHARE["lose" if diff < 0 else "gain"][pace]
     wanted = share * profile["weight_kg"] * KCAL_PER_KG / 7.0
     limited = None
+    warn = False  # D60: the deficit cap is a rule, not a problem; the safe minimum is worth flagging
     if diff < 0:
         room = max(daily_burn - minimum_calories(profile), 0.0)
         cap = MAX_DEFICIT_SHARE * daily_burn
         change = min(wanted, cap, room)
         if change <= 0:
+            warn = True
             limited = ("What you burn is already close to a safe minimum, so Forkcast won't plan "
                        "a deficit. A doctor or dietitian can help with this goal.")
         elif change < wanted - 1 and room <= cap:
+            warn = True
             limited = "Slowed down to keep your daily calories above a safe minimum."
         elif change < wanted - 1:
             limited = "Slowed down: Forkcast keeps the deficit to at most a quarter of what you burn."
@@ -153,7 +156,7 @@ def plan(profile: Mapping) -> dict | None:
     weeks = None if left is None else math.ceil(left)
     return out | {"direction": direction, "calories": round(calories), "change": round(change),
                   "kg_per_week": round(kg_per_week, 2), "pace_share": share, "weeks": weeks,
-                  "limited": limited}
+                  "limited": limited, "limited_warn": warn}
 
 
 def targets(profile: Mapping) -> dict:

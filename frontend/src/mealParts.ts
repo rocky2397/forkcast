@@ -9,8 +9,10 @@ export interface Part {
   /** -1: grams; otherwise an index into the current form's portions. */
   unit: number;
   cooked: boolean;
+  /** D64: from a can, drained (beans, peas); wins over cooked. */
+  canned?: boolean;
   /** D51: a scanned product, with where its values came from. */
-  product?: { barcode: string | null; source: Product["source"] };
+  product?: { barcode: string | null; source: Product["source"] | "logged" };
   /** D54: the amount is the one from last time, untouched so far. */
   fromLast?: boolean;
 }
@@ -80,12 +82,22 @@ type Totals = Record<(typeof MACROS)[number], number>;
 
 export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+/** D60: a portion as the unit menu shows it, short enough for a phone:
+ *  "× medium (118 g)" after an amount of 1, not "× 1 medium (118 g)"; the
+ *  USDA's longer descriptions up to their first "or". */
+export function unitLabel(label: string, grams: number): string {
+  const short = label.replace(/^1 /, "").split(/ or |, /)[0];
+  return `× ${short} (${Math.round(grams).toLocaleString("en")} g)`;
+}
+
 export function formOf(p: Part): FoodForm {
+  if (p.canned && p.food.canned) return p.food.canned;
   return p.cooked && p.food.cooked ? p.food.cooked : p.food;
 }
 
 export function gramsOf(p: Part): number {
-  const n = Number(p.amount.replace(",", ".")) || 0;
+  // D58: a negative amount counts as none (the form says amounts must be above 0).
+  const n = Math.max(Number(p.amount.replace(",", ".")) || 0, 0);
   return p.unit < 0 ? n : n * (formOf(p).portions[p.unit]?.grams ?? 0);
 }
 

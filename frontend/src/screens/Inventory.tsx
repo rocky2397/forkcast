@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, isDemo, pretty, scansOn, type InventoryItem, type ScanProposal } from "../api";
 import { ScanConfirm } from "./ScanConfirm";
 import { foodColor, kitchenGroup, KITCHEN_GROUPS } from "../format";
-import { Guide, HelpButton } from "../Guide";
+import { Guide, GuideHint, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
 import { CloseIcon, ScanIcon } from "../Icons";
 
@@ -36,7 +36,7 @@ export function Inventory() {
       // comma-separated batch entry supported
       const parts = raw.split(",").map((s) => s.trim()).filter(Boolean);
       const res = await api.addInventory(parts);
-      setFeedback({ added: res.added, unknown: res.unknown, suggestions: res.suggestions ?? {} });
+      setFeedback({ added: res.added_names ?? res.added.map(pretty), unknown: res.unknown, suggestions: res.suggestions ?? {} });
       setInput("");
       await refresh();
     } catch (e) {
@@ -54,7 +54,7 @@ export function Inventory() {
       const res = await api.addInventory([pretty(name)]);
       setFeedback((f) =>
         f && !("error" in f)
-          ? { added: [...f.added, ...res.added], unknown: f.unknown.filter((u) => u !== typed), suggestions: f.suggestions }
+          ? { added: [...f.added, ...(res.added_names ?? res.added.map(pretty))], unknown: f.unknown.filter((u) => u !== typed), suggestions: f.suggestions }
           : f,
       );
       await refresh();
@@ -115,6 +115,7 @@ export function Inventory() {
           : "What you have at home. Recipes are matched against this list."}
       </p>
 
+      {guide.hint && <GuideHint onOpen={guide.show} onDismiss={guide.dismiss} />}
       {guide.open && (
         <Guide
           id="kitchen-guide"
@@ -185,7 +186,7 @@ export function Inventory() {
               id="add-ingredient"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="e.g. chicken breasts, rice, soy sauce"
+              placeholder="e.g. chicken, rice, Zwiebeln"
               aria-describedby="add-hint"
             />
             <button type="submit" className="btn" disabled={busy || !input.trim()}>
@@ -204,7 +205,7 @@ export function Inventory() {
             <p className="error">{feedback.error}</p>
           ) : (
             <>
-              {feedback.added.length > 0 && <p>Added {feedback.added.map(pretty).join(", ")}.</p>}
+              {feedback.added.length > 0 && <p>Added {feedback.added.join(", ")}.</p>}
               {feedback.unknown
                 .filter((u) => feedback.suggestions[u]?.length)
                 .map((u) => (
@@ -232,7 +233,8 @@ export function Inventory() {
                     .filter((u) => !feedback.suggestions[u]?.length)
                     .map((u) => `“${u}”`)
                     .join(", ")}
-                  . Try a simpler name, like "chicken" instead of a brand.
+                  . Try the plain food, like “chicken” or “tomatoes”; a few products, such as tomato paste or
+                  coffee, aren't on Forkcast's list of recipe ingredients.
                 </p>
               )}
             </>
@@ -255,9 +257,9 @@ export function Inventory() {
                 <li key={it.canonical}>
                   <span className="item-name">
                     <span className="dot" aria-hidden="true" style={{ background: foodColor(it.canonical, it.family ?? null) }} />
-                    {pretty(it.canonical)}
+                    {it.name ?? pretty(it.canonical)}
                   </span>
-                  <button className="remove" onClick={() => remove(it.canonical)} aria-label={`Remove ${pretty(it.canonical)}`}>
+                  <button className="remove" onClick={() => remove(it.canonical)} aria-label={`Remove ${it.name ?? pretty(it.canonical)}`}>
                     <CloseIcon size={18} />
                   </button>
                 </li>

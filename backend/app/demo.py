@@ -137,12 +137,8 @@ def build_template(match: Callable[[str], str | None]) -> list[str]:
     tmp = path.with_suffix(".building")
     tmp.unlink(missing_ok=True)
     con = db.connect(tmp)
-    p = data["profile"]
-    con.execute(
-        "INSERT INTO profile (id, sex, age, height_cm, weight_kg, activity, goal)"
-        " VALUES (1, ?, ?, ?, ?, ?, ?)",
-        (p["sex"], p["age"], p["height_cm"], p["weight_kg"], p["activity"], p["goal"]),
-    )
+    # D57: no profile, so each visitor sets their own, and nothing logged
+    # today or rated: an empty day that is theirs.
     unknown = []
     for raw in data["kitchen"]:
         canonical = match(raw)
@@ -150,15 +146,15 @@ def build_template(match: Callable[[str], str | None]) -> list[str]:
             unknown.append(raw)
         else:
             con.execute("INSERT OR IGNORE INTO inventory (canonical) VALUES (?)", (canonical,))
-    for rid in data["cooked_and_liked"]:
+    for cook in data["cooked_earlier"]:
+        # Earlier in the week, unrated: the recipe feed has dishes to compare
+        # with ("Like your Cherry Tomato Pasta"), and the intro says so.
         # Skipped, not failed, on a corpus without these ids (the test corpus).
-        if con.execute("SELECT 1 FROM recipes WHERE id = ?", (rid,)).fetchone():
-            con.execute("INSERT INTO meal_log (recipe_id, liked) VALUES (?, 1)", (rid,))
-    m = data["typed_meal"]
-    con.execute(
-        "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g) VALUES (?, ?, ?, ?, ?)",
-        (m["name"], m["calories"], m["protein_g"], m["carbs_g"], m["fat_g"]),
-    )
+        if con.execute("SELECT 1 FROM recipes WHERE id = ?", (cook["recipe_id"],)).fetchone():
+            con.execute(
+                "INSERT INTO meal_log (recipe_id, logged_at) VALUES (?, datetime('now', ?))",
+                (cook["recipe_id"], f"-{cook['days_ago']} days"),
+            )
     con.commit()
     con.close()
     os.replace(tmp, path)
@@ -212,9 +208,14 @@ def kitchen(requested: str | None) -> tuple[str, Path, bool]:
         new = secrets.token_urlsafe(16)
         path = kitchens_dir() / f"{new}.db"
         shutil.copyfile(template_path(), path)
-        # The seeded meals happened "today" for every new visitor.
+        # D57: the seeded cooks are the same number of days back for every new
+        # visitor, however old the template is; never today.
         con = sqlite3.connect(path)
-        con.execute("UPDATE meal_log SET logged_at = datetime('now')")
+        for cook in seed()["cooked_earlier"]:
+            con.execute(
+                "UPDATE meal_log SET logged_at = datetime('now', ?) WHERE recipe_id = ?",
+                (f"-{cook['days_ago']} days", cook["recipe_id"]),
+            )
         con.commit()
         con.close()
         return new, path, True

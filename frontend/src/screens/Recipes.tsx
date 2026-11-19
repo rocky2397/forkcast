@@ -9,7 +9,7 @@ import {
 } from "../api";
 import { displayName, foodColor, mealOfDay } from "../format";
 import { useMediaQuery } from "../useMediaQuery";
-import { Guide, HelpButton } from "../Guide";
+import { Guide, GuideHint, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
 import { RecipeView } from "./RecipeView";
 
@@ -29,6 +29,9 @@ export function Recipes() {
   const [basket, setBasket] = useState<ShoppingItem[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  // D58: "Worth buying" takes a few seconds; say so while it works.
+  const [basketLoading, setBasketLoading] = useState(true);
+  const [withoutDesserts, setWithoutDesserts] = useState(false);
   const guide = useGuide("forkcast.feedguide.v1");
   // From 960px the list and the open recipe sit side by side.
   const wide = useMediaQuery("(min-width: 960px)");
@@ -37,7 +40,14 @@ export function Recipes() {
     api.taste().then(setTasteInfo).catch(() => {});
     // Slower than the feed (it scans the near-miss corpus), so it loads
     // independently instead of holding the recipe list back.
-    api.shopping().then((s) => setBasket(s.items)).catch(() => {});
+    api
+      .shopping()
+      .then((s) => {
+        setBasket(s.items);
+        setWithoutDesserts(Boolean(s.without_desserts));
+      })
+      .catch(() => {})
+      .finally(() => setBasketLoading(false));
   }, []);
 
   // A tester wanted more than three. The picks are made one after another,
@@ -108,7 +118,18 @@ export function Recipes() {
           <HelpButton open={guide.open} onToggle={guide.toggle} label="How to read this list" controls="feed-guide" />
         </div>
 
+        {guide.hint && <GuideHint onOpen={guide.show} onDismiss={guide.dismiss} />}
         {guide.open && <FeedGuide onClose={guide.close} />}
+        {/* D58: the shopping list sits below 30 recipes; a way to it from the top. */}
+        {(basketLoading || basket.length > 0) && (
+        <button
+          type="button"
+          className="link-button jump-shopping"
+          onClick={() => document.getElementById("worth-buying")?.scrollIntoView({ behavior: "smooth" })}
+        >
+          What's worth buying? ↓
+        </button>
+        )}
 
         {loading && (
           <div aria-busy="true" aria-label="Searching 87,861 recipes">
@@ -148,11 +169,18 @@ export function Recipes() {
           </ul>
         )}
 
+        {basketLoading && (
+          <section className="shopping" aria-labelledby="worth-buying" aria-busy="true">
+            <h2 id="worth-buying" className="section-title">Worth buying</h2>
+            <p className="taste-note">Working out which few things would unlock the most recipes…</p>
+          </section>
+        )}
         {basket.length > 0 && (
           <section className="shopping" aria-labelledby="worth-buying">
             <h2 id="worth-buying" className="section-title">Worth buying</h2>
             <p className="taste-note">
               These {basket.length} unlock {unlocksTotal} more recipes together.
+              {withoutDesserts && " Desserts aren't counted, since you're losing weight."}
             </p>
             <ol className="shopping-list">
               {basket.map((item, i) => (

@@ -23,9 +23,11 @@ const AXE = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 // corpus release corpus-20261114-d29.
 const DEMO = JSON.parse(readFileSync(new URL("../../backend/app/demo_kitchen.json", import.meta.url), "utf8"));
 const KITCHEN = DEMO.kitchen;
-const PROFILE = DEMO.profile;
-const COOKED = DEMO.cooked_and_liked; // Cherry Tomato Pasta, Foil Chicken Casserole for One
-const TYPED_MEAL = DEMO.typed_meal;
+// D57: the demo seeds no profile or meals; the README's sample person lives
+// under its own key, used only here.
+const PROFILE = DEMO.readme.profile;
+const COOKED = DEMO.readme.cooked_and_liked; // Cherry Tomato Pasta, Foil Chicken Casserole for One
+const TYPED_MEAL = DEMO.readme.typed_meal;
 
 // D43: the progress screens need six weeks of history, which the API can't
 // backdate, so a sample person is written straight into the database.
@@ -207,7 +209,7 @@ async function recordDemo(browser, videoDir) {
   await tab(page, "Kitchen").click();
   await page.locator(".kitchen-group").first().waitFor();
   await pause(900);
-  const field = page.getByPlaceholder("e.g. chicken breasts");
+  const field = page.getByPlaceholder("e.g. chicken, rice");
   await field.click();
   await field.pressSequentially("avocado, lime", { delay: 85 });
   await pause(500);
@@ -282,6 +284,9 @@ async function recordProgress(browser, videoDir) {
   await pause(500);
   await page.getByRole("button", { name: "Log a meal" }).click();
   await pause(600);
+  // D58: the calories fields are behind a link.
+  await page.getByRole("button", { name: "Or type the calories yourself" }).click();
+  await pause(400);
   await page.getByPlaceholder("e.g. Skyr with berries").pressSequentially("Chickpea salad", { delay: 70 });
   await page.getByRole("spinbutton", { name: "kcal", exact: true }).pressSequentially(String(Math.round(left / 10) * 10), { delay: 110 });
   await page.getByRole("spinbutton", { name: "Protein g" }).pressSequentially("16", { delay: 90 });
@@ -361,8 +366,8 @@ async function replanShot(page, name, label) {
 /** D49: a meal built from ingredients, before it's logged. Nothing is saved. */
 async function builderShot(page) {
   await page.getByRole("button", { name: "Log a meal" }).click();
-  const field = page.getByPlaceholder("e.g. banana, Haferflocken, rice");
-  for (const [name, label, amount] of [["Haferflocken", "oat", "50"], ["Milch", "milk", "200"], ["banana", "banana", null]]) {
+  const field = page.getByPlaceholder("e.g. 2 eggs, 50 g oats");
+  for (const [name, label, amount] of [["Haferflocken", "oats", "50"], ["Milch", "milk", "200"], ["banana", "banana", null]]) {
     await field.fill(name);
     await field.press("Enter");
     await page.getByLabel(`How much ${label}`).waitFor();

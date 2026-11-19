@@ -3,6 +3,8 @@ export interface InventoryItem {
   added_at: string;
   /** Food class (D28), for grouping and colouring; null when unclassed. */
   family?: string | null;
+  /** D60: how it reads in the kitchen list ("oats"). */
+  name?: string;
 }
 
 export interface CookableRecipe {
@@ -76,6 +78,8 @@ export interface WeightPlan {
   pace_share?: number;
   weeks: number | null;
   limited: string | null;
+  /** D60: whether the limit is worth a warning (the safe minimum), not just the deficit cap. */
+  limited_warn: boolean;
 }
 
 /** D40: one day in the strip. */
@@ -177,7 +181,24 @@ export interface DayMeal {
   ingredients: MealIngredient[];
   /** Whether rating it teaches the recipe feed: cooked recipes, and meals built from two or more ingredients. */
   rateable: boolean;
+  /** D60: why the meal can't be rated, when it can't. */
+  rate_note: string | null;
+  /** D56: a cooked recipe eaten as more or less than one serving; null for one. */
+  servings: number | null;
 }
+
+/** D56: a deleted meal as the server gave it back, to restore with Undo. */
+export type MealSnapshot = Record<string, unknown>;
+
+/** The meal as logged or edited: numbers typed in, or ingredients and products. */
+export type MealIn =
+  | { name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; logged_at?: string }
+  | {
+      name: string;
+      ingredients?: { canonical: string; grams: number; cooked: boolean; canned?: boolean }[];
+      products?: MealProduct[];
+      logged_at?: string;
+    };
 
 export interface MealIngredient {
   /** For a product (D51): what its name matched, if anything. */
@@ -185,8 +206,13 @@ export interface MealIngredient {
   name: string;
   grams: number;
   cooked: boolean;
+  /** D64: from a can, drained. */
+  canned?: boolean;
   /** D51: a scanned or remembered product rather than a USDA ingredient. */
   product: boolean;
+  /** D56: a product's barcode and values per 100 g, to edit the meal again. */
+  barcode?: string | null;
+  per_100g?: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
 }
 
 /** D51: a product in a built meal, with its values per 100 g. */
@@ -202,7 +228,11 @@ export interface MealProduct {
 
 /** D49: one food's USDA values, per 100 g. */
 export interface FoodForm {
+  /** D60: the portion it starts at (1 medium, 1 slice, 1 tbsp, 1 glass); null: 100 g. */
+  default_portion?: string | null;
   usda: string;
+  /** D55: the USDA's tables, or the median of German packs on Open Food Facts. */
+  source?: "usda" | "openfoodfacts";
   fdc_id: number;
   per_100g: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
   portions: { label: string; grams: number }[];
@@ -215,8 +245,36 @@ export interface Food extends FoodForm {
   checked: boolean;
   /** Rice, pasta, beans...: the values when weighed cooked. */
   cooked: FoodForm | null;
+  /** D64: beans and peas from a can, drained. */
+  canned?: FoodForm | null;
   /** D54: how much went into your last meal with it, if any. */
-  last?: { grams: number; cooked: boolean } | null;
+  last?: { grams: number; cooked: boolean; canned?: boolean } | null;
+  /** D55: typed with "gekocht" or "cooked": start in the cooked form. */
+  start_cooked?: boolean;
+  /** D64: typed with "Dose" or "canned": start in the canned form. */
+  start_canned?: boolean;
+  /** D63: the fat levels of milk or yogurt this can switch between. */
+  variants?: { canonical: string; name: string; fat_g: number }[] | null;
+}
+
+/** D61: one food a typed line adds, with the amount typed for it, if any. */
+export interface LinePart {
+  food: Food;
+  grams?: number;
+  count?: number;
+  /** The portion a count is of: "2 eggs" is 2 of "1 large". */
+  portion?: string;
+  cooked: boolean;
+  canned?: boolean;
+  /** D62: the dish this part is a typical share of ("Cappuccino"). */
+  dish?: string;
+}
+
+export interface FoodLine {
+  query: string;
+  parts: LinePart[];
+  missing: FoodLookup[];
+  dishes: string[];
 }
 
 export interface FoodLookup {
@@ -421,7 +479,7 @@ export const api = {
   inventory: () => req<{ items: InventoryItem[] }>("/api/inventory"),
   addInventory: (items: string[]) =>
     // D46: suggestions holds "Did you mean…?" names for what wasn't recognised.
-    req<{ added: string[]; unknown: string[]; suggestions?: Record<string, string[]> }>("/api/inventory", {
+    req<{ added: string[]; added_names?: string[]; unknown: string[]; suggestions?: Record<string, string[]> }>("/api/inventory", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ items }),
@@ -444,6 +502,8 @@ export const api = {
       personalized: boolean;
       unlocks_total: number;
       partial_scan: boolean;
+      /** D59: desserts left out, for someone losing weight. */
+      without_desserts?: boolean;
       items: ShoppingItem[];
     }>(`/api/shopping?basket=${basket}`),
   scanPhoto: (file: File) => {
@@ -476,29 +536,47 @@ export const api = {
       body: JSON.stringify({ complete }),
     }),
   findFood: (q: string) => req<FoodLookup>(`/api/foods?q=${encodeURIComponent(q)}`),
-  addMeal: (
-    meal:
-      | { name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number }
-      | {
-          name: string;
-          ingredients?: { canonical: string; grams: number; cooked: boolean }[];
-          products?: MealProduct[];
-        },
-  ) =>
+  foodLine: (q: string) => req<FoodLine>(`/api/foods/line?q=${encodeURIComponent(q)}`),
+  addMeal: (meal: MealIn) =>
     req<{ logged: boolean; meal_log_id: number; calories: number }>("/api/meals", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(meal),
     }),
   recentMeals: () => req<{ meals: RecentMeal[] }>("/api/meals/recent"),
-  logAgain: (id: number) => req<{ logged: boolean; meal_log_id: number }>(`/api/meals/${id}/again`, { method: "POST" }),
+  logAgain: (id: number, logged_at?: string) =>
+    req<{ logged: boolean; meal_log_id: number }>(`/api/meals/${id}/again`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ logged_at }),
+    }),
+  // D56: change a logged meal, how much of a cooked recipe was eaten, Undo a delete.
+  editMeal: (id: number, meal: MealIn) =>
+    req<{ edited: number }>(`/api/meals/${id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(meal),
+    }),
+  setServings: (id: number, servings: number) =>
+    req<{ id: number; servings: number }>(`/api/meals/${id}/servings`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ servings }),
+    }),
+  restoreMeal: (meal: MealSnapshot) =>
+    req<{ restored: number }>("/api/meals/restore", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(meal),
+    }),
+  foodByKey: (key: string) => req<{ food: Food }>(`/api/foods/${encodeURIComponent(key)}`),
   setFavourite: (id: number, favourite: boolean) =>
     req<{ name: string; favourite: boolean }>(`/api/meals/${id}/favourite`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ favourite }),
     }),
-  deleteMeal: (id: number) => req<{ deleted: number }>(`/api/meals/${id}`, { method: "DELETE" }),
+  deleteMeal: (id: number) => req<{ deleted: number; meal: MealSnapshot }>(`/api/meals/${id}`, { method: "DELETE" }),
   rateMeal: (id: number, liked: boolean | null) =>
     req<{ id: number; liked: boolean | null }>(`/api/meals/${id}/rate`, {
       method: "POST",
@@ -531,13 +609,30 @@ export const api = {
   forgetProduct: (code: string) =>
     req<{ forgotten: string }>(`/api/nutrition/products/${encodeURIComponent(code)}`, { method: "DELETE" }),
   recipe: (id: number) => req<RecipeDetail>(`/api/recipes/${id}`),
-  logCooked: (id: number, usedUp: string[] = []) =>
+  logCooked: (id: number, usedUp: string[] = [], servings = 1) =>
     req<{ logged: boolean; meal_log_id: number; removed: string[] }>(`/api/recipes/${id}/cooked`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ used_up: usedUp }),
+      body: JSON.stringify({ used_up: usedUp, servings }),
     }),
 };
 
 /** "black_pepper" -> "black pepper" for display */
 export const pretty = (canonical: string) => canonical.replaceAll("_", " ");
+
+/** D56: noon of a local day (YYYY-MM-DD) as an ISO time with its UTC offset,
+ *  for a meal logged on an earlier day. */
+export function noonOf(day: string): string {
+  const d = new Date(`${day}T12:00:00`);
+  const off = -d.getTimezoneOffset();
+  const sign = off >= 0 ? "+" : "-";
+  const hh = String(Math.floor(Math.abs(off) / 60)).padStart(2, "0");
+  const mm = String(Math.abs(off) % 60).padStart(2, "0");
+  return `${day}T12:00:00${sign}${hh}:${mm}`;
+}
+
+/** Today's local date as YYYY-MM-DD. */
+export function localToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}

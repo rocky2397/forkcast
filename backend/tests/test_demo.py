@@ -37,7 +37,10 @@ def test_a_visitor_starts_with_the_demo_kitchen(demo_app):
     kitchen, items = _visit(demo_app)
     assert items == set(demo.seed()["kitchen"])
     assert demo_app.get("/api/session").json()["demo"] is True
-    assert demo_app.get("/api/profile").json()["profile"] is not None
+    # D57: no profile and an empty, unrated day: each visitor starts as themselves.
+    assert demo_app.get("/api/profile", headers={H: kitchen}).json()["profile"] is None
+    day = demo_app.get("/api/day", headers={H: kitchen}).json()
+    assert day["meals"] == []
 
 
 def test_visitors_cannot_see_each_others_changes(demo_app):
@@ -67,10 +70,12 @@ def test_unknown_or_malformed_ids_get_a_fresh_kitchen(demo_app, bad):
     assert all(f.parent == demo.kitchens_dir() for f in demo.kitchens_dir().iterdir())
 
 
-def test_seeded_meals_are_from_today(demo_app):
+def test_nothing_is_seeded_for_today(demo_app):
+    # D57: the demo's earlier cooks are on earlier days (none exist in the
+    # test corpus); today is the visitor's own.
     kitchen, _ = _visit(demo_app)
-    day = demo_app.get("/api/day", headers={H: kitchen}).json()
-    assert [m["name"] for m in day["meals"]] == [demo.seed()["typed_meal"]["name"]]
+    assert demo_app.get("/api/day", headers={H: kitchen}).json()["meals"] == []
+    assert all(c["days_ago"] >= 1 for c in demo.seed()["cooked_earlier"])
 
 
 def test_scanning_is_off(demo_app):
@@ -307,3 +312,22 @@ def test_the_caps_reset_the_next_day(scanning_app, monkeypatch):
         scanning_app.post("/api/vision/scan", files=PHOTO, headers={H: k})
     monkeypatch.setattr(demo, "_today", lambda: "2099-01-01")
     assert scanning_app.post("/api/vision/scan", files=PHOTO, headers={H: k}).status_code == 200
+
+
+
+def test_earlier_cooks_stay_days_back_for_a_new_visitor(demo_app, monkeypatch):
+    # D57: a seeded cook in the template is moved to its own number of days
+    # back from now when a visitor's kitchen is copied, never to today. (The
+    # test corpus lacks the demo's recipes, so the cook is written directly.)
+    import sqlite3
+    monkeypatch.setattr(demo, "seed", lambda: {"kitchen": [], "cooked_earlier": [{"recipe_id": 7, "days_ago": 2}]})
+    con = sqlite3.connect(demo.template_path())
+    con.execute("INSERT INTO meal_log (recipe_id, logged_at) VALUES (7, '2000-01-01 12:00:00')")
+    con.commit()
+    con.close()
+    _, path, new = demo.kitchen(None)
+    assert new
+    con = sqlite3.connect(path)
+    days = con.execute("SELECT julianday('now') - julianday(logged_at) FROM meal_log WHERE recipe_id = 7").fetchone()[0]
+    con.close()
+    assert 1.99 < days < 2.01

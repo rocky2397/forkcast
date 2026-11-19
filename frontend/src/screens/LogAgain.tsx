@@ -6,7 +6,16 @@ const fmt = (n: number) => Math.round(n).toLocaleString("en");
 const SHOWN = 4;
 
 /** D50: meals typed or built before, to log again in one tap. Starred ones stay on top. */
-export function LogAgain({ meals, onChange }: { meals: RecentMeal[]; onChange: () => Promise<unknown> }) {
+export function LogAgain({
+  meals,
+  onChange,
+  loggedAt,
+}: {
+  meals: RecentMeal[];
+  onChange: () => Promise<unknown>;
+  /** D56: log on an earlier day, at noon. */
+  loggedAt?: string;
+}) {
   const [busy, setBusy] = useState<number | null>(null);
   const [all, setAll] = useState(false);
   if (meals.length === 0) return null;
@@ -47,7 +56,7 @@ export function LogAgain({ meals, onChange }: { meals: RecentMeal[]; onChange: (
               type="button"
               className="pill"
               aria-label={`Log ${m.name} again`}
-              onClick={() => run(m.meal_id, () => api.logAgain(m.meal_id))}
+              onClick={() => run(m.meal_id, () => api.logAgain(m.meal_id, loggedAt))}
               disabled={busy !== null}
             >
               {busy === m.meal_id ? "…" : "Log"}

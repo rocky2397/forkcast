@@ -15,6 +15,15 @@ const GOALS: { value: Profile["goal"]; label: string }[] = [
   { value: "bulk", label: "Build muscle (eat a little more)" },
 ];
 
+const EMPTY = {
+  sex: "",
+  age: 0,
+  height_cm: 0,
+  weight_kg: 0,
+  activity: "moderate",
+  goal: "maintain",
+} as unknown as Profile; // the inputs below won't submit until each is filled
+
 export function ProfileForm({
   initial,
   onSaved,
@@ -22,14 +31,16 @@ export function ProfileForm({
   initial: Profile | null;
   onSaved: (profile: Profile, targets: Targets) => void;
 }) {
-  const [form, setForm] = useState<Profile>(
-    initial ?? { sex: "m", age: 30, height_cm: 175, weight_kg: 75, activity: "moderate", goal: "maintain" },
-  );
+  // D60: a new profile starts empty. Filled-in sample numbers looked like
+  // yours, and saving them gave targets for someone else's body.
+  const [form, setForm] = useState<Profile>(initial ?? EMPTY);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const set = <K extends keyof Profile>(key: K, value: Profile[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+  const filled = (v: number) => (v > 0 ? v : "");
+  const number = (v: string) => (v === "" ? 0 : Number(v));
   // D39: the usual healthy range for this height (BMI 18.5 to 25), as context
   const m2 = (form.height_cm / 100) ** 2;
   const low = Math.ceil(18.5 * m2 * 2) / 2;
@@ -40,7 +51,21 @@ export function ProfileForm({
   const shares = gaining ? { gentle: 0.25, steady: 0.5 } : { gentle: 0.5, steady: 0.75 };
   const perWeek = (pct: number) => (Math.round(form.weight_kg * pct) / 100).toFixed(2).replace(/0$/, "");
 
+  /** D60: what's missing or out of range, in the app's words rather than the browser's. */
+  function problem(): string | null {
+    if (!form.sex) return "Choose your sex: the estimate of what you burn depends on it.";
+    if (!(form.age >= 14 && form.age <= 100)) return "Enter an age between 14 and 100.";
+    if (!(form.height_cm >= 120 && form.height_cm <= 230)) return "Enter a height between 120 and 230 cm.";
+    if (!(form.weight_kg >= 35 && form.weight_kg <= 250)) return "Enter a weight between 35 and 250 kg.";
+    return null;
+  }
+
   async function save() {
+    const missing = problem();
+    if (missing) {
+      setError(missing);
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -56,6 +81,7 @@ export function ProfileForm({
   return (
     <form
       className="profile-form"
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
         save();
@@ -77,22 +103,25 @@ export function ProfileForm({
       <div className="form-grid">
       <label>
         Sex
-        <select value={form.sex} onChange={(e) => set("sex", e.target.value as Profile["sex"])}>
+        <select required value={form.sex} onChange={(e) => set("sex", e.target.value as Profile["sex"])}>
+          <option value="" disabled>
+            Choose
+          </option>
           <option value="m">Male</option>
           <option value="f">Female</option>
         </select>
       </label>
       <label>
         Age
-        <input type="number" min={14} max={100} value={form.age} onChange={(e) => set("age", Number(e.target.value))} />
+        <input type="number" required min={14} max={100} placeholder="years" value={filled(form.age)} onChange={(e) => set("age", number(e.target.value))} />
       </label>
       <label>
         Height (cm)
-        <input type="number" min={120} max={230} value={form.height_cm} onChange={(e) => set("height_cm", Number(e.target.value))} />
+        <input type="number" required min={120} max={230} placeholder="cm" value={filled(form.height_cm)} onChange={(e) => set("height_cm", number(e.target.value))} />
       </label>
       <label>
         Weight (kg)
-        <input type="number" min={35} max={250} value={form.weight_kg} onChange={(e) => set("weight_kg", Number(e.target.value))} />
+        <input type="number" required inputMode="decimal" min={35} max={250} step="any" placeholder="kg" value={filled(form.weight_kg)} onChange={(e) => set("weight_kg", number(e.target.value))} />
       </label>
       </div>
       <label>
@@ -116,8 +145,8 @@ export function ProfileForm({
           onChange={(e) => set("goal_weight_kg", e.target.value === "" ? null : Number(e.target.value))}
         />
         <span className="field-hint">
-          A healthy weight for {form.height_cm} cm is about {low}–{high} kg. With a goal weight, Forkcast works out how
-          much to eat each day and roughly how long it takes.
+          {form.height_cm >= 120 && `A healthy weight for ${form.height_cm} cm is about ${low}–${high} kg. `}
+          With a goal weight, Forkcast works out how much to eat each day and roughly how long it takes.
         </span>
       </label>
       {hasGoal ? (
@@ -125,12 +154,18 @@ export function ProfileForm({
           Pace
           <select value={form.pace ?? "steady"} onChange={(e) => set("pace", e.target.value as Profile["pace"])}>
             <option value="gentle">
-              Gentle: {shares.gentle}% of your weight a week (about {perWeek(shares.gentle)} kg)
+              Gentle
+              {form.weight_kg > 0 && `: about ${perWeek(shares.gentle)} kg a week`}
             </option>
             <option value="steady">
-              Steady: {shares.steady}% of your weight a week (about {perWeek(shares.steady)} kg)
+              Steady
+              {form.weight_kg > 0 && `: about ${perWeek(shares.steady)} kg a week`}
             </option>
           </select>
+          <span className="field-hint">
+            A share of your weight: gentle is {shares.gentle}% a week, steady {shares.steady}%, so the kilos shrink
+            as you get closer.
+          </span>
         </label>
       ) : (
         <label>
@@ -148,7 +183,11 @@ export function ProfileForm({
           doctor before changing how much you eat.
         </p>
       )}
-      {error && <p className="feedback error">{error}</p>}
+      {error && (
+        <p className="feedback error" role="alert">
+          {error}
+        </p>
+      )}
       <button type="submit" className="btn" disabled={busy}>
         {busy ? "Saving…" : "Save and work out my targets"}
       </button>

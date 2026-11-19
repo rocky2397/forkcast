@@ -102,6 +102,15 @@ const GROUP_OF_FOOD: Record<string, KitchenGroup> = {
   tomato: "Vegetables", sun_dried_tomato: "Pantry", bell_pepper: "Vegetables", cucumber: "Vegetables",
   avocado: "Vegetables", corn: "Vegetables", eggplant: "Vegetables", pumpkin: "Vegetables",
   pea: "Vegetables", banana: "Fruit",
+  // D58: common foods without a food family, which landed in "Other".
+  cumin: "Herbs & spices", cinnamon: "Herbs & spices", nutmeg: "Herbs & spices", turmeric: "Herbs & spices",
+  paprika: "Herbs & spices", black_pepper: "Herbs & spices", cardamom: "Herbs & spices", clove: "Herbs & spices",
+  curry_powder: "Herbs & spices", chili_powder: "Herbs & spices", coriander: "Herbs & spices", vanilla: "Pantry",
+  oat: "Grains, pasta & bread", quinoa: "Grains, pasta & bread", couscous: "Grains, pasta & bread",
+  bulgur: "Grains, pasta & bread", barley: "Grains, pasta & bread", polenta: "Grains, pasta & bread",
+  cornmeal: "Grains, pasta & bread", muesli: "Grains, pasta & bread",
+  quark: "Dairy & cheese", skyr: "Dairy & cheese", cream_cheese: "Dairy & cheese", oat_milk: "Pantry",
+  almond_milk: "Pantry", soy_milk: "Pantry", tofu: "Pantry", coconut_milk: "Pantry",
 };
 
 export function kitchenGroup(canonical: string, family: string | null | undefined): KitchenGroup {
