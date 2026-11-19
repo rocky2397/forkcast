@@ -13,8 +13,8 @@ What is left is real: one milk and one yogurt where German shelves have
 several fat levels, and canned beans that hold more water than boiled ones.
 On 12 more kinds fetched later, the carb fix held (31% to 50% within 3 g),
 but calories didn't move: their gain came from the words the app now finds.
-Fat levels and a canned form, added later (D63, D64), fix the milk (dev 86% to
-97% within 10%) and bring canned chickpeas closer, but not yet within 10%;
+Fat levels, a canned form and German cans, added later (D63 to D65), fix the
+milk (dev 86% to 97% within 10%) and the canned beans (held-out 76% to 85%);
 those numbers are no longer unseen.
 
 ## What was tested
@@ -224,6 +224,23 @@ went from 64% to 81% and carbs from 50% to 69%; all of it is quark and
 Leinsamen, which D55 added after this set had shown them missing. Without those
 two kinds nothing moved. Rows: `labeling/foods/d64.jsonl`,
 `labeling/foods/fresh_d64.jsonl`.
+
+## After D65: German cans and Greek yogurt
+
+D65 replaced the USDA's canned chickpeas and kidney beans (and Greek yogurt)
+with the median of German packs from the same Open Food Facts categories. Two
+of the four chickpea products scored here are among the 12 cans in the median,
+so this is a check that the fix works, not a measurement.
+
+| Held-out | D53 | D63, D64 | **D65** |
+|---|---|---|---|
+| Calories within 10% of the label | 76% | 76% | **85%** |
+| Carbs within 3 g | 76% | 82% | **85%** |
+
+Canned chickpeas are now within 10% for 3 of 4 (the fourth label says 155
+kcal, far above the others), and the one kidney bean product too. Plain
+yogurt is unchanged: "Naturjoghurt" still means whole-milk yogurt. Dev is
+unchanged at 97% and 84%. Rows: `labeling/foods/d65.jsonl`.
 
 ## How much to trust this
 

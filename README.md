@@ -183,8 +183,8 @@ adds each food with its amount. A cappuccino, a Döner or spaghetti bolognese
 adds the foods of a typical serving, each with its own values, and the app
 says it's a typical one so the part that differs can be changed. Milk and
 yogurt come in the fat levels German shelves have (1.5% milk is 47 kcal,
-whole 61), switchable on each row, and chickpeas and beans can come from a
-can, drained.
+whole 61; Greek yogurt about 10%), switchable on each row, and chickpeas and
+beans can come from a can, drained, with the values of German cans.
 
 ## Evaluation
 
@@ -249,9 +249,10 @@ held up (31% to 50% within 3 g) but calories didn't move: the calorie gain
 came from words the app now finds, not from the new values. The misses left
 were fat levels (one milk, one yogurt) and canned beans, which hold more water
 than boiled ones. Both were added later (D63, D64): "fettarme Milch" is now
-right for all four products, and canned chickpeas are 11 kcal over the label
-instead of 34, still outside 10% for three of four. Those numbers are no longer
-unseen ([details](eval/RESULTS-stage7.md)).
+right for all four products, and with the median of German cans (D65) canned
+chickpeas are within 10% for three of four, which takes held-out calories
+within 10% to 85%. Those numbers are no longer unseen: the cans come from the
+same source as the test ([details](eval/RESULTS-stage7.md)).
 
 ### How the tests work
 
@@ -417,7 +418,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 492 pytest tests in about three seconds, offline and without the
+- **Tests:** 495 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -446,7 +447,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 64 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 65 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
