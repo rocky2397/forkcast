@@ -13,6 +13,9 @@ What is left is real: one milk and one yogurt where German shelves have
 several fat levels, and canned beans that hold more water than boiled ones.
 On 12 more kinds fetched later, the carb fix held (31% to 50% within 3 g),
 but calories didn't move: their gain came from the words the app now finds.
+Fat levels and a canned form, added later (D63, D64), fix the milk (dev 86% to
+97% within 10%) and bring canned chickpeas closer, but not yet within 10%;
+those numbers are no longer unseen.
 
 ## What was tested
 
@@ -124,7 +127,8 @@ typed and scanned foods add up one way.
 
 Still missing on fresh kinds: **quark** (no USDA values; scanning the pack
 works, D51) and **"Leinsamen"** (flaxseed), a compound whose main noun,
-Samen, isn't in the German word list. One raisin entry is a database error
+Samen, isn't in the German word list. Both were added later (D55), after this
+set had shown them missing, so they don't count as unseen below. One raisin entry is a database error
 (181 kcal and 1 g carbs for raisins).
 
 ## Kind by kind
@@ -175,13 +179,51 @@ a typo in the database:
 | … kidney beans: 104 against 116 | 1 |
 
 Both are fixable, and neither was attempted here, since the held-out half has
-now been used:
+now been used. Both were attempted later (D63, D64); see
+[After D63 and D64](#after-d63-and-d64-fat-levels-and-cans) for what they did:
 
 - **Fat levels:** milk and yogurt as German shelves have them (1.5%, 3.5 to
   3.8%, Greek style). The ingredient list (Epicure's 1,790 names) has one
   milk, so this needs a choice in the app, like the dry or cooked switch.
 - **Canned beans:** a third form next to dry and cooked, from the USDA's
   canned and drained entries.
+
+## After D63 and D64: fat levels and cans
+
+D63 added low-fat milk (1.5%), skimmed milk and low-fat yogurt; D64 a "from a
+can, drained" form for chickpeas and beans. The same products were scored
+again, through the meal form as it now works (`score_foods.py --log-a-meal`):
+the typed word goes through the words people log with (D55), and a kind
+bought in a can uses the canned form, as a person holding the can would pick.
+None of this is unseen: the held-out half had already been used, the 1.5%
+milk is built from the same Open Food Facts category as the dev kind
+semi-skimmed milk, and the low-fat yogurt from the held-out plain yogurts. So
+this says whether the fixes do what they were meant to, not how the app does
+on new foods.
+
+| | Dev | | Held-out | |
+|---|---|---|---|---|
+| | D53 | **now** | D53 | **now** |
+| Calories within 10% of the label | 86% | **97%** | 76% | 76% |
+| Carbs within 3 g | 84% | 84% | 76% | **82%** |
+
+- **Semi-skimmed milk** ("fettarme Milch"): 4 of 4 within 10% now, 0 of 4
+  before. The word reaches 1.5% milk instead of whole milk.
+- **Canned chickpeas:** a median 11 kcal over the label instead of 34, and
+  carbs within 3 g for 3 of 4 (1 before); but calories are still within 10%
+  for only 1 of 4 (the USDA's canned chickpeas have 130 kcal, three labels 113
+  to 122, one 155). Kidney beans barely change: the USDA's canned and boiled
+  values are the same.
+- **Plain yogurt** ("Naturjoghurt"): no change. The word still means whole-milk
+  yogurt, and the 1.8% and Greek-style products in the sample are off. A person
+  who bought low-fat yogurt can now pick it in the menu, which a typed-word
+  score can't show.
+
+On the 36 fresh products (hazelnuts left out, as above), calories within 10%
+went from 64% to 81% and carbs from 50% to 69%; all of it is quark and
+Leinsamen, which D55 added after this set had shown them missing. Without those
+two kinds nothing moved. Rows: `labeling/foods/d64.jsonl`,
+`labeling/foods/fresh_d64.jsonl`.
 
 ## How much to trust this
 

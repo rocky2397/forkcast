@@ -1,6 +1,7 @@
 """Score stage 7: the app's values for a typed food against EU labels.
 
-usage: python score_foods.py <foods.json> [--split dev|held-out|all] [--table ingredient_nutrition.json] [--out rows.jsonl]
+usage: python score_foods.py <foods.json> [--split dev|held-out|all] [--table ingredient_nutrition.json]
+                              [--out rows.jsonl] [--log-a-meal]
 
 For each kind of food in the frozen sample (sample_foods.py), the word a
 person types goes through the app exactly as in Log a meal: the matcher (D47
@@ -8,6 +9,12 @@ German words included), then app/ingredient_nutrition.json (D49), in the
 cooked form for foods bought ready to eat. Each product's label is the
 reference. --table scores another version of the table (the one before a
 fix), so before and after run on the same products.
+
+--log-a-meal scores the meal form as it is after D63 and D64: the typed word
+goes through the words people log with (D55: "fettarme Milch" is 1.5% milk),
+and a kind bought in a can (chickpeas, kidney beans) uses "from a can,
+drained" where the app has it, as a person holding the can would pick. Without
+it, the scoring is the one the first results were made with.
 
 Reported, per split:
 - found: the word reached an ingredient with values;
@@ -34,17 +41,26 @@ KCAL_SHARE = 0.10
 CARBS_G = 3.0
 
 
-def app_values(normalizer: Normalizer, typed: str, form: str):
-    canonical = normalizer.match(typed)
-    food = foods.food(canonical) if canonical else None
+def app_values(normalizer: Normalizer, typed: str, form: str, log_a_meal: bool = False):
+    if log_a_meal:
+        found = foods.lookup(normalizer, typed)
+        canonical, food = found["canonical"], found["food"]
+    else:
+        canonical = normalizer.match(typed)
+        food = foods.food(canonical) if canonical else None
     if food is None:
         return canonical, None, None
-    use = food["cooked"] if form == "cooked" and food["cooked"] else food
-    return canonical, use["usda"], use["per_100g"]
+    if form == "cooked" and log_a_meal and food.get("canned"):
+        use = food["canned"]
+    else:
+        use = food["cooked"] if form == "cooked" and food["cooked"] else food
+    return food["canonical"], use["usda"], use["per_100g"]
 
 
 def main() -> None:
     args = sys.argv[1:]
+    log_a_meal = "--log-a-meal" in args
+    args = [a for a in args if a != "--log-a-meal"]
     opt = {}
     for flag in ("--split", "--table", "--out"):
         if flag in args:
@@ -64,7 +80,7 @@ def main() -> None:
     for k in kinds:
         if split != "all" and k["split"] != split:
             continue
-        canonical, usda, app = app_values(normalizer, k["typed"], k["form"])
+        canonical, usda, app = app_values(normalizer, k["typed"], k["form"], log_a_meal)
         errs = []
         for p in k["products"]:
             label = p["label"]
