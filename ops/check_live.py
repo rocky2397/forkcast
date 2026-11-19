@@ -34,6 +34,7 @@ import re
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import date
 from pathlib import Path
@@ -193,8 +194,9 @@ def check_visit(url: str) -> None:
         return
     k = {KITCHEN_HEADER: kitchen}
     try:
-        check(bool(day and day["meals"]) and (day.get("targets") or {}).get("calories", 0) > 0,
-              f"it starts with the demo's meals and targets ({len((day or {}).get('meals', []))} meals)")
+        # D57: a visitor sets up their own profile and starts with an empty day.
+        check(day is not None and day["meals"] == [] and day.get("targets") is None,
+              f"it starts empty, without a profile ({len((day or {}).get('meals', []))} meals)")
         _, _, inv = get_json(url + "/api/inventory", headers=k)
         check(len((inv or {}).get("items", [])) >= 5, f"and the demo kitchen ({len((inv or {}).get('items', []))} ingredients)")
 
@@ -206,6 +208,12 @@ def check_visit(url: str) -> None:
             check(st == 200 and (r or {}).get("name") == first["name"], f"a recipe opens: {first['name']}")
         st, _, _ = request(url + "/api/shopping", headers=k)
         check(st == 200, f"worth buying answers ({st})")
+
+        # D61: one typed line, several foods with their amounts.
+        _, _, line = get_json(url + "/api/foods/line?q=" + urllib.parse.quote("2 Eier, Cappuccino"), headers=k)
+        parts = [(p["food"]["canonical"], p.get("count")) for p in (line or {}).get("parts", [])]
+        check(parts[:1] == [("egg", 2)] and (line or {}).get("dishes") == ["Cappuccino"],
+              f"a typed line reads amounts and dishes ({len(parts)} parts)")
 
         profile = {"sex": "f", "age": 31, "height_cm": 170, "weight_kg": 72, "activity": "moderate",
                    "goal": "maintain", "goal_weight_kg": 66, "pace": "steady"}
