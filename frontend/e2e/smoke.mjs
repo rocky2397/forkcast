@@ -256,6 +256,22 @@ async function run(page) {
       await meal.getByRole("button", { name: "Liked" }).click(); // two or more ingredients: it can teach the feed
       await expectText(meal.locator(".rate"), /Liked/, "built meal rated");
     }],
+    ["the amount from last time (D54)", async () => {
+      // The porridge above had 50 g oats and one medium banana.
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      const add = async (name) => {
+        await page.getByPlaceholder("e.g. banana, Haferflocken, rice").fill(name);
+        await page.getByPlaceholder("e.g. banana, Haferflocken, rice").press("Enter");
+      };
+      await add("Haferflocken");
+      await page.getByLabel("How much oat").waitFor();
+      if ((await page.getByLabel("How much oat").inputValue()) !== "50") throw new Error("oats didn't start at last time's 50 g");
+      await expectText(page.locator(".builder-last").first(), /Same as last time\. Change it to what you had\./, "last-time note");
+      await page.getByLabel("How much oat").fill("60");
+      if (await page.locator(".builder-last").count()) throw new Error("the note stayed after the amount changed");
+      await audit(page, "today, amount from last time");
+      await page.getByRole("button", { name: "Cancel" }).click();
+    }],
     ["log again, and a favourite (D50)", async () => {
       const again = page.locator(".again");
       await expectText(again, /Smoke test porridge[\s\S]*Smoke test salad/, "recent meals, latest first");

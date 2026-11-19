@@ -215,6 +215,8 @@ export interface Food extends FoodForm {
   checked: boolean;
   /** Rice, pasta, beans...: the values when weighed cooked. */
   cooked: FoodForm | null;
+  /** D54: how much went into your last meal with it, if any. */
+  last?: { grams: number; cooked: boolean } | null;
 }
 
 export interface FoodLookup {
@@ -260,6 +262,8 @@ export interface Product {
   /** D52: one serving and the whole pack in grams, when Open Food Facts says. */
   serving_g?: number | null;
   pack_g?: number | null;
+  /** D54: grams of it in your last meal with it, if any. */
+  last_grams?: number | null;
 }
 
 export interface RecipeDetail {

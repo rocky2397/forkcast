@@ -623,8 +623,41 @@ def put_profile(body: ProfileIn, tz: int = Query(0, ge=-840, le=840)):
 
 @app.get("/api/foods")
 def find_food(q: str = Query(..., min_length=1, max_length=100)):
-    """A typed food or ingredient -> its USDA values per 100 g and portions (D49)."""
-    return foods.lookup(normalizer, q)
+    """A typed food or ingredient -> its USDA values per 100 g and portions (D49).
+
+    D54: with how much of it went into your last meal, if any, so the meal
+    form can start there.
+    """
+    out = foods.lookup(normalizer, q)
+    if out["food"] is not None:
+        with connect() as con:
+            out["food"]["last"] = _last_ingredient(con, out["food"]["canonical"])
+    return out
+
+
+def _last_ingredient(con, canonical: str) -> dict | None:
+    """D54: the amount of an ingredient in the latest meal that had it."""
+    row = con.execute(
+        """SELECT mi.grams, mi.cooked FROM meal_ingredients mi JOIN meal_log ml ON ml.id = mi.meal_id
+           WHERE mi.canonical = ? ORDER BY ml.logged_at DESC, ml.id DESC, mi.rowid DESC LIMIT 1""",
+        (canonical,),
+    ).fetchone()
+    return {"grams": row["grams"], "cooked": bool(row["cooked"])} if row else None
+
+
+def _with_last(product: dict) -> dict:
+    """D54: a product with the grams of it in the latest meal that had it (by barcode)."""
+    product = dict(product)
+    product["last_grams"] = None
+    if product.get("barcode"):
+        with connect() as con:
+            row = con.execute(
+                """SELECT mp.grams FROM meal_products mp JOIN meal_log ml ON ml.id = mp.meal_id
+                   WHERE mp.barcode = ? ORDER BY ml.logged_at DESC, ml.id DESC, mp.rowid DESC LIMIT 1""",
+                (product["barcode"],),
+            ).fetchone()
+        product["last_grams"] = row["grams"] if row else None
+    return product
 
 
 class MealIngredient(BaseModel):
@@ -982,7 +1015,7 @@ def barcode_lookup(code: str):
             raise HTTPException(502, f"Open Food Facts unreachable: {e}")
     if product is None:
         raise HTTPException(404, f"barcode {code} not on Open Food Facts")
-    return {"product": product}
+    return {"product": _with_last(product)}
 
 
 def _barcode(code: str | None) -> str | None:
@@ -1026,13 +1059,13 @@ async def nutrition_scan(photo: UploadFile = File(...), barcode: str | None = Fo
             except nutrition.OffUnavailable:
                 off_down = True  # fall back to the label values
     if product is not None and product["calories_100g"] is not None:
-        return {"product": product}
+        return {"product": _with_last(product)}
 
     label = scan.per_100g
     if label is None or label.calories is None:
         raise HTTPException(404, {"message": _no_label_message(code, product, off_down), "barcode": code})
     return {
-        "product": {
+        "product": _with_last({
             "barcode": code,
             "name": scan.product_name or (product or {}).get("name"),
             "brand": (product or {}).get("brand"),
@@ -1043,7 +1076,7 @@ async def nutrition_scan(photo: UploadFile = File(...), barcode: str | None = Fo
             "source": "label",
             # D36: a sum check, shown as a warning before the values are used
             "check": nutrition.label_check(label.calories, label.protein_g, label.carbs_g, label.fat_g),
-        }
+        })
     }
 
 
