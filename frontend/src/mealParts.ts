@@ -13,6 +13,8 @@ export interface Part {
   canned?: boolean;
   /** D51: a scanned product, with where its values came from. */
   product?: { barcode: string | null; source: Product["source"] | "logged" };
+  /** D62: the dish this row is a typical share of ("Döner"), for the note above its rows. */
+  dish?: string;
   /** D54: the amount is the one from last time, untouched so far. */
   fromLast?: boolean;
 }

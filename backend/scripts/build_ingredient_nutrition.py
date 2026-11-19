@@ -265,18 +265,26 @@ def main() -> None:
         for form, ids in forms.items():  # rice, pasta, beans...: dry, cooked and canned differ 2-3x
             if c in ids:
                 out[c][form] = food(ids[c])
-    # D55: staples the USDA table lacks, from the labels of German packs.
+    # D55: staples the USDA table lacks, from the labels of German packs. D65:
+    # also where German packs differ from the USDA's food (Greek yogurt) or form
+    # (canned chickpeas); the USDA's portions are kept.
     if OFF_FOODS.is_file():
         with open(OFF_FOODS, newline="") as f:
             for r in csv.DictReader(f):
-                out[r["canonical"]] = {
+                c, form = r["canonical"], r.get("form") or ""
+                before = out.get(c, {}).get(form) if form else out.get(c)
+                values = {
                     "fdc_id": None,
                     "source": "openfoodfacts",
                     "usda": f"median of {r['n']} products sold in Germany",
                     **{k: float(r[k]) for k in ("kcal", "protein_g", "carbs_g", "fat_g", "fibre_g")},
-                    "portions": [],
-                    "picked": "hand",
+                    "portions": (before or {}).get("portions", []),
                 }
+                if form:
+                    out[c][form] = values
+                else:
+                    forms_before = {k: v for k, v in (out.get(c) or {}).items() if k in forms}
+                    out[c] = {**values, **forms_before, "picked": "hand"}
     out = dict(sorted(out.items()))
     with open(OUT, "w") as f:
         f.write("{\n")

@@ -340,6 +340,10 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 
 /* Worth buying */
 .shopping { margin: 36px 0 8px; }
+/* D65: the last section, so it gets room to scroll up under the header when jumped to. */
+.shopping { min-height: calc(100dvh - 180px); }
+#worth-buying { scroll-margin-top: 72px; }
+#worth-buying:focus { outline: none; }
 .shopping-list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
 .shopping-item { display: flex; flex-direction: column; gap: 6px; }
 .shopping-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
@@ -805,6 +809,8 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .builder-amount .form-select { flex-basis: 100%; }
 .builder-source { font-size: 12px; color: var(--ink-3); }
 .builder-last { font-size: 13px; color: var(--ink-2); }
+/* D65: heads a dish's rows ("A typical döner"). */
+.builder-dish { list-style: none; font-size: 13px; color: var(--ink-2); margin: 4px 0 -2px; }
 .builder-total { margin: 0; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .meal-ingredients { font-size: 13px; color: var(--ink-3); }
 

@@ -135,6 +135,8 @@ export interface BurnEstimate {
   complete_days: number;
   needed_days: number;
   weigh_in_days: number;
+  /** D65: how many weigh-ins the window has. */
+  weigh_ins?: number;
   needed_span: number;
   window_days: number;
 }

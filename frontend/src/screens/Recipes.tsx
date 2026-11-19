@@ -125,7 +125,12 @@ export function Recipes() {
         <button
           type="button"
           className="link-button jump-shopping"
-          onClick={() => document.getElementById("worth-buying")?.scrollIntoView({ behavior: "smooth" })}
+          onClick={() => {
+            // D65: land on the heading, at the top, with focus there too.
+            const heading = document.getElementById("worth-buying");
+            heading?.scrollIntoView({ behavior: "smooth", block: "start" });
+            heading?.focus({ preventScroll: true });
+          }}
         >
           What's worth buying? ↓
         </button>
@@ -171,13 +176,13 @@ export function Recipes() {
 
         {basketLoading && (
           <section className="shopping" aria-labelledby="worth-buying" aria-busy="true">
-            <h2 id="worth-buying" className="section-title">Worth buying</h2>
+            <h2 id="worth-buying" className="section-title" tabIndex={-1}>Worth buying</h2>
             <p className="taste-note">Working out which few things would unlock the most recipes…</p>
           </section>
         )}
         {basket.length > 0 && (
           <section className="shopping" aria-labelledby="worth-buying">
-            <h2 id="worth-buying" className="section-title">Worth buying</h2>
+            <h2 id="worth-buying" className="section-title" tabIndex={-1}>Worth buying</h2>
             <p className="taste-note">
               These {basket.length} unlock {unlocksTotal} more recipes together.
               {withoutDesserts && " Desserts aren't counted, since you're losing weight."}

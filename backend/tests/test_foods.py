@@ -116,6 +116,8 @@ def test_fat_levels_are_their_own_foods_with_german_values():
     assert 1.4 <= t["low_fat_milk"]["fat_g"] <= 1.6
     assert t["skim_milk"]["fat_g"] < 0.5
     assert t["low_fat_yogurt"]["source"] == "openfoodfacts" and t["low_fat_yogurt"]["kcal"] < t["yogurt"]["kcal"]
+    # D65: Greek yogurt as German shelves have it, about 10% fat (the USDA's is 5%).
+    assert t["greek_yogurt"]["source"] == "openfoodfacts" and 9 <= t["greek_yogurt"]["fat_g"] <= 11
     names = [v["name"] for v in foods.food("milk")["variants"]]
     assert names == ["whole milk", "low-fat milk", "skimmed milk"]
     assert foods.food("banana")["variants"] is None
@@ -134,7 +136,9 @@ def test_typed_fat_levels_find_the_right_milk_and_yogurt():
 
 def test_canned_is_a_form_of_its_own():
     chick = foods.food("chickpea")
-    assert "canned" in chick["canned"]["usda"] and "drained" in chick["canned"]["usda"]
+    # D65: from German cans, which hold more water than the USDA's (130 kcal).
+    assert chick["canned"]["source"] == "openfoodfacts" and 110 <= chick["canned"]["per_100g"]["calories"] <= 125
+    assert chick["source"] == "usda" and chick["cooked"]["source"] == "usda"  # the other forms stay
     # Canned chickpeas hold more water than boiled ones: fewer calories per 100 g.
     assert chick["canned"]["per_100g"]["calories"] < chick["cooked"]["per_100g"]["calories"]
     assert foods.food("rice")["canned"] is None
