@@ -24,7 +24,7 @@ import { useGuide } from "../useGuide";
 import { BackIcon, CloseIcon, ScanIcon } from "../Icons";
 import { MealBuilder } from "./MealBuilder";
 import { LogAgain } from "./LogAgain";
-import { defaultName, gramsOf, type Part } from "../mealParts";
+import { asMealProduct, complete, defaultName, gramsOf, productPart, type Part } from "../mealParts";
 
 const GOAL_WORDS: Record<Profile["goal"], string> = {
   cut: "losing fat",
@@ -172,9 +172,14 @@ export function Today() {
     try {
       if (parts.length > 0) {
         // The server works the numbers out from the ingredients (D49).
+        const ingredients = parts
+          .filter((p) => !p.product)
+          .map((p) => ({ canonical: p.food.canonical, grams: gramsOf(p), cooked: p.cooked }));
+        const products = parts.filter((p) => p.product).map(asMealProduct);
         await api.addMeal({
           name: meal.name.trim() || defaultName(parts),
-          ingredients: parts.map((p) => ({ canonical: p.food.canonical, grams: gramsOf(p), cooked: p.cooked })),
+          ...(ingredients.length > 0 && { ingredients }),
+          ...(products.length > 0 && { products }),
         });
       } else {
         await api.addMeal({
@@ -249,12 +254,17 @@ export function Today() {
 
   async function useProduct() {
     if (!product) return;
-    if (parts.length > 0) {
-      // A product has its own values, not an ingredient's: it can't join the list (yet).
-      setMealError("A scanned product can't be mixed with ingredients yet. Log it as its own meal.");
+    if (savable(product)) await api.saveProduct(product).catch(() => null);
+    if (complete(product)) {
+      // D51: a product joins the ingredient list like any other row.
+      setParts([...parts, productPart(product, String(Number(grams) || 100))]);
+      setProduct(null);
       return;
     }
-    if (savable(product)) await api.saveProduct(product).catch(() => null);
+    if (parts.length > 0) {
+      setMealError("Some of this product's values couldn't be read, so it can't join the list. Log it as a meal of its own and type them in.");
+      return;
+    }
     const factor = (Number(grams) || 0) / 100;
     // One decimal: 30 g of something with 6.5 g protein per 100 g is 2 g, not 0 or 1.95.
     const scale = (v: number | null) => (v == null ? "" : String(Math.round(v * factor * 10) / 10));
@@ -339,7 +349,7 @@ export function Today() {
             },
             {
               term: "Log a meal",
-              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there.",
+              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there.",
             },
             {
               term: "Liked · Not for me",
@@ -467,7 +477,7 @@ export function Today() {
               ) : (
                 <p className="field-hint">
                   Products on Open Food Facts fill in from the barcode. For anything else, photograph the
-                  nutrition table. Homemade? Add the ingredients below.
+                  nutrition table. A scanned product joins the ingredients below, so it can go into a homemade meal too.
                 </p>
               )}
               {isDemo() && scansOn() && (
@@ -499,7 +509,7 @@ export function Today() {
                   )}
                   {savable(product) && (
                     <p className="field-hint product-note">
-                      Barcode {product.barcode} isn't on Open Food Facts yet. When you tap Use, Forkcast remembers
+                      Barcode {product.barcode} isn't on Open Food Facts yet. When you add it, Forkcast remembers
                       these values for it, so the barcode alone works next time.{" "}
                       <a
                         href={`https://world.openfoodfacts.org/product/${product.barcode}`}
@@ -531,7 +541,7 @@ export function Today() {
                       g
                     </label>
                     <button type="button" className="btn" onClick={useProduct}>
-                      Use
+                      {complete(product) ? "Add to meal" : "Use these values"}
                     </button>
                   </div>
                 </div>

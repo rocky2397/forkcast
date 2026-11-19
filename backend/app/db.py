@@ -110,6 +110,22 @@ CREATE TABLE IF NOT EXISTS meal_ingredients (
 );
 CREATE INDEX IF NOT EXISTS idx_mi_meal ON meal_ingredients(meal_id);
 
+-- D51: packaged products in a built meal (skyr from a scanned barcode), with
+-- the values per 100 g they had when logged. canonical is what the product's
+-- name matched, if anything, for the taste profile only.
+CREATE TABLE IF NOT EXISTS meal_products (
+    meal_id        INTEGER NOT NULL,   -- meal_log.id
+    name           TEXT NOT NULL,
+    barcode        TEXT,
+    grams          REAL NOT NULL,
+    calories_100g  REAL NOT NULL,
+    protein_g_100g REAL NOT NULL,
+    carbs_g_100g   REAL NOT NULL,
+    fat_g_100g     REAL NOT NULL,
+    canonical      TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_mp_meal ON meal_products(meal_id);
+
 -- D50: meals kept at the top of "Log again", by name (lower case), so a
 -- favourite survives deleting one day's entry of it.
 CREATE TABLE IF NOT EXISTS favourite_meals (

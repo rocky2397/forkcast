@@ -625,3 +625,55 @@ def test_a_cooked_recipe_isnt_logged_again_here(foods_client, db):
     assert foods_client.post(f"/api/meals/{cur.lastrowid}/again").status_code == 404
     assert foods_client.post("/api/meals/999/again").status_code == 404
     assert foods_client.put("/api/meals/999/favourite", json={"favourite": True}).status_code == 404
+
+
+# D51: scanned products in a built meal.
+
+SKYR = {"name": "Skyr Natur", "barcode": "4011800527911", "calories_100g": 63,
+        "protein_g_100g": 11, "carbs_g_100g": 4, "fat_g_100g": 0.2}
+
+
+def test_a_product_and_an_ingredient_make_one_meal(foods_client):
+    res = foods_client.post("/api/meals", json={
+        "name": "Skyr with banana",
+        "ingredients": [{"canonical": "banana", "grams": 118}],
+        "products": [{**SKYR, "grams": 150}],
+    })
+    assert res.status_code == 200
+    assert res.json()["calories"] == round(89 * 1.18 + 63 * 1.5, 1)
+    meal = foods_client.get("/api/day").json()["meals"][0]
+    assert [(i["name"], i["grams"], i["product"]) for i in meal["ingredients"]] == [
+        ("banana", 118, False), ("Skyr Natur", 150, True)]
+
+
+def test_a_meal_of_products_alone_is_built_too(foods_client):
+    res = foods_client.post("/api/meals", json={"name": "Skyr", "products": [{**SKYR, "grams": 200}]})
+    assert res.json()["protein_g"] == 22
+
+
+def test_a_product_needs_all_four_values(foods_client):
+    incomplete = {k: v for k, v in SKYR.items() if k != "fat_g_100g"}
+    res = foods_client.post("/api/meals", json={"name": "Skyr", "products": [{**incomplete, "grams": 150}]})
+    assert res.status_code == 422
+    impossible = {**SKYR, "protein_g_100g": 140}  # more than 100 g in 100 g
+    assert foods_client.post("/api/meals", json={"name": "Skyr", "products": [{**impossible, "grams": 1}]}).status_code == 422
+
+
+def test_a_products_name_is_matched_for_taste(foods_client, db):
+    foods_client.post("/api/meals", json={
+        "name": "Milk and rice", "products": [{**SKYR, "name": "Whole milk", "grams": 200}],
+        "ingredients": [{"canonical": "rice", "grams": 100}],
+    })
+    assert db.execute("SELECT canonical FROM meal_products").fetchone()[0] == "milk"
+    meal = foods_client.get("/api/day").json()["meals"][0]
+    assert meal["rateable"] is True  # rice and milk: two real ingredients
+
+
+def test_logging_again_and_deleting_carry_the_products(foods_client, db):
+    first = foods_client.post("/api/meals", json={"name": "Skyr", "products": [{**SKYR, "grams": 150}]}).json()["meal_log_id"]
+    again = foods_client.post(f"/api/meals/{first}/again").json()["meal_log_id"]
+    meals = {m["id"]: m for m in foods_client.get("/api/day").json()["meals"]}
+    assert meals[again]["ingredients"] == meals[first]["ingredients"]
+    foods_client.delete(f"/api/meals/{first}")
+    foods_client.delete(f"/api/meals/{again}")
+    assert db.execute("SELECT COUNT(*) FROM meal_products").fetchone()[0] == 0

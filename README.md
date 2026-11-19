@@ -152,6 +152,9 @@ were checked by hand, and the first automatic match was wrong for 134 of them
 matches found 67 right (84%), so the app shows which USDA food it used and
 marks the ones matched by name only. Rice, pasta, beans and other grains can
 be weighed dry or cooked: 150 g of rice is about 550 kcal dry and 195 cooked.
+A scanned product joins the same list with its own values, so skyr from a
+pack and a banana make one meal; that also covers foods the USDA table
+lacks, like quark and oat milk.
 
 Rating a meal teaches the recipe feed what you like, so a rating needs a
 dish: a cooked recipe, or a meal built from two or more ingredients ("Like
@@ -374,9 +377,9 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 444 pytest tests in about three seconds, offline and without the
+- **Tests:** 450 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
-  all in CI. 54 of the pytest tests need the Epicure weights; CI caches them and
+  all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
 
 ## Design
@@ -403,7 +406,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 50 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 51 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -453,7 +456,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-The 54 tests that need the Epicure weights (swaps and taste ranking) skip
+The 55 tests that need the Epicure weights (swaps and taste ranking) skip
 themselves locally unless the weights are cached. CI downloads and caches
 them first and sets `FORKCAST_REQUIRE_EMBEDDINGS=1`, so there a missing
 download fails the run instead of quietly skipping them. The suite runs with
@@ -469,7 +472,7 @@ ops/e2e.sh            # needs Google Chrome, the corpus and the Epicure weights
 It starts the app on an empty data dir and makes a first visit in Chrome:
 a profile with a goal weight, the kitchen, the recipe feed, a cooked recipe
 and what ran out, a typed meal, a product that isn't on Open Food Facts (the
-label reader faked, the rest real), a meal built from ingredients and logged again, "Done for today", a weigh-in and a reload.
+label reader faked, the rest real) added to a meal with a banana, a meal built from ingredients and logged again, "Done for today", a weigh-in and a reload.
 It fails if a screen doesn't show what it should, on any JavaScript or
 console error, on any API error, and on a serious accessibility problem
 (axe-core) on any screen. Breaking the app on purpose (a renamed API field,

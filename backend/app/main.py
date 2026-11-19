@@ -633,6 +633,26 @@ class MealIngredient(BaseModel):
     cooked: bool = False
 
 
+class MealProduct(BaseModel):
+    """A scanned or remembered product in a built meal (D51)."""
+
+    name: str = Field(min_length=1, max_length=120)
+    barcode: str | None = Field(None, pattern=r"^\d{6,14}$")
+    grams: float = Field(gt=0, le=5000)
+    calories_100g: float = Field(ge=0, le=900)
+    protein_g_100g: float = Field(ge=0, le=100)
+    carbs_g_100g: float = Field(ge=0, le=100)
+    fat_g_100g: float = Field(ge=0, le=100)
+
+
+PRODUCT_VALUES = {"calories": "calories_100g", "protein_g": "protein_g_100g",
+                  "carbs_g": "carbs_g_100g", "fat_g": "fat_g_100g"}
+
+
+def _product_totals(products: list[dict]) -> dict[str, float]:
+    return {k: sum(p[col] * p["grams"] / 100 for p in products) for k, col in PRODUCT_VALUES.items()}
+
+
 class MealAdd(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     # Typed in (or filled from a scanned product): the four numbers.
@@ -642,18 +662,23 @@ class MealAdd(BaseModel):
     fat_g: float | None = Field(None, ge=0, le=500)
     # D49: or built from ingredients; the server works the numbers out.
     ingredients: list[MealIngredient] | None = Field(None, min_length=1, max_length=30)
+    # D51: and packaged products, with their own values per 100 g.
+    products: list["MealProduct"] | None = Field(None, min_length=1, max_length=10)
 
 
 @app.post("/api/meals")
 def add_meal(body: MealAdd):
     items = [i.model_dump() for i in body.ingredients or []]
-    if items:
+    products = [p.model_dump() for p in body.products or []]
+    if items or products:
         try:
             values = foods.totals(items)
         except KeyError as e:
             raise HTTPException(422, f"No nutrition values for {foods.label(e.args[0])}.") from None
         except ValueError as e:
             raise HTTPException(422, f"{foods.label(e.args[0]).capitalize()} has no cooked form.") from None
+        extra = _product_totals(products)
+        values = {k: round(values[k] + extra[k], 1) for k in foods.MACROS}
         if values["calories"] > 5000:
             raise HTTPException(422, "That's over 5,000 kcal for one meal. Check the amounts.")
     else:
@@ -670,8 +695,17 @@ def add_meal(body: MealAdd):
             "INSERT INTO meal_ingredients (meal_id, canonical, grams, cooked) VALUES (?, ?, ?, ?)",
             [(cur.lastrowid, i["canonical"], i["grams"], int(i["cooked"])) for i in items],
         )
+        con.executemany(
+            """INSERT INTO meal_products (meal_id, name, barcode, grams, calories_100g, protein_g_100g,
+                                          carbs_g_100g, fat_g_100g, canonical)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            [(cur.lastrowid, p["name"], p["barcode"], p["grams"], p["calories_100g"], p["protein_g_100g"],
+              p["carbs_g_100g"], p["fat_g_100g"],
+              packaged(normalizer, p["name"]) if normalizer else None)  # D35: a product's name
+             for p in products],
+        )
         con.commit()
-    stats.event("meal_built" if items else "meal_typed")  # how, never what
+    stats.event("meal_built" if items or products else "meal_typed")  # how, never what
     return {"logged": True, "meal_log_id": cur.lastrowid, **values}
 
 
@@ -734,6 +768,14 @@ def log_again(meal_id: int):
                SELECT ?, canonical, grams, cooked FROM meal_ingredients WHERE meal_id = ? ORDER BY rowid""",
             (cur.lastrowid, meal_id),
         )
+        con.execute(
+            """INSERT INTO meal_products (meal_id, name, barcode, grams, calories_100g, protein_g_100g,
+                                          carbs_g_100g, fat_g_100g, canonical)
+               SELECT ?, name, barcode, grams, calories_100g, protein_g_100g, carbs_g_100g, fat_g_100g,
+                      canonical
+               FROM meal_products WHERE meal_id = ? ORDER BY rowid""",
+            (cur.lastrowid, meal_id),
+        )
         con.commit()
     stats.event("meal_again")
     return {"logged": True, "meal_log_id": cur.lastrowid}
@@ -783,6 +825,7 @@ def delete_meal(meal_id: int):
     with connect() as con:
         cur = con.execute("DELETE FROM meal_log WHERE id = ?", (meal_id,))
         con.execute("DELETE FROM meal_ingredients WHERE meal_id = ?", (meal_id,))
+        con.execute("DELETE FROM meal_products WHERE meal_id = ?", (meal_id,))
         con.commit()
     if cur.rowcount == 0:
         raise HTTPException(404, f"no logged meal {meal_id}")
@@ -827,7 +870,7 @@ def day_summary(
         # D49: cooked recipes teach the feed, and so do meals built from
         # two or more real ingredients; typed numbers and single foods don't.
         m["rateable"] = m["recipe_id"] is not None or foods.teaches_taste(
-            [i["canonical"] for i in m["ingredients"]]
+            [i["canonical"] for i in m["ingredients"] if i["canonical"]]
         )
     totals = {
         key: round(sum(m[key] or 0.0 for m in meals), 1)
@@ -854,7 +897,16 @@ def _meal_ingredients(con, ids: list[int]) -> dict[int, list[dict]]:
     ):
         out.setdefault(r["meal_id"], []).append(
             {"canonical": r["canonical"], "name": foods.label(r["canonical"]),
-             "grams": r["grams"], "cooked": bool(r["cooked"])}
+             "grams": r["grams"], "cooked": bool(r["cooked"]), "product": False}
+        )
+    for r in con.execute(  # D51: products after the USDA ingredients
+        f"SELECT meal_id, name, grams, canonical FROM meal_products"
+        f" WHERE meal_id IN ({','.join('?' * len(ids))}) ORDER BY rowid",
+        ids,
+    ):
+        out.setdefault(r["meal_id"], []).append(
+            {"canonical": r["canonical"], "name": r["name"], "grams": r["grams"],
+             "cooked": False, "product": True}
         )
     return out
 

@@ -180,10 +180,24 @@ export interface DayMeal {
 }
 
 export interface MealIngredient {
-  canonical: string;
+  /** For a product (D51): what its name matched, if anything. */
+  canonical: string | null;
   name: string;
   grams: number;
   cooked: boolean;
+  /** D51: a scanned or remembered product rather than a USDA ingredient. */
+  product: boolean;
+}
+
+/** D51: a product in a built meal, with its values per 100 g. */
+export interface MealProduct {
+  name: string;
+  barcode: string | null;
+  grams: number;
+  calories_100g: number;
+  protein_g_100g: number;
+  carbs_g_100g: number;
+  fat_g_100g: number;
 }
 
 /** D49: one food's USDA values, per 100 g. */
@@ -458,7 +472,11 @@ export const api = {
   addMeal: (
     meal:
       | { name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number }
-      | { name: string; ingredients: { canonical: string; grams: number; cooked: boolean }[] },
+      | {
+          name: string;
+          ingredients?: { canonical: string; grams: number; cooked: boolean }[];
+          products?: MealProduct[];
+        },
   ) =>
     req<{ logged: boolean; meal_log_id: number; calories: number }>("/api/meals", {
       method: "POST",

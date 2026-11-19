@@ -189,14 +189,21 @@ async function run(page) {
       await expectText(page.locator(".field-hint").filter({ hasText: "next photo" }), new RegExp(`nutrition table for barcode ${code}`), "carried barcode");
 
       await photo();
-      await expectText(page.locator(".product-note"), /isn't on Open Food Facts yet\. When you tap Use, Forkcast remembers/, "remember note");
+      await expectText(page.locator(".product-note"), /isn't on Open Food Facts yet\. When you add it, Forkcast remembers/, "remember note");
       if (!sent[2].includes(code)) throw new Error("the label photo was sent without the barcode from the photo before");
       const add = page.getByRole("link", { name: "Add it to Open Food Facts" });
       if ((await add.getAttribute("href")) !== `https://world.openfoodfacts.org/product/${code}`) throw new Error("Open Food Facts link wrong");
       await audit(page, "today, product read from a label");
-      await page.getByRole("button", { name: "Use", exact: true }).click();
+      await page.getByRole("button", { name: "Add to meal" }).click();
+      // D51: the product is a row of the meal, next to a USDA ingredient.
+      await expectText(page.locator(".builder-source").first(), /Per 100 g read from the label/, "product row");
+      await page.getByPlaceholder("e.g. banana, Haferflocken, rice").fill("banana");
+      await page.getByPlaceholder("e.g. banana, Haferflocken, rice").press("Enter");
+      await page.getByLabel("How much banana").waitFor();
+      await expectText(page.locator(".builder-total"), /Together: 595 kcal/, "chips and a banana"); // 490 + 105
       await page.getByRole("button", { name: "Log meal" }).click();
-      await expectText(page.locator(".meal-list"), /Smoke test chips, 100 g/, "scanned meal logged");
+      const chips = page.locator(".meal-list li").filter({ hasText: "Smoke test chips, banana" });
+      await expectText(chips.locator(".meal-ingredients"), /banana 118 g · Smoke test chips 100 g/, "scanned meal logged");
       await page.unroute("**/api/nutrition/scan");
 
       // Next time the barcode alone fills it in, from the saved reading.
