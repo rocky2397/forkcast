@@ -67,3 +67,55 @@ def test_feed_names_the_dish_a_recipe_is_like(db, monkeypatch):
     chicken = next(r for r in body["recipes"] if r["id"] == 1)
     assert chicken["like_your"] == {"id": 2, "name": "salted rice"}
     assert "taste_sim" in chicken
+
+
+# D49: meals built from ingredients count as dishes too.
+
+def _build(db, name, canonicals, liked=None, ago_days=0):
+    cur = db.execute(
+        "INSERT INTO meal_log (name, calories, liked, logged_at)"
+        " VALUES (?, 0, ?, datetime('now', ?))",
+        (name, liked, f"-{ago_days} days"),
+    )
+    db.executemany(
+        "INSERT INTO meal_ingredients (meal_id, canonical, grams) VALUES (?, ?, 100)",
+        [(cur.lastrowid, c) for c in canonicals],
+    )
+    db.commit()
+    return cur.lastrowid
+
+
+def test_a_built_meal_joins_the_profile(db):
+    mid = _build(db, "Carrot milk", ["milk", "carrot"])
+    profile = taste.taste_profile(db)
+    assert profile.ids == [-mid]
+    assert profile.names == {-mid: "Carrot milk"}
+
+
+def test_single_foods_staples_and_dislikes_dont(db):
+    _build(db, "Banana", ["banana"])
+    _build(db, "Salty oil", ["salt", "olive_oil", "carrot"])  # one real ingredient
+    _build(db, "Duck and thyme", ["duck", "thyme"], liked=0)
+    assert taste.taste_profile(db) is None
+
+
+def test_a_meal_logged_every_day_counts_once(db):
+    for ago in range(5):
+        _build(db, "Smoothie", ["milk", "banana"], ago_days=ago)
+    assert len(taste.taste_profile(db).ids) == 1
+    assert taste.taste_vector(db)[1] == 1
+
+
+def test_the_feed_names_a_built_meal(db, monkeypatch):
+    monkeypatch.setattr(taste, "LIKE_YOUR", -1.0)
+    _build(db, "My rice bowl", ["rice", "chicken", "onion"])
+    body = TestClient(main.app).get("/api/recipes/cookable?max_missing=0").json()
+    chicken = next(r for r in body["recipes"] if r["id"] == 1)
+    assert chicken["like_your"]["name"] == "My rice bowl"
+    assert chicken["like_your"]["id"] < 0  # not a recipe: nothing to open
+
+
+def test_a_built_meal_with_real_ingredients_can_be_rated(db):
+    _build(db, "Carrot milk", ["milk", "carrot"])
+    meal = TestClient(main.app).get("/api/day").json()["meals"][0]
+    assert meal["rateable"] is True

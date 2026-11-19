@@ -358,6 +358,38 @@ async function replanShot(page, name, label) {
   console.log(`  ${name}.jpg`);
 }
 
+/** D49: a meal built from ingredients, before it's logged. Nothing is saved. */
+async function builderShot(page) {
+  await page.getByRole("button", { name: "Log a meal" }).click();
+  const field = page.getByPlaceholder("e.g. banana, Haferflocken, rice");
+  for (const [name, label, amount] of [["Haferflocken", "oat", "50"], ["Milch", "milk", "200"], ["banana", "banana", null]]) {
+    await field.fill(name);
+    await field.press("Enter");
+    await page.getByLabel(`How much ${label}`).waitFor();
+    if (amount) await page.getByLabel(`How much ${label}`).fill(amount);
+  }
+  await page.getByLabel("Name it (optional)").fill("Oat porridge");
+  // The fixed tab bar would sit across a full-page clip.
+  const hide = await page.addStyleTag({ content: ".tabbar { display: none !important; }" });
+  await page.waitForTimeout(300);
+  const box = await page.evaluate(() => {
+    const from = document.querySelector(".builder").getBoundingClientRect();
+    const to = document.querySelector(".meal-form .form-actions").getBoundingClientRect();
+    return { x: from.left + scrollX, y: from.top + scrollY, width: from.width, height: to.bottom - from.top };
+  });
+  await page.screenshot({
+    path: join(outDir, "log-ingredients.jpg"),
+    type: "jpeg",
+    quality: 86,
+    fullPage: true,
+    clip: { x: box.x - 14, y: box.y - 14, width: box.width + 28, height: box.height + 28 },
+  });
+  await hide.evaluate((el) => el.remove());
+  await audit(page, "meal built from ingredients (phone)");
+  console.log("  log-ingredients.jpg");
+  await page.getByRole("button", { name: "Cancel" }).click();
+}
+
 async function main() {
   mkdirSync(outDir, { recursive: true });
   await seed();
@@ -388,6 +420,7 @@ async function main() {
     await tab(phone, "Today").click();
     await phone.locator(".ring").waitFor();
     await shot(phone, "today", "today (phone)");
+    await builderShot(phone);
 
     await tab(phone, "Kitchen").click();
     await phone.locator(".kitchen-group").first().waitFor();

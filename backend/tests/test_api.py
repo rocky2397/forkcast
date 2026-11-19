@@ -8,7 +8,8 @@ need the normalizer get a stub instead, so these tests stay offline.
 import pytest
 from fastapi.testclient import TestClient
 
-from app import embeddings, main, substitutions
+from app import embeddings, foods, main, substitutions
+from app.recipes import STAPLES
 from app.normalize import Normalizer
 
 VOCAB = ["chicken", "rice", "onion", "carrot", "egg", "yeast", "milk", "salt"]
@@ -449,3 +450,115 @@ def test_unrecognised_ingredients_get_did_you_mean_suggestions(client, db):
 def test_german_names_can_be_added_to_the_kitchen(client, db):
     r = client.post("/api/inventory", json={"items": ["Zwiebeln", "Hähnchenbrust"]}).json()
     assert r["added"] == ["onion", "chicken"] and r["unknown"] == []
+
+
+# D49: meals built from ingredients and grams, with USDA values per ingredient.
+
+FOOD_VOCAB = VOCAB + ["banana", "quark", "oat"]
+
+
+@pytest.fixture
+def foods_client(client, monkeypatch):
+    main.normalizer = Normalizer(FOOD_VOCAB)
+    # Whether a meal can be rated needs the Epicure weights; test_taste checks
+    # the real rule. Here: two or more non-staples, so these tests stay offline.
+    monkeypatch.setattr(foods, "teaches_taste", lambda cs: len(set(cs) - STAPLES) >= 2)
+    return client
+
+
+def test_a_food_comes_with_its_values_and_portions(foods_client):
+    body = foods_client.get("/api/foods", params={"q": "bananas"}).json()
+    food = body["food"]
+    assert food["canonical"] == "banana"
+    assert food["usda"] == "Bananas, raw"
+    assert food["checked"] is True
+    assert food["per_100g"]["calories"] == 89
+    assert {"label": "1 medium", "grams": 118.0} in food["portions"]
+    assert food["cooked"] is None  # nobody weighs a cooked banana
+
+
+def test_rice_can_be_weighed_dry_or_cooked(foods_client):
+    food = foods_client.get("/api/foods", params={"q": "rice"}).json()["food"]
+    assert food["per_100g"]["calories"] == 365
+    assert food["cooked"]["per_100g"]["calories"] == 130
+
+
+def test_german_names_find_the_food(foods_client):
+    assert foods_client.get("/api/foods", params={"q": "Milch"}).json()["food"]["canonical"] == "milk"
+
+
+def test_a_known_ingredient_without_values_says_which_it_is(foods_client):
+    body = foods_client.get("/api/foods", params={"q": "Magerquark"}).json()
+    assert body["canonical"] == "quark"
+    assert body["food"] is None  # the USDA table has no quark
+
+
+def test_an_unknown_food_finds_nothing(foods_client):
+    body = foods_client.get("/api/foods", params={"q": "zzz"}).json()
+    assert body["canonical"] is None and body["food"] is None
+
+
+def test_a_built_meal_is_totalled_by_the_server(foods_client, profile):
+    res = foods_client.post("/api/meals", json={
+        "name": "Smoothie",
+        "ingredients": [{"canonical": "banana", "grams": 120}, {"canonical": "milk", "grams": 200}],
+    })
+    assert res.status_code == 200
+    assert res.json()["calories"] == round(89 * 1.2 + 61 * 2, 1)
+    day = foods_client.get("/api/day").json()
+    meal = day["meals"][0]
+    assert meal["calories"] == day["totals"]["calories"] == 228.8
+    assert [(i["name"], i["grams"]) for i in meal["ingredients"]] == [("banana", 120), ("milk", 200)]
+
+
+def test_cooked_rice_counts_as_cooked_rice(foods_client):
+    def kcal(cooked):
+        return foods_client.post("/api/meals", json={
+            "name": "Rice", "ingredients": [{"canonical": "rice", "grams": 150, "cooked": cooked}],
+        }).json()["calories"]
+    assert kcal(True) == 195.0
+    assert kcal(False) == 547.5
+
+
+def test_an_ingredient_without_values_is_refused_by_name(foods_client):
+    res = foods_client.post("/api/meals", json={
+        "name": "Quark bowl", "ingredients": [{"canonical": "quark", "grams": 250}],
+    })
+    assert res.status_code == 422
+    assert res.json()["detail"] == "No nutrition values for quark."
+
+
+def test_a_cooked_form_that_doesnt_exist_is_refused(foods_client):
+    res = foods_client.post("/api/meals", json={
+        "name": "Banana", "ingredients": [{"canonical": "banana", "grams": 100, "cooked": True}],
+    })
+    assert res.status_code == 422
+
+
+def test_a_meal_needs_its_numbers_or_its_ingredients(foods_client):
+    assert foods_client.post("/api/meals", json={"name": "Something"}).status_code == 422
+    assert foods_client.post("/api/meals", json={"name": "Half", "calories": 300}).status_code == 422
+
+
+def test_a_huge_built_meal_is_refused(foods_client):
+    res = foods_client.post("/api/meals", json={
+        "name": "Oil", "ingredients": [{"canonical": "salt", "grams": 1}, {"canonical": "egg", "grams": 4000}],
+    })
+    assert res.status_code == 422 and "5,000 kcal" in res.json()["detail"]
+
+
+def test_typed_meals_and_single_foods_cant_be_rated(foods_client):
+    foods_client.post("/api/meals", json={"name": "Toast", "calories": 200,
+                                          "protein_g": 6, "carbs_g": 30, "fat_g": 6})
+    foods_client.post("/api/meals", json={"name": "Banana", "ingredients": [{"canonical": "banana", "grams": 118}]})
+    meals = foods_client.get("/api/day").json()["meals"]
+    assert [m["rateable"] for m in meals] == [False, False]
+    assert meals[0]["ingredients"] == []
+
+
+def test_deleting_a_built_meal_deletes_what_it_was_made_of(foods_client, db):
+    mid = foods_client.post("/api/meals", json={
+        "name": "Smoothie", "ingredients": [{"canonical": "banana", "grams": 120}],
+    }).json()["meal_log_id"]
+    assert foods_client.delete(f"/api/meals/{mid}").status_code == 200
+    assert db.execute("SELECT COUNT(*) FROM meal_ingredients").fetchone()[0] == 0

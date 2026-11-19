@@ -173,6 +173,41 @@ export interface DayMeal {
   protein_g: number | null;
   carbs_g: number | null;
   fat_g: number | null;
+  /** D49: what a meal built from ingredients was made of; empty otherwise. */
+  ingredients: MealIngredient[];
+  /** Whether rating it teaches the recipe feed: cooked recipes, and meals built from two or more ingredients. */
+  rateable: boolean;
+}
+
+export interface MealIngredient {
+  canonical: string;
+  name: string;
+  grams: number;
+  cooked: boolean;
+}
+
+/** D49: one food's USDA values, per 100 g. */
+export interface FoodForm {
+  usda: string;
+  fdc_id: number;
+  per_100g: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
+  portions: { label: string; grams: number }[];
+}
+
+export interface Food extends FoodForm {
+  canonical: string;
+  name: string;
+  /** Matched to its USDA food by hand; false: matched by name only. */
+  checked: boolean;
+  /** Rice, pasta, beans...: the values when weighed cooked. */
+  cooked: FoodForm | null;
+}
+
+export interface FoodLookup {
+  query: string;
+  canonical: string | null;
+  food: Food | null;
+  suggestions: { canonical: string; name: string }[];
 }
 
 export interface DaySummary {
@@ -407,8 +442,13 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ complete }),
     }),
-  addMeal: (meal: { name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number }) =>
-    req<{ logged: boolean; meal_log_id: number }>("/api/meals", {
+  findFood: (q: string) => req<FoodLookup>(`/api/foods?q=${encodeURIComponent(q)}`),
+  addMeal: (
+    meal:
+      | { name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number }
+      | { name: string; ingredients: { canonical: string; grams: number; cooked: boolean }[] },
+  ) =>
+    req<{ logged: boolean; meal_log_id: number; calories: number }>("/api/meals", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(meal),
