@@ -230,7 +230,8 @@ export function Today() {
           : await api.scanProduct(file, code ?? pendingBarcode);
       setProduct(res.product);
       setPendingBarcode(null);
-      setGrams("100");
+      // D52: one serving to start with, when Open Food Facts knows it (a 30 g scoop, not 100 g).
+      setGrams(String(res.product.serving_g ?? 100));
     } catch (e) {
       const found = e instanceof ApiError ? (e.detail as { barcode?: string | null } | null)?.barcode : null;
       if (found) setPendingBarcode(found);
@@ -527,6 +528,16 @@ export function Today() {
                       <button type="button" className="link-button" onClick={forgetProduct}>
                         Wrong? Forget these values
                       </button>
+                    </p>
+                  )}
+                  {(product.serving_g || product.pack_g) && (
+                    <p className="field-hint product-note">
+                      {/* D52: a suggestion from Open Food Facts, not a fixed amount. */}
+                      {product.serving_g
+                        ? `Starts at one serving, ${fmt(product.serving_g)} g according to Open Food Facts` +
+                          (product.pack_g ? ` (the pack is ${fmt(product.pack_g)} g)` : "") +
+                          ". Change it to what you had."
+                        : `The pack is ${fmt(product.pack_g ?? 0)} g, according to Open Food Facts.`}
                     </p>
                   )}
                   <div className="product-use">

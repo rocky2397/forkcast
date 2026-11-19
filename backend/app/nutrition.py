@@ -11,7 +11,8 @@ import urllib.request
 
 OFF_URL = (
     "https://world.openfoodfacts.org/api/v2/product/{code}.json"
-    "?fields=product_name,brands,nutriments"
+    "?fields=product_name,brands,nutriments,"
+    "serving_quantity,serving_quantity_unit,product_quantity,product_quantity_unit"
 )
 # OFF asks API users to identify themselves.
 USER_AGENT = "Forkcast/0.1 (personal food-inventory app)"
@@ -24,6 +25,27 @@ class OffUnavailable(Exception):
 def _num(nutriments: dict, key: str) -> float | None:
     v = nutriments.get(key)
     return float(v) if isinstance(v, (int, float)) else None
+
+
+MAX_SERVING_G = 2000
+MAX_PACK_G = 10000
+
+
+def _grams(value, unit, most: float) -> float | None:
+    """An Open Food Facts quantity in grams, or None.
+
+    Only grams and millilitres count; millilitres as grams, as near enough for
+    drinks, whose values Open Food Facts gives per 100 ml anyway. The number
+    is sometimes a string ("30"), and junk ("0", "1e9", a unit like "oz")
+    gives None rather than a serving nobody eats.
+    """
+    try:
+        g = float(value)
+    except (TypeError, ValueError):
+        return None
+    if (unit or "g").strip().lower() not in ("g", "ml") or not 0 < g <= most:
+        return None
+    return round(g, 1)
 
 
 def fetch_off(code: str) -> dict | None:
@@ -51,6 +73,9 @@ def fetch_off(code: str) -> dict | None:
         "carbs_g_100g": _num(n, "carbohydrates_100g"),
         "fat_g_100g": _num(n, "fat_100g"),
         "source": "openfoodfacts",
+        # D52: what one serving and the whole pack weigh, when Open Food Facts says.
+        "serving_g": _grams(p.get("serving_quantity"), p.get("serving_quantity_unit"), MAX_SERVING_G),
+        "pack_g": _grams(p.get("product_quantity"), p.get("product_quantity_unit"), MAX_PACK_G),
     }
 
 
@@ -62,10 +87,11 @@ def cached(con: sqlite3.Connection, code: str) -> dict | None:
 def cache(con: sqlite3.Connection, product: dict) -> None:
     con.execute(
         """INSERT OR REPLACE INTO products
-           (barcode, name, brand, calories_100g, protein_g_100g, carbs_g_100g, fat_g_100g, source)
+           (barcode, name, brand, calories_100g, protein_g_100g, carbs_g_100g, fat_g_100g, source,
+            serving_g, pack_g)
            VALUES (:barcode, :name, :brand, :calories_100g, :protein_g_100g,
-                   :carbs_g_100g, :fat_g_100g, :source)""",
-        product,
+                   :carbs_g_100g, :fat_g_100g, :source, :serving_g, :pack_g)""",
+        {"serving_g": None, "pack_g": None, **product},
     )
     con.commit()
 
