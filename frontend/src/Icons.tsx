@@ -77,3 +77,10 @@ export const SwapIcon = (p: IconProps) => (
     <path d="M5 12h13M13 7l5 5-5 5" />
   </Svg>
 );
+
+/** D50: favourite meals. Filled through CSS (.star-on) when it's on. */
+export const StarIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 4.5l2.3 4.7 5.2.8-3.8 3.6.9 5.1-4.6-2.4-4.6 2.4.9-5.1-3.8-3.6 5.2-.8z" />
+  </Svg>
+);

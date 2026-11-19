@@ -43,7 +43,7 @@ EVENTS = frozenset({
     "ingredient_added", "ingredient_removed",
     "recipe_opened", "recipe_cooked",
     "rated_liked", "rated_not_for_me", "rating_cleared",
-    "profile_saved", "meal_typed", "meal_built",
+    "profile_saved", "meal_typed", "meal_built", "meal_again",
     "photo_scan_tried", "label_scan_tried", "barcode_lookup",
 })
 # Events whose item is worth counting, and what kind of item it must be.

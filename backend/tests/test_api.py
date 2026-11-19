@@ -562,3 +562,66 @@ def test_deleting_a_built_meal_deletes_what_it_was_made_of(foods_client, db):
     }).json()["meal_log_id"]
     assert foods_client.delete(f"/api/meals/{mid}").status_code == 200
     assert db.execute("SELECT COUNT(*) FROM meal_ingredients").fetchone()[0] == 0
+
+
+# D50: log again, recent meals and favourites.
+
+def _typed(client, name, kcal=300):
+    return client.post("/api/meals", json={"name": name, "calories": kcal, "protein_g": 10,
+                                           "carbs_g": 30, "fat_g": 10}).json()["meal_log_id"]
+
+
+def test_recent_meals_are_the_latest_of_each_name(foods_client, db):
+    _typed(foods_client, "Toast", 200)
+    _typed(foods_client, "toast ", 250)  # same meal, later and a bit bigger
+    built = foods_client.post("/api/meals", json={
+        "name": "Smoothie", "ingredients": [{"canonical": "banana", "grams": 120}],
+    }).json()["meal_log_id"]
+    db.execute("INSERT INTO meal_log (recipe_id, name, calories) VALUES (1, 'x', 500)")  # a cooked recipe
+    db.commit()
+    meals = foods_client.get("/api/meals/recent").json()["meals"]
+    assert [m["name"] for m in meals] == ["Smoothie", "toast "]
+    assert meals[0]["meal_id"] == built and meals[0]["ingredients"][0]["canonical"] == "banana"
+    assert meals[1]["calories"] == 250
+
+
+def test_old_meals_drop_out_unless_they_are_favourites(foods_client, db):
+    old = _typed(foods_client, "Christmas stollen")
+    _typed(foods_client, "Pancakes")
+    db.execute("UPDATE meal_log SET logged_at = datetime('now', '-40 days') WHERE name IN ('Christmas stollen', 'Pancakes')")
+    db.commit()
+    assert foods_client.get("/api/meals/recent").json()["meals"] == []
+    assert foods_client.put(f"/api/meals/{old}/favourite", json={"favourite": True}).status_code == 200
+    meals = foods_client.get("/api/meals/recent").json()["meals"]
+    assert [(m["name"], m["favourite"]) for m in meals] == [("Christmas stollen", True)]
+
+
+def test_favourites_come_first_and_survive_deleting_an_entry(foods_client):
+    a = _typed(foods_client, "Porridge")
+    _typed(foods_client, "Salad")
+    foods_client.put(f"/api/meals/{a}/favourite", json={"favourite": True})
+    b = foods_client.post(f"/api/meals/{a}/again").json()["meal_log_id"]
+    foods_client.delete(f"/api/meals/{a}")
+    meals = foods_client.get("/api/meals/recent").json()["meals"]
+    assert [(m["name"], m["favourite"], m["meal_id"]) for m in meals] == [("Porridge", True, b), ("Salad", False, meals[1]["meal_id"])]
+    foods_client.put(f"/api/meals/{b}/favourite", json={"favourite": False})
+    assert [m["favourite"] for m in foods_client.get("/api/meals/recent").json()["meals"]] == [False, False]
+
+
+def test_logging_again_copies_the_numbers_and_the_ingredients(foods_client):
+    first = foods_client.post("/api/meals", json={
+        "name": "Rice bowl", "ingredients": [{"canonical": "rice", "grams": 150, "cooked": True},
+                                             {"canonical": "egg", "grams": 50}],
+    }).json()["meal_log_id"]
+    again = foods_client.post(f"/api/meals/{first}/again").json()["meal_log_id"]
+    meals = {m["id"]: m for m in foods_client.get("/api/day").json()["meals"]}
+    assert meals[again]["calories"] == meals[first]["calories"]
+    assert meals[again]["ingredients"] == meals[first]["ingredients"]
+
+
+def test_a_cooked_recipe_isnt_logged_again_here(foods_client, db):
+    cur = db.execute("INSERT INTO meal_log (recipe_id, name, calories) VALUES (1, 'x', 500)")
+    db.commit()
+    assert foods_client.post(f"/api/meals/{cur.lastrowid}/again").status_code == 404
+    assert foods_client.post("/api/meals/999/again").status_code == 404
+    assert foods_client.put("/api/meals/999/favourite", json={"favourite": True}).status_code == 404
