@@ -210,6 +210,18 @@ export interface FoodLookup {
   suggestions: { canonical: string; name: string }[];
 }
 
+/** D50: a typed or built meal to log again in one tap. */
+export interface RecentMeal {
+  meal_id: number;
+  name: string;
+  favourite: boolean;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  ingredients: MealIngredient[];
+}
+
 export interface DaySummary {
   date: string;
   meals: DayMeal[];
@@ -452,6 +464,14 @@ export const api = {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(meal),
+    }),
+  recentMeals: () => req<{ meals: RecentMeal[] }>("/api/meals/recent"),
+  logAgain: (id: number) => req<{ logged: boolean; meal_log_id: number }>(`/api/meals/${id}/again`, { method: "POST" }),
+  setFavourite: (id: number, favourite: boolean) =>
+    req<{ name: string; favourite: boolean }>(`/api/meals/${id}/favourite`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ favourite }),
     }),
   deleteMeal: (id: number) => req<{ deleted: number }>(`/api/meals/${id}`, { method: "DELETE" }),
   rateMeal: (id: number, liked: boolean | null) =>

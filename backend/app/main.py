@@ -675,6 +675,90 @@ def add_meal(body: MealAdd):
     return {"logged": True, "meal_log_id": cur.lastrowid, **values}
 
 
+RECENT_DAYS = 30  # D50: how far back "Log again" looks; favourites always show
+
+
+def _name_key(name: str | None) -> str:
+    return " ".join((name or "").lower().split())
+
+
+@app.get("/api/meals/recent")
+def recent_meals(limit: int = Query(8, ge=1, le=20)):
+    """Meals to log again in one tap (D50): favourites first, then recent ones.
+
+    Typed and built meals only, the latest of each name; a cooked recipe is
+    logged again from its page, where "I cooked this" also updates the kitchen.
+    """
+    with connect() as con:
+        favourites = {r[0] for r in con.execute("SELECT name_key FROM favourite_meals")}
+        rows = con.execute(
+            """SELECT id, name, calories, protein_g, carbs_g, fat_g,
+                      julianday('now') - julianday(logged_at) AS age_days
+               FROM meal_log
+               WHERE recipe_id IS NULL AND name IS NOT NULL
+               ORDER BY logged_at DESC, id DESC"""
+        ).fetchall()
+        latest: dict[str, dict] = {}
+        for r in rows:
+            key = _name_key(r["name"])
+            if key and key not in latest:
+                latest[key] = dict(r)
+        made_of = _meal_ingredients(con, [m["id"] for m in latest.values()])
+    favs = sorted((m for k, m in latest.items() if k in favourites), key=lambda m: _name_key(m["name"]))
+    recent = [m for k, m in latest.items() if k not in favourites and m["age_days"] <= RECENT_DAYS]
+    out = []
+    for m in (favs + recent)[:max(limit, len(favs))]:
+        out.append({
+            "meal_id": m["id"], "name": m["name"], "favourite": _name_key(m["name"]) in favourites,
+            **{k: m[k] for k in foods.MACROS}, "ingredients": made_of.get(m["id"], []),
+        })
+    return {"meals": out}
+
+
+@app.post("/api/meals/{meal_id:int}/again")
+def log_again(meal_id: int):
+    """Log a copy of a typed or built meal now, with its ingredients (D50)."""
+    with connect() as con:
+        m = con.execute(
+            "SELECT name, calories, protein_g, carbs_g, fat_g FROM meal_log WHERE id = ? AND recipe_id IS NULL",
+            (meal_id,),
+        ).fetchone()
+        if m is None:
+            raise HTTPException(404, f"no typed or built meal {meal_id}")
+        cur = con.execute(
+            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g) VALUES (?, ?, ?, ?, ?)",
+            tuple(m),
+        )
+        con.execute(
+            """INSERT INTO meal_ingredients (meal_id, canonical, grams, cooked)
+               SELECT ?, canonical, grams, cooked FROM meal_ingredients WHERE meal_id = ? ORDER BY rowid""",
+            (cur.lastrowid, meal_id),
+        )
+        con.commit()
+    stats.event("meal_again")
+    return {"logged": True, "meal_log_id": cur.lastrowid}
+
+
+class Favourite(BaseModel):
+    favourite: bool
+
+
+@app.put("/api/meals/{meal_id:int}/favourite")
+def set_favourite(meal_id: int, body: Favourite):
+    """Keep a meal at the top of "Log again", or stop (D50). By name, not by entry."""
+    with connect() as con:
+        row = con.execute("SELECT name FROM meal_log WHERE id = ?", (meal_id,)).fetchone()
+        if row is None or not _name_key(row["name"]):
+            raise HTTPException(404, f"no named meal {meal_id}")
+        key = _name_key(row["name"])
+        if body.favourite:
+            con.execute("INSERT OR IGNORE INTO favourite_meals (name_key) VALUES (?)", (key,))
+        else:
+            con.execute("DELETE FROM favourite_meals WHERE name_key = ?", (key,))
+        con.commit()
+    return {"name": row["name"], "favourite": body.favourite}
+
+
 class MealRating(BaseModel):
     liked: bool | None  # None clears the rating
 

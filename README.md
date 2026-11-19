@@ -158,6 +158,10 @@ dish: a cooked recipe, or a meal built from two or more ingredients ("Like
 your oat porridge"). A single food or a meal typed in as numbers can't be
 rated.
 
+Meals you typed or built in the last month wait under "Log again", one tap
+each, and a starred one stays at the top: most people eat the same few
+breakfasts and snacks.
+
 ## Evaluation
 
 The app makes promises you act on. Six are tested: five on data from outside
@@ -370,7 +374,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 439 pytest tests in about three seconds, offline and without the
+- **Tests:** 444 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 54 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -399,7 +403,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 49 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 50 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -465,7 +469,7 @@ ops/e2e.sh            # needs Google Chrome, the corpus and the Epicure weights
 It starts the app on an empty data dir and makes a first visit in Chrome:
 a profile with a goal weight, the kitchen, the recipe feed, a cooked recipe
 and what ran out, a typed meal, a product that isn't on Open Food Facts (the
-label reader faked, the rest real), a meal built from ingredients, "Done for today", a weigh-in and a reload.
+label reader faked, the rest real), a meal built from ingredients and logged again, "Done for today", a weigh-in and a reload.
 It fails if a screen doesn't show what it should, on any JavaScript or
 console error, on any API error, and on a serious accessibility problem
 (axe-core) on any screen. Breaking the app on purpose (a renamed API field,

@@ -231,6 +231,17 @@ async function run(page) {
       await meal.getByRole("button", { name: "Liked" }).click(); // two or more ingredients: it can teach the feed
       await expectText(meal.locator(".rate"), /Liked/, "built meal rated");
     }],
+    ["log again, and a favourite (D50)", async () => {
+      const again = page.locator(".again");
+      await expectText(again, /Smoke test porridge[\s\S]*Smoke test salad/, "recent meals, latest first");
+      await page.getByRole("button", { name: "Star Smoke test salad: keep it at the top" }).click();
+      await expectText(again.locator(".again-item").first(), /Smoke test salad/, "the starred meal moved to the top");
+      await audit(page, "today, log again");
+      await page.getByRole("button", { name: "Log Smoke test porridge again" }).click();
+      await expectText(page.locator(".meal-list"), /Smoke test porridge[\s\S]*Smoke test porridge/, "logged a second time");
+      const copy = page.locator(".meal-list li").filter({ hasText: "Smoke test porridge" }).last();
+      await expectText(copy.locator(".meal-ingredients"), /oat 50 g · milk 200 g · banana 118 g/, "with its ingredients");
+    }],
     ["Done for today", async () => {
       await page.getByRole("button", { name: "Done for today" }).click();
       await expectText(page.locator(".day-check-done"), /Today is marked complete/, "day check");

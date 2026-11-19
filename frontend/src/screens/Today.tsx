@@ -8,6 +8,7 @@ import {
   type DaySummary,
   type Product,
   type Profile,
+  type RecentMeal,
   type Progress,
   type Targets,
   type WeightPlan,
@@ -22,6 +23,7 @@ import { Guide, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
 import { BackIcon, CloseIcon, ScanIcon } from "../Icons";
 import { MealBuilder } from "./MealBuilder";
+import { LogAgain } from "./LogAgain";
 import { defaultName, gramsOf, type Part } from "../mealParts";
 
 const GOAL_WORDS: Record<Profile["goal"], string> = {
@@ -31,8 +33,10 @@ const GOAL_WORDS: Record<Profile["goal"], string> = {
 };
 
 const fmt = (n: number) => Math.round(n).toLocaleString("en");
+/** Grams per 100 g: one decimal under 10 g (6.5 g protein, not 7), whole above. */
+const grams = (n: number) => (n < 10 ? (Math.round(n * 10) / 10).toLocaleString("en") : fmt(n));
 /** A value read off a label, or "?" when it couldn't be read (never a 0 that looks real). */
-const shown = (n: number | null) => (n == null ? "?" : fmt(n));
+const shown = (n: number | null, g = true) => (n == null ? "?" : g ? grams(n) : fmt(n));
 
 /** Calories as a ring: eaten against the daily target, what's left in the middle. */
 function CalorieRing({ eaten, target }: { eaten: number; target: number }) {
@@ -117,6 +121,7 @@ export function Today() {
   const [day, setDay] = useState<DaySummary | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [weight, setWeight] = useState<WeightSummary | null>(null);
+  const [recent, setRecent] = useState<RecentMeal[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -139,8 +144,9 @@ export function Today() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const refresh = () =>
-    Promise.all([api.day(), api.profile(), api.progress(), api.weight()])
-      .then(([d, p, g, w]) => {
+    Promise.all([api.day(), api.profile(), api.progress(), api.weight(), api.recentMeals().catch(() => ({ meals: [] }))])
+      .then(([d, p, g, w, r]) => {
+        setRecent(r.meals);
         setDay(d);
         setProgress(g.progress);
         setWeight(w);
@@ -250,7 +256,8 @@ export function Today() {
     }
     if (savable(product)) await api.saveProduct(product).catch(() => null);
     const factor = (Number(grams) || 0) / 100;
-    const scale = (v: number | null) => (v == null ? "" : String(Math.round(v * factor)));
+    // One decimal: 30 g of something with 6.5 g protein per 100 g is 2 g, not 0 or 1.95.
+    const scale = (v: number | null) => (v == null ? "" : String(Math.round(v * factor * 10) / 10));
     setMeal({
       name: [product.name, `${Number(grams) || 0} g`].filter(Boolean).join(", "),
       calories: scale(product.calories_100g),
@@ -332,7 +339,7 @@ export function Today() {
             },
             {
               term: "Log a meal",
-              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference.",
+              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there.",
             },
             {
               term: "Liked · Not for me",
@@ -424,6 +431,7 @@ export function Today() {
             ))}
           </ol>
 
+          {!adding && <LogAgain meals={recent} onChange={refresh} />}
           {adding ? (
             <form
               className="meal-form"
@@ -481,7 +489,7 @@ export function Today() {
                     </span>
                   </div>
                   <p className="product-macros">
-                    Per 100 g: {shown(product.calories_100g)} kcal · {shown(product.protein_g_100g)} g protein ·{" "}
+                    Per 100 g: {shown(product.calories_100g, false)} kcal · {shown(product.protein_g_100g)} g protein ·{" "}
                     {shown(product.carbs_g_100g)} g carbs · {shown(product.fat_g_100g)} g fat
                   </p>
                   {product.check && (

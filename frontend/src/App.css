@@ -796,6 +796,19 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .builder-total { margin: 0; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .meal-ingredients { font-size: 13px; color: var(--ink-3); }
 
+/* D50: log again */
+.again { margin: 4px 0 12px; }
+.again-title { margin: 0 0 6px; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
+.again-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.again-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.again-name { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.again-kcal { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.star { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink-3); cursor: pointer; }
+.star:hover { color: var(--ink); }
+.star-on { color: var(--accent); }
+.star-on svg path { fill: currentColor; }
+.again .link-button { margin-top: 6px; font-size: 14px; }
+
 /* --- Kitchen -------------------------------------------------------------- */
 
 .kitchen-actions { display: grid; gap: 16px; margin: 20px 0 16px; }

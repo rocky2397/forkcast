@@ -110,6 +110,13 @@ CREATE TABLE IF NOT EXISTS meal_ingredients (
 );
 CREATE INDEX IF NOT EXISTS idx_mi_meal ON meal_ingredients(meal_id);
 
+-- D50: meals kept at the top of "Log again", by name (lower case), so a
+-- favourite survives deleting one day's entry of it.
+CREATE TABLE IF NOT EXISTS favourite_meals (
+    name_key TEXT PRIMARY KEY,
+    added_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- D41: weigh-ins, for the trend and the projection to the goal weight.
 CREATE TABLE IF NOT EXISTS weight_log (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
