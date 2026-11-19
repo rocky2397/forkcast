@@ -5,6 +5,12 @@ import { cap, formOf, partTotals, totalsOf, type Part } from "../mealParts";
 
 const fmt = (n: number) => Math.round(n).toLocaleString("en");
 
+const PRODUCT_SOURCE = {
+  openfoodfacts: "from Open Food Facts",
+  label: "read from the label",
+  saved: "saved from your earlier scan",
+} as const;
+
 /** A whole piece where the USDA has one (1 medium banana, 1 large egg), else 100 g. */
 function newPart(food: Food): Part {
   const piece = food.portions.findIndex((p) => /^1 (medium|large)$/.test(p.label));
@@ -99,7 +105,7 @@ export function MealBuilder({ parts, onChange }: { parts: Part[]; onChange: (par
             return (
               <li key={i} className="builder-item">
                 <div className="builder-head">
-                  <strong>{cap(p.food.name)}</strong>
+                  <strong>{p.product ? p.food.name : cap(p.food.name)}</strong>
                   <span className="builder-kcal">{fmt(t.calories)} kcal</span>
                   <button
                     type="button"
@@ -144,8 +150,14 @@ export function MealBuilder({ parts, onChange }: { parts: Part[]; onChange: (par
                   )}
                 </div>
                 <span className="builder-source">
-                  USDA: {form.usda}
-                  {!p.food.checked && " · matched by name only, check it's the right food"}
+                  {p.product ? (
+                    `Per 100 g ${PRODUCT_SOURCE[p.product.source]}`
+                  ) : (
+                    <>
+                      USDA: {form.usda}
+                      {!p.food.checked && " · matched by name only, check it's the right food"}
+                    </>
+                  )}
                 </span>
               </li>
             );

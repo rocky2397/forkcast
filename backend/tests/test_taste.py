@@ -119,3 +119,14 @@ def test_a_built_meal_with_real_ingredients_can_be_rated(db):
     _build(db, "Carrot milk", ["milk", "carrot"])
     meal = TestClient(main.app).get("/api/day").json()["meals"][0]
     assert meal["rateable"] is True
+
+
+def test_a_product_counts_for_taste_by_its_matched_name(db):
+    mid = _build(db, "Carrots in milk", ["carrot"])  # one ingredient alone wouldn't count
+    db.execute(
+        "INSERT INTO meal_products (meal_id, name, grams, calories_100g, protein_g_100g, carbs_g_100g,"
+        " fat_g_100g, canonical) VALUES (?, 'Vollmilch', 150, 64, 3.4, 4.8, 3.5, 'milk')",
+        (mid,),
+    )
+    db.commit()
+    assert taste.taste_profile(db).ids == [-mid]

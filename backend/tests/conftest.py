@@ -53,7 +53,7 @@ def db():
     con = connect()
     con.executescript(
         "DELETE FROM recipe_ingredients; DELETE FROM recipes;"
-        "DELETE FROM inventory; DELETE FROM meal_log; DELETE FROM meal_ingredients;"
+        "DELETE FROM inventory; DELETE FROM meal_log; DELETE FROM meal_ingredients; DELETE FROM meal_products;"
         "DELETE FROM profile; DELETE FROM favourite_meals;"
         "DELETE FROM weight_log; DELETE FROM day_check;"
     )

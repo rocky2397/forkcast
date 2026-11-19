@@ -146,8 +146,12 @@ def built_meals(con: sqlite3.Connection) -> list[dict]:
     rows = con.execute(
         """SELECT ml.id, ml.name, ml.liked,
                   (julianday('now') - julianday(ml.logged_at)) AS age_days,
-                  GROUP_CONCAT(mi.canonical) AS canonicals
-           FROM meal_log ml JOIN meal_ingredients mi ON mi.meal_id = ml.id
+                  GROUP_CONCAT(parts.canonical) AS canonicals
+           FROM meal_log ml
+           JOIN (SELECT meal_id, canonical FROM meal_ingredients
+                 UNION ALL  -- D51: a product counts by what its name matched
+                 SELECT meal_id, canonical FROM meal_products WHERE canonical IS NOT NULL) parts
+             ON parts.meal_id = ml.id
            WHERE ml.recipe_id IS NULL
            GROUP BY ml.id
            ORDER BY ml.logged_at DESC, ml.id DESC"""
