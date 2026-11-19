@@ -455,6 +455,7 @@ def test_german_names_can_be_added_to_the_kitchen(client, db):
 # D49: meals built from ingredients and grams, with USDA values per ingredient.
 
 FOOD_VOCAB = VOCAB + ["banana", "quark", "oat"]
+KCAL = {c: r["kcal"] for c, r in foods.table().items()}
 
 
 @pytest.fixture
@@ -472,15 +473,16 @@ def test_a_food_comes_with_its_values_and_portions(foods_client):
     assert food["canonical"] == "banana"
     assert food["usda"] == "Bananas, raw"
     assert food["checked"] is True
-    assert food["per_100g"]["calories"] == 89
+    assert food["per_100g"]["calories"] == KCAL["banana"]
     assert {"label": "1 medium", "grams": 118.0} in food["portions"]
     assert food["cooked"] is None  # nobody weighs a cooked banana
 
 
 def test_rice_can_be_weighed_dry_or_cooked(foods_client):
     food = foods_client.get("/api/foods", params={"q": "rice"}).json()["food"]
-    assert food["per_100g"]["calories"] == 365
-    assert food["cooked"]["per_100g"]["calories"] == 130
+    assert food["per_100g"]["calories"] == KCAL["rice"]
+    assert food["cooked"]["per_100g"]["calories"] == foods.table()["rice"]["cooked"]["kcal"]
+    assert food["cooked"]["per_100g"]["calories"] < food["per_100g"]["calories"] / 2
 
 
 def test_german_names_find_the_food(foods_client):
@@ -504,10 +506,11 @@ def test_a_built_meal_is_totalled_by_the_server(foods_client, profile):
         "ingredients": [{"canonical": "banana", "grams": 120}, {"canonical": "milk", "grams": 200}],
     })
     assert res.status_code == 200
-    assert res.json()["calories"] == round(89 * 1.2 + 61 * 2, 1)
+    expected = round(KCAL["banana"] * 1.2 + KCAL["milk"] * 2, 1)
+    assert res.json()["calories"] == expected
     day = foods_client.get("/api/day").json()
     meal = day["meals"][0]
-    assert meal["calories"] == day["totals"]["calories"] == 228.8
+    assert meal["calories"] == day["totals"]["calories"] == expected
     assert [(i["name"], i["grams"]) for i in meal["ingredients"]] == [("banana", 120), ("milk", 200)]
 
 
@@ -516,8 +519,8 @@ def test_cooked_rice_counts_as_cooked_rice(foods_client):
         return foods_client.post("/api/meals", json={
             "name": "Rice", "ingredients": [{"canonical": "rice", "grams": 150, "cooked": cooked}],
         }).json()["calories"]
-    assert kcal(True) == 195.0
-    assert kcal(False) == 547.5
+    assert kcal(True) == round(foods.table()["rice"]["cooked"]["kcal"] * 1.5, 1)
+    assert kcal(False) == round(KCAL["rice"] * 1.5, 1)
 
 
 def test_an_ingredient_without_values_is_refused_by_name(foods_client):
@@ -640,7 +643,7 @@ def test_a_product_and_an_ingredient_make_one_meal(foods_client):
         "products": [{**SKYR, "grams": 150}],
     })
     assert res.status_code == 200
-    assert res.json()["calories"] == round(89 * 1.18 + 63 * 1.5, 1)
+    assert res.json()["calories"] == round(KCAL["banana"] * 1.18 + 63 * 1.5, 1)
     meal = foods_client.get("/api/day").json()["meals"][0]
     assert [(i["name"], i["grams"], i["product"]) for i in meal["ingredients"]] == [
         ("banana", 118, False), ("Skyr Natur", 150, True)]

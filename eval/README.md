@@ -16,7 +16,10 @@ as the system under test.
 | [`RESULTS-stage4.md`](RESULTS-stage4.md) | stage 4 (photo scanning) results and findings |
 | [`RESULTS-stage5.md`](RESULTS-stage5.md) | stage 5 (nutrition-label reading) results and findings |
 | [`RESULTS-stage6.md`](RESULTS-stage6.md) | stage 6 (learning what you burn) simulation results |
+| [`RESULTS-stage7.md`](RESULTS-stage7.md) | stage 7 (typed foods against EU labels) results and findings |
 | `data/labels_off150.json` | stage 5 sample: 150 Open Food Facts products with their per-100 g values and label photo URLs |
+| `data/foods_off_fresh.json` | stage 7 second check: 40 products in the 12 kinds fetched later, which no fix was designed on |
+| `data/foods_off.json` | stage 7 sample: 70 single-ingredient products sold in Germany in 19 kinds, with the German word typed for each and its dev or held-out half |
 | `data/labels_fresh150.json` | 150 fresh products (ranks 601 on) for judging the D37 prompt |
 | `data/vision_gold.json` | stage 4 answer key: the right ingredients for each of the 81 Grocery Store Dataset products |
 | `data/taste_users.json` | the frozen dev/test split of 5,419 food.com users for stage 3 |

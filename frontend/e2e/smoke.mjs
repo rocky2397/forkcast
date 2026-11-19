@@ -200,7 +200,7 @@ async function run(page) {
       await page.getByPlaceholder("e.g. banana, Haferflocken, rice").fill("banana");
       await page.getByPlaceholder("e.g. banana, Haferflocken, rice").press("Enter");
       await page.getByLabel("How much banana").waitFor();
-      await expectText(page.locator(".builder-total"), /Together: 595 kcal/, "chips and a banana"); // 490 + 105
+      await expectText(page.locator(".builder-total"), /Together: 600 kcal/, "chips and a banana"); // 490 + 110
       await page.getByRole("button", { name: "Log meal" }).click();
       const chips = page.locator(".meal-list li").filter({ hasText: "Smoke test chips, banana" });
       await expectText(chips.locator(".meal-ingredients"), /banana 118 g · Smoke test chips 100 g/, "scanned meal logged");
@@ -242,8 +242,8 @@ async function run(page) {
       await page.getByLabel("How much banana").waitFor();
       await page.getByLabel("How much oat").fill("50");
       await page.getByLabel("How much milk").fill("200");
-      // 50 g oats 190 + 200 g milk 122 + 1 medium banana 105
-      await expectText(page.locator(".builder-total"), /Together: 417 kcal/, "built meal total");
+      // 50 g oats 181 + 200 g milk 122 + 1 medium banana 110 (EU values, D53)
+      await expectText(page.locator(".builder-total"), /Together: 413 kcal/, "built meal total");
       await expectText(page.locator(".builder-source").first(), /USDA: Cereals, oats/, "which USDA food");
       await add("Magerquark"); // a known ingredient the USDA table doesn't have
       await expectText(page.locator(".builder .feedback"), /No nutrition values for quark yet/, "quark");
@@ -251,7 +251,7 @@ async function run(page) {
       await page.getByLabel("Name it (optional)").fill("Smoke test porridge");
       await page.getByRole("button", { name: "Log meal" }).click();
       const meal = page.locator(".meal-list li").filter({ hasText: "Smoke test porridge" });
-      await expectText(meal.locator(".meal-macros"), /417 kcal/, "server total");
+      await expectText(meal.locator(".meal-macros"), /413 kcal/, "server total");
       await expectText(meal.locator(".meal-ingredients"), /oat 50 g · milk 200 g · banana 118 g/, "what it was made of");
       await meal.getByRole("button", { name: "Liked" }).click(); // two or more ingredients: it can teach the feed
       await expectText(meal.locator(".rate"), /Liked/, "built meal rated");

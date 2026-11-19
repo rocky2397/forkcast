@@ -354,6 +354,13 @@ class Normalizer:
             english = german.translate(t)
             if english:
                 hit = self._match_english(english)
+        if hit is None:
+            # D53: "vollmilch" -> "whole milk", "buttermilch" -> "buttermilk".
+            # Both parts are translated; never the main noun alone, which
+            # would make Mandelmilch (almond milk) plain milk.
+            for english in german.compound(t):
+                if (hit := self._match_english(english)) is not None:
+                    break
         return hit
 
     def _match_english(self, t: str) -> str | None:

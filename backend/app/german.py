@@ -138,3 +138,50 @@ def translate(t: str) -> str | None:
     if not any(w in WORDS for w in words) or any(w in NOT_GERMAN for w in words):
         return None
     return " ".join(WORDS.get(w, w) for w in words)
+
+
+# D53: front parts of compound words ("Voll-milch", "Weizen-mehl"), so a
+# compound translates whole rather than losing the part that names the kind.
+# Only used inside a compound: on their own some read as something else.
+FRONTS = {
+    "voll": "whole", "vollkorn": "whole wheat", "weizen": "wheat", "dinkel": "spelt",
+    "roggen": "rye", "hafer": "oat", "mandel": "almond", "kokos": "coconut",
+    "soja": "soy", "erdnuss": "peanut", "nuss": "nut",
+}
+
+# D53: German writes compounds as one word, with the main noun last:
+# "Vollmilch" is a kind of Milch, "Weizenmehl" a kind of Mehl. A word the
+# tables don't know is split before the longest known German word at its end
+# (at least 4 letters, with at least 3 in front), and both parts are
+# translated: "voll milch" is "whole milk". A front part the tables don't know
+# stays as it is ("basmati reis" is "basmati rice"), and only the English
+# matcher decides; the main noun is never matched alone, which would turn
+# Mandelmilch into milk.
+MIN_TAIL = 4
+MIN_HEAD = 3
+
+
+def compound(word: str) -> list[str]:
+    """English readings of a German compound, closest first, or [] if it isn't one.
+
+    "buttermilch" -> ["buttermilk", "butter milk"]: written together first,
+    because English writes some compounds as one word too.
+    """
+    parts = split_compound(word)
+    if parts is None:
+        return []
+    head, tail = parts
+    front = FRONTS.get(head) or WORDS.get(head) or head
+    return [front + WORDS[tail], f"{front} {WORDS[tail]}"]
+
+
+def split_compound(word: str) -> tuple[str, str] | None:
+    """("voll", "milch") for "vollmilch", or None when no known word ends it."""
+    if " " in word or word in WORDS:
+        return None
+    for i in range(MIN_HEAD, len(word) - MIN_TAIL + 1):
+        tail = word[i:]
+        if tail in WORDS:
+            return word[:i], tail
+    return None
+

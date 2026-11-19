@@ -295,3 +295,34 @@ def test_every_german_word_is_one_the_english_matcher_does_not_know():
         if e not in describing:
             assert n.match(w) == n.match(e), w
 
+
+
+# --- D53: German compounds, the main noun last ---
+
+@pytest.fixture
+def compounds():
+    return Normalizer(VOCAB + ["milk", "almond_milk", "oat_milk", "buttermilk", "whole_wheat_flour", "rice"])
+
+
+@pytest.mark.parametrize("raw, name", [
+    ("Vollmilch", "milk"), ("Weizenmehl", "flour"), ("Mandelmilch", "almond_milk"),
+    ("Hafermilch", "oat_milk"), ("Buttermilch", "buttermilk"), ("Vollkornmehl", "whole_wheat_flour"),
+])
+def test_a_compound_is_read_whole(compounds, raw, name):
+    assert compounds.match(raw) == name
+
+
+def test_a_compound_behaves_like_its_english(compounds):
+    # Read whole, never as its main noun alone: Kokosmilch goes wherever
+    # "coconut milk" goes, which here (no coconut milk in the list) is milk...
+    assert compounds.match("Kokosmilch") == compounds.match("coconut milk")
+    # ...and coconut milk once the list has it.
+    assert Normalizer(VOCAB + ["milk", "coconut_milk"]).match("Kokosmilch") == "coconut_milk"
+
+
+def test_a_word_that_ends_in_no_known_word_is_not_a_compound():
+    from app import german
+    assert german.split_compound("vollmilch") == ("voll", "milch")
+    assert german.split_compound("milch") is None  # a word on its own
+    assert german.split_compound("tomatenmark") is None  # "mark" isn't a food word here
+    assert german.compound("buttermilch") == ["buttermilk", "butter milk"]
