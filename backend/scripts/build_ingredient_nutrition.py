@@ -8,7 +8,9 @@
 https://fdc.nal.usda.gov/download-datasets). It isn't in the repo; only the
 result is: app/ingredient_nutrition.json, with each ingredient's USDA food,
 calories and macros per 100 g, and the USDA's own portions (1 medium banana
-is 118 g).
+is 118 g; pieces and spoons only, D53). Values follow EU labelling (D53,
+eu_values): carbohydrate without fibre, energy from the EU factors. Rice,
+pasta, beans and a few others also get their cooked form.
 
 Each ingredient gets one USDA food. A word-match picks a candidate (all the
 ingredient's words in the food's name, raw and plain forms first); the picks
@@ -38,6 +40,30 @@ PICKS = HERE / "usda_picks.csv"
 OUT = HERE.parent / "app" / "ingredient_nutrition.json"
 
 NUTRIENTS = {"1008": "kcal", "1003": "protein_g", "1005": "carbs_g", "1004": "fat_g"}
+# D53: for EU labelling; a food without them has none.
+EXTRA = {"1079": "fibre_g", "1018": "alcohol_g"}
+
+# D53: portion names in US measures mean little to European users; grams,
+# pieces ("1 medium") and spoons stay.
+US_MEASURES = re.compile(r"\b(cups?|fl oz|oz|ounces?|quarts?|pints?|lbs?|pounds?|gallons?|NLEA)\b", re.I)
+
+
+def eu_values(v: dict) -> dict:
+    """USDA values per 100 g -> what an EU label would say (Regulation 1169/2011, Annex XIV).
+
+    The USDA's carbohydrate is "by difference" and includes fibre; an EU label
+    lists fibre on its own line and leaves it out of carbohydrate. Energy on
+    an EU label is 4 kcal per g of protein and carbohydrate, 9 per g of fat,
+    2 per g of fibre and 7 per g of alcohol (polyols and organic acids,
+    which SR Legacy doesn't give, are left out).
+    """
+    fibre = v.get("fibre_g", 0.0)
+    carbs = max(v["carbs_g"] - fibre, 0.0)
+    kcal = 4 * v["protein_g"] + 4 * carbs + 9 * v["fat_g"] + 2 * fibre + 7 * v.get("alcohol_g", 0.0)
+    out = {"kcal": kcal, "protein_g": v["protein_g"], "carbs_g": carbs, "fat_g": v["fat_g"], "fibre_g": fibre}
+    if v.get("alcohol_g"):
+        out["alcohol_g"] = v["alcohol_g"]  # drinks: their energy is mostly this
+    return out
 
 # Categories that hold dishes, brands or baby food, never a plain ingredient.
 SKIP_CATEGORIES = {"3", "21", "22", "24", "25", "26", "27"}
@@ -87,7 +113,7 @@ def load_usda(src: Path):
     values: dict[str, dict] = defaultdict(dict)
     with open(src / "food_nutrient.csv", newline="") as f:
         for r in csv.DictReader(f):
-            key = NUTRIENTS.get(r["nutrient_id"])
+            key = NUTRIENTS.get(r["nutrient_id"]) or EXTRA.get(r["nutrient_id"])
             if key and r["fdc_id"] in foods:
                 values[r["fdc_id"]][key] = float(r["amount"])
     portions: dict[str, list] = defaultdict(list)
@@ -98,10 +124,12 @@ def load_usda(src: Path):
             modifier = re.sub(r"\s*\([^)]*\)", "", r["modifier"]).strip(" ,")
             modifier = re.sub(r'(\d+-\d+/\d+|\d+/\d+|\d+(?:\.\d+)?)"', _cm, modifier)
             label = " ".join(p for p in (_amount(r["amount"]), modifier) if p)
+            if US_MEASURES.search(label):
+                continue
             have = [p[0] for p in portions[r["fdc_id"]]]
             if r["fdc_id"] in foods and grams > 0 and label and label not in have:
                 portions[r["fdc_id"]].append([label, round(grams, 1)])
-    complete = {i for i, v in values.items() if len(v) == len(NUTRIENTS)}
+    complete = {i for i, v in values.items() if all(k in v for k in NUTRIENTS.values())}
     return {i: f for i, f in foods.items() if i in complete}, values, portions
 
 
@@ -213,7 +241,7 @@ def main() -> None:
         return {
             "fdc_id": int(fdc),
             "usda": foods[fdc]["description"],
-            **{k: round(values[fdc][k], 1) for k in NUTRIENTS.values()},
+            **{k: round(v, 1) for k, v in eu_values(values[fdc]).items()},  # D53
             "portions": portions.get(fdc, [])[:6],
         }
 

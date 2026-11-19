@@ -3,25 +3,29 @@
 from app import foods
 from app.recipes import STAPLES
 
-# Spices are mostly fibre and drinks mostly alcohol, which the three macros
-# don't cover; everything else should roughly add up (4/4/9 kcal per gram).
-NOT_ADDING_UP = ("Spices", "Alcoholic", "Leavening", "Vanilla", "Sweetener", "Seasoning",
-                 "Oat bran", "Carob", "Cocoa", "Liqueur", "Whiskey")
+# D53: values follow EU labelling, so energy is 4 kcal per g of protein and
+# carbohydrate, 9 per g of fat, 2 per g of fibre and 7 per g of alcohol.
 
 
-def test_every_entry_has_all_four_values():
+def test_energy_follows_the_eu_factors():
     for c, row in foods.table().items():
         for form in [row] + ([row["cooked"]] if "cooked" in row else []):
-            assert all(form[k] is not None and form[k] >= 0 for k in ("kcal", "protein_g", "carbs_g", "fat_g")), c
+            est = (4 * form["protein_g"] + 4 * form["carbs_g"] + 9 * form["fat_g"]
+                   + 2 * form["fibre_g"] + 7 * form.get("alcohol_g", 0))
+            assert abs(est - form["kcal"]) <= 1, (c, form["usda"])
 
 
-def test_the_values_add_up():
-    for c, row in foods.table().items():
-        for form in [row] + ([row["cooked"]] if "cooked" in row else []):
-            if form["usda"].startswith(NOT_ADDING_UP):
-                continue
-            est = 4 * form["protein_g"] + 4 * form["carbs_g"] + 9 * form["fat_g"]
-            assert abs(est - form["kcal"]) <= max(40, 0.2 * form["kcal"]), (c, form["usda"])
+def test_carbs_leave_out_fibre_as_on_eu_labels():
+    oats = foods.table()["oat"]
+    assert oats["fibre_g"] == 10.1
+    assert oats["carbs_g"] == 57.6  # 67.7 by the US definition
+    assert abs(oats["kcal"] - 362) <= 1
+
+
+def test_no_us_measures():
+    import re
+    us = re.compile(r"\b(cups?|fl oz|oz|quarts?|pints?|NLEA)\b", re.I)
+    assert not [p for r in foods.table().values() for p in r["portions"] if us.search(p[0])]
 
 
 def test_the_everyday_ingredients_were_checked_by_hand():

@@ -142,16 +142,17 @@ ingredients. For a smoothie or a homemade sauce you add each ingredient and
 how much of it ("Haferflocken, 50 g", "banana, 1 medium") and Forkcast adds
 up the calories and macros.
 
-<p align="center"><img src="docs/screenshots/log-ingredients.jpg" width="300" alt="Building a meal on a phone: oats 50 g (190 kcal), milk 200 g (122 kcal) and one medium banana of 118 g (105 kcal), each naming the USDA food it uses, together 417 kcal, 14 g protein, 70 g carbs and 10 g fat, named Oat porridge"></p>
+<p align="center"><img src="docs/screenshots/log-ingredients.jpg" width="300" alt="Building a meal on a phone: oats 50 g (181 kcal), milk 200 g (122 kcal) and one medium banana of 118 g (110 kcal), each naming the USDA food it uses, together 413 kcal, 14 g protein, 62 g carbs and 10 g fat, named Oat porridge"></p>
 
 The values per ingredient come from the USDA's food tables (FoodData
-Central), matched to Forkcast's ingredient list: 743 of the 1,790 ingredients
-have values. The 300 used most in recipes, 96% of all ingredient mentions,
+Central), converted to EU labelling (carbs without fibre, as on a European
+pack; test 7) and matched to Forkcast's ingredient list: 740 of the 1,790
+ingredients have values. The 300 used most in recipes, 96% of all ingredient mentions,
 were checked by hand, and the first automatic match was wrong for 134 of them
 (flour had become soy flour, egg the yolk). Checking 80 of the remaining
 matches found 67 right (84%), so the app shows which USDA food it used and
 marks the ones matched by name only. Rice, pasta, beans and other grains can
-be weighed dry or cooked: 150 g of rice is about 550 kcal dry and 195 cooked.
+be weighed dry or cooked: 150 g of rice is about 530 kcal dry and 190 cooked.
 A scanned product joins the same list with its own values, so skyr from a
 pack and a banana make one meal; that also covers foods the USDA table
 lacks, like quark and oat milk. When Open Food Facts knows a product's
@@ -168,7 +169,7 @@ breakfasts and snacks.
 
 ## Evaluation
 
-The app makes promises you act on. Six are tested: five on data from outside
+The app makes promises you act on. Seven are tested: six on data from outside
 the app, one on simulated people. Every fix is judged on cases it wasn't
 designed on:
 
@@ -181,6 +182,8 @@ designed on:
 5. **"These are the label's macros."** Does it read a nutrition label right?
 6. **"This is what you burn."** Does learning from your meals and weigh-ins
    beat the formula?
+7. **"Haferflocken, 50 g: 181 kcal."** Do the values for a food you type match
+   the label on the pack you bought?
 
 | Test | Before | After the fix | Judged on |
 |---|---|---|---|
@@ -190,6 +193,7 @@ designed on:
 | 4. Photo scan proposes the right ingredient | 71% | **76%** | 289 unseen store photos |
 | 5. Label read with the right calories | 78% | **83%** | 150 fresh products |
 | 6. What you burn, off by (kcal a day, median) | 186 | **74** | 2,000 simulated people, 4 weeks |
+| 7. Typed food's calories within 10% of its label | 64% | **76%** | 33 held-out German products |
 
 **Test 4, photo scanning,** on phone photos from a public grocery dataset. A
 third of the misses were the ingredient matcher, not the camera: "orange
@@ -213,6 +217,20 @@ swings. After four weeks of honest logs the typical error falls from 186 to
 reads low, but that is the number their plan needs: the plan's error falls
 from 272 to 104. Not tested: real people, and the water lost in the first
 weeks of a diet ([details](eval/RESULTS-stage6.md)).
+
+**Test 7, typed foods,** on single-ingredient products sold in Germany, from
+Open Food Facts: you type "Haferflocken", does the app's number match the
+pack? Two things were wrong. The values came from US tables, which count
+fibre as carbohydrate where EU labels don't (oats had 9 g too many carbs),
+and German compound words like "Vollmilch" and "Weizenmehl" found nothing.
+After converting every value to EU labelling and reading compounds whole
+(D53), calories are within 10% for 76% of held-out products (64% before) and
+carbs within 3 g for 76% (36%). On 12 more kinds fetched later, the carbs
+held up (31% to 50% within 3 g) but calories didn't move: the calorie gain
+came from words the app now finds, not from the new values. What is left: the app has one milk and one
+yogurt where German shelves have several fat levels, and canned beans hold
+more water than boiled ones, and quark has no values yet
+([details](eval/RESULTS-stage7.md)).
 
 ### How the tests work
 
@@ -378,7 +396,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 460 pytest tests in about three seconds, offline and without the
+- **Tests:** 469 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -407,7 +425,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 52 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 53 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

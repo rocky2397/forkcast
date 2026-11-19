@@ -1,0 +1,539 @@
+[
+ {
+  "kind": "walnuts",
+  "category": "walnuts",
+  "typed": "Walnüsse",
+  "form": "raw",
+  "split": "fresh",
+  "products": [
+   {
+    "code": "20005733",
+    "name": "Cerneaux de Noix",
+    "label": {
+     "calories": 712.0,
+     "protein_g": 15.5,
+     "carbs_g": 3.7,
+     "fat_g": 69.1,
+     "fibre_g": 6.8
+    }
+   },
+   {
+    "code": "20816438",
+    "name": "Walnuts XXL",
+    "label": {
+     "calories": 712.0,
+     "protein_g": 15.5,
+     "carbs_g": 3.7,
+     "fat_g": 69.1,
+     "fibre_g": 6.8
+    }
+   },
+   {
+    "code": "4008258130018",
+    "name": "Walnusskerne",
+    "label": {
+     "calories": 716.0,
+     "protein_g": 16.0,
+     "carbs_g": 5.9,
+     "fat_g": 69.0,
+     "fibre_g": 4.5
+    }
+   },
+   {
+    "code": "4008258130056",
+    "name": "Cerneaux de noix",
+    "label": {
+     "calories": 717.0,
+     "protein_g": 16.0,
+     "carbs_g": 6.0,
+     "fat_g": 69.0,
+     "fibre_g": 4.5
+    }
+   }
+  ]
+ },
+ {
+  "kind": "hazelnuts",
+  "category": "hazelnuts",
+  "typed": "Haselnüsse",
+  "form": "raw",
+  "split": "fresh",
+  "products": [
+   {
+    "code": "4056489033042",
+    "name": "Noisettes grillées",
+    "label": {
+     "calories": 723.333333333333,
+     "protein_g": 14.3,
+     "carbs_g": 3.5,
+     "fat_g": 70.5,
+     "fibre_g": 8.2
+    }
+   },
+   {
+    "code": "4335619014404",
+    "name": "Alesto pörkölt egészmogyoró",
+    "label": {
+     "calories": 722.0,
+     "protein_g": 14.3,
+     "carbs_g": 3.5,
+     "fat_g": 70.5,
+     "fibre_g": 8.2
+    }
+   },
+   {
+    "code": "4008258100011",
+    "name": "Hazelnuts shelled",
+    "label": {
+     "calories": 619.0,
+     "protein_g": 24.0,
+     "carbs_g": 5.7,
+     "fat_g": 53.0,
+     "fibre_g": 11.0
+    }
+   },
+   {
+    "code": "7613413839971",
+    "name": "Noisettes",
+    "label": {
+     "calories": 674.0,
+     "protein_g": 14.0,
+     "carbs_g": 11.0,
+     "fat_g": 62.0,
+     "fibre_g": 8.2
+    }
+   }
+  ]
+ },
+ {
+  "kind": "raisins",
+  "category": "raisins",
+  "typed": "Rosinen",
+  "form": "raw",
+  "split": "fresh",
+  "products": [
+   {
+    "code": "4056489763321",
+    "name": "Pasas sultanas",
+    "label": {
+     "calories": 300.0,
+     "protein_g": 2.5,
+     "carbs_g": 68.6,
+     "fat_g": 0.6,
+     "fibre_g": 5.2
+    }
+   },
+   {
+    "code": "4047247192187",
+    "name": "Sultaninen",
+    "label": {
+     "calories": 329.0,
+     "protein_g": 2.7,
+     "carbs_g": 74.0,
+     "fat_g": 1.1,
+     "fibre_g": 4.5
+    }
+   },
+   {
+    "code": "4066447615913",
+    "name": "Trockenfrüchte, Rosinen",
+    "label": {
+     "calories": 256.33,
+     "protein_g": 2.7,
+     "carbs_g": 73.0,
+     "fat_g": 1.3,
+     "fibre_g": 3.9
+    }
+   },
+   {
+    "code": "20240318",
+    "name": "Trauben hell",
+    "label": {
+     "calories": 181.0,
+     "protein_g": 17.0,
+     "carbs_g": 1.0,
+     "fat_g": 12.0
+    }
+   }
+  ]
+ },
+ {
+  "kind": "honey",
+  "category": "honeys",
+  "typed": "Honig",
+  "form": "raw",
+  "split": "fresh",
+  "products": [
+   {
+    "code": "3088545004001",
+    "name": "Miel de Fleurs Liquide Doseur 500g",
+    "label": {
+     "calories": 320.0,
+     "protein_g": 0.0,
+     "carbs_g": 80.0,
+     "fat_g": 0.0
+    }
+   },
+   {
+    "code": "20072803",
+    "name": "Miel de fleurs",
+    "label": {
+     "calories": 302.0,
+     "protein_g": 0.4,
+     "carbs_g": 75.1,
+     "fat_g": 0.1,
+     "fibre_g": 0.1
+    }
+   },
+   {
+    "code": "8480000154309",
+    "name": "Miel de flores",
+    "label": {
+     "calories": 333.0,
+     "protein_g": 0.5,
+     "carbs_g": 83.0,
+     "fat_g": 0.0
+    }
+   },
+   {
+    "code": "20276515",
+    "name": "Miel de fleurs crémeux",
+    "label": {
+     "calories": 302.0,
+     "protein_g": 0.4,
+     "carbs_g": 75.1,
+     "fat_g": 0.1,
+     "fibre_g": 0.1
+    }
+   }
+  ]
+ },
+ {
+  "kind": "frozen spinach",
+  "category": "frozen-spinachs",
+  "typed": "Spinat",
+  "form": "raw",
+  "split": "fresh",
+  "products": [
+   {
+    "code": "3083680836371",
+    "name": "Epinards Feuilles Préservées 750g",
+    "label": {
+     "calories": 24.0,
+     "protein_g": 2.5,
+     "carbs_g": 1.5,
+     "fat_g": 0.4,
+     "fibre_g": 2.3
+    }
+   },
+   {
+    "code": "4250241207331",
+    "name": "Blattspinat Natur",
+    "label": {
+     "calories": 21.0,
+     "protein_g": 3.0,
+     "carbs_g": 0.5,
+     "fat_g": 0.5,
+     "fibre_g": 2.0
+    }
+   },
+   {
+    "code": "4337256845427",
+    "name": "Junger Spinat gehackt erntefrisch tiefgefroren",
+    "label": {
+     "calories": 24.0,
+     "protein_g": 2.3,
+     "carbs_g": 1.7,
+     "fat_g": 0.5,
+     "fibre_g": 2.4
+    }
+   },
+   {
+    "code": "4311501428184",
+    "name": "Junger Spinat",
+    "label": {
+     "calories": 24.0,
+     "protein_g": 2.3,
+     "carbs_g": 1.7,
+     "fat_g": 0.4
+    }
+   }
+  ]
+ },
+ {
+  "kind": "frozen peas",
+  "category": "frozen-peas",
+  "typed": "Erbsen",
+  "form": "raw",
+  "split": "fresh",
+  "products": []
+ },
+ {
+  "kind": "passata",
+  "category": "tomato-passata",
+  "typed": "passierte Tomaten",
+  "form": "raw",
+  "split": "fresh",
+  "products": []
+ },
+ {
+  "kind": "low-fat quark",
+  "category": "quarks",
+  "typed": "Magerquark",
+  "form": "raw",
+  "split": "fresh",
+  "products": [
+   {
+    "code": "4002971112900",
+    "name": "",
+    "label": {
+     "calories": 53.2982791586997,
+     "protein_g": 9.3,
+     "carbs_g": 3.8,
+     "fat_g": 0.2
+    }
+   },
+   {
+    "code": "4260071790057",
+    "name": "Quark nach russischer Art",
+    "label": {
+     "calories": 150.0,
+     "protein_g": 16.0,
+     "carbs_g": 3.5,
+     "fat_g": 8.0
+    }
+   },
+   {
+    "code": "7613404013465",
+    "name": "Seré maigre",
+    "label": {
+     "calories": 63.0,
+     "protein_g": 9.7,
+     "carbs_g": 5.7,
+     "fat_g": 0.5
+    }
+   },
+   {
+    "code": "4056489013082",
+    "name": "Bio Speisequark Magerstufe",
+    "label": {
+     "calories": 66.4,
+     "protein_g": 12.0,
+     "carbs_g": 4.1,
+     "fat_g": 0.2,
+     "fibre_g": 0.0
+    }
+   }
+  ]
+ },
+ {
+  "kind": "couscous",
+  "category": "couscous",
+  "typed": "Couscous",
+  "form": "raw",
+  "split": "fresh",
+  "products": [
+   {
+    "code": "3165440006702",
+    "name": "Couscous sachet cuisson",
+    "label": {
+     "calories": 360.0,
+     "protein_g": 13.0,
+     "carbs_g": 72.0,
+     "fat_g": 1.8,
+     "fibre_g": 3.7
+    }
+   },
+   {
+    "code": "3223920700127",
+    "name": "Couscous Grain Moyen",
+    "label": {
+     "calories": 365.0,
+     "protein_g": 12.0,
+     "carbs_g": 73.0,
+     "fat_g": 2.0,
+     "fibre_g": 3.4
+    }
+   },
+   {
+    "code": "3223920620128",
+    "name": "couscous moyen",
+    "label": {
+     "calories": 365.0,
+     "protein_g": 12.0,
+     "carbs_g": 73.0,
+     "fat_g": 2.0,
+     "fibre_g": 3.4
+    }
+   },
+   {
+    "code": "3223920630134",
+    "name": "Ferrero couscous fin kg f /6",
+    "label": {
+     "calories": 365.0,
+     "protein_g": 12.0,
+     "carbs_g": 73.0,
+     "fat_g": 2.0,
+     "fibre_g": 3.4
+    }
+   }
+  ]
+ },
+ {
+  "kind": "quinoa",
+  "category": "quinoa",
+  "typed": "Quinoa",
+  "form": "raw",
+  "split": "fresh",
+  "products": [
+   {
+    "code": "4067796167818",
+    "name": "Quinoa",
+    "label": {
+     "calories": 390.0,
+     "protein_g": 12.0,
+     "carbs_g": 67.0,
+     "fat_g": 6.6,
+     "fibre_g": 5.5
+    }
+   },
+   {
+    "code": "4104420241305",
+    "name": "Quinoa bunt",
+    "label": {
+     "calories": 371.0,
+     "protein_g": 13.0,
+     "carbs_g": 61.0,
+     "fat_g": 6.5,
+     "fibre_g": 8.2
+    }
+   },
+   {
+    "code": "4104420139282",
+    "name": "Quinoa Gepufft",
+    "label": {
+     "calories": 377.0,
+     "protein_g": 8.6,
+     "carbs_g": 75.0,
+     "fat_g": 3.8,
+     "fibre_g": 4.3
+    }
+   },
+   {
+    "code": "4104420215313",
+    "name": "Quinoa",
+    "label": {
+     "calories": 381.0,
+     "protein_g": 14.0,
+     "carbs_g": 64.0,
+     "fat_g": 6.1,
+     "fibre_g": 7.0
+    }
+   }
+  ]
+ },
+ {
+  "kind": "coconut milk",
+  "category": "coconut-milks",
+  "typed": "Kokosmilch",
+  "form": "raw",
+  "split": "fresh",
+  "products": [
+   {
+    "code": "8858135001322",
+    "name": "Lait de coco premium saveur",
+    "label": {
+     "calories": 185.0,
+     "protein_g": 1.6,
+     "carbs_g": 2.0,
+     "fat_g": 19.0
+    }
+   },
+   {
+    "code": "4067796063882",
+    "name": "Kokosmilch",
+    "label": {
+     "calories": 220.0,
+     "protein_g": 1.7,
+     "carbs_g": 3.4,
+     "fat_g": 22.0,
+     "fibre_g": 0.5
+    }
+   },
+   {
+    "code": "0806253210414",
+    "name": "Organic Coconut Milk",
+    "label": {
+     "calories": 183.33,
+     "protein_g": 1.67,
+     "carbs_g": 5.0,
+     "fat_g": 16.67,
+     "fibre_g": 0.0
+    }
+   },
+   {
+    "code": "4066447490725",
+    "name": "Kokosmilch (BIO)",
+    "label": {
+     "calories": 220.0,
+     "protein_g": 1.7,
+     "carbs_g": 3.4,
+     "fat_g": 22.0,
+     "fibre_g": 0.5
+    }
+   }
+  ]
+ },
+ {
+  "kind": "flaxseed",
+  "category": "flax-seeds",
+  "typed": "Leinsamen",
+  "form": "raw",
+  "split": "fresh",
+  "products": [
+   {
+    "code": "4067796063332",
+    "name": "Leinsamen, geschrotet",
+    "label": {
+     "calories": 540.0,
+     "protein_g": 22.0,
+     "carbs_g": 3.0,
+     "fat_g": 43.0,
+     "fibre_g": 26.0
+    }
+   },
+   {
+    "code": "4104420241886",
+    "name": "Leinsamen geschrotet",
+    "label": {
+     "calories": 539.0,
+     "protein_g": 22.0,
+     "carbs_g": 3.0,
+     "fat_g": 43.0
+    }
+   },
+   {
+    "code": "4335619010543",
+    "name": "Био ленено семе, мляно",
+    "label": {
+     "calories": 477.0,
+     "protein_g": 19.0,
+     "carbs_g": 13.0,
+     "fat_g": 31.0,
+     "fibre_g": 34.8
+    }
+   },
+   {
+    "code": "4104420016828",
+    "name": "Leinsamen Braun",
+    "label": {
+     "calories": 506.0,
+     "protein_g": 21.0,
+     "carbs_g": 0.9,
+     "fat_g": 40.0,
+     "fibre_g": 29.0
+    }
+   }
+  ]
+ }
+]
