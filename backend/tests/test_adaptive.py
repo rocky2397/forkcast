@@ -26,6 +26,22 @@ def test_nothing_is_learned_from_too_little_data():
     assert est["complete_days"] == 6 and est["needed_days"] == adaptive.MIN_COMPLETE_DAYS
 
 
+def test_the_number_of_weigh_ins_is_reported():
+    # D65: one weigh-in spans 0 days, but the app should still say there is one.
+    assert adaptive.estimate(FORMULA, [], [(0.0, 80.0)])["weigh_ins"] == 1
+    assert adaptive.estimate(FORMULA, [], [])["weigh_ins"] == 0
+
+
+def test_todays_weigh_in_is_counted_on_screen_but_not_learned_from(db):
+    # D65: right after the first weigh-in the screen said "spread over 0 days".
+    db.execute("INSERT INTO profile (id, sex, age, height_cm, weight_kg, activity, goal)"
+               " VALUES (1, 'm', 30, 180, 80, 'moderate', 'maintain')")
+    db.execute("INSERT INTO weight_log (weight_kg, logged_at) VALUES (80, datetime('now'))")
+    db.commit()
+    _, est = adaptive.profile_with_burn(db, 0)
+    assert est["weigh_ins"] == 1 and est["weigh_in_days"] == 0 and est["measured"] is None
+
+
 def test_steady_weight_means_you_burn_what_you_eat():
     # 2,600 a day for four weeks and the weight didn't move: you burn about 2,600.
     est = adaptive.estimate(FORMULA, [2600.0] * 24, _flat(80))

@@ -328,7 +328,9 @@ async function run(page) {
       await box.fill("Cappuccino");
       await box.press("Enter");
       await page.getByLabel("How much espresso").waitFor();
-      await expectText(page.locator(".builder-note"), /A typical cappuccino: espresso, milk\. Change any amount/, "dish note");
+      await expectText(page.locator(".builder-dish"), /A typical cappuccino\. Change any amount that's different\./, "dish note");
+      // D65: the note heads the dish's own rows: the next row is the espresso.
+      await expectText(page.locator(".builder-dish + .builder-item strong"), /Espresso/, "note above its rows");
       if ((await page.getByLabel("Name it (optional)").inputValue()) !== "Cappuccino") throw new Error("the dish didn't name the meal");
       await audit(page, "today, a dish");
       await page.getByRole("button", { name: "Cancel" }).click();
@@ -354,7 +356,7 @@ async function run(page) {
       const form = page.getByLabel("Weighed raw or cooked: chickpeas");
       await form.waitFor();
       if ((await form.inputValue()) !== "canned") throw new Error("Kichererbsen aus der Dose didn't start canned");
-      await expectText(page.locator(".builder-source").first(), /drained/, "canned values");
+      await expectText(page.locator(".builder-source").first(), /Open Food Facts: median of 12 products sold in Germany/, "values from German cans");
       await page.getByRole("button", { name: "Cancel" }).click();
     }],
     ["log again, and a favourite (D50)", async () => {
@@ -458,6 +460,16 @@ async function run(page) {
       await tab(page, "Recipes").click();
       // Losing weight (the profile's goal weight): desserts don't count towards what to buy.
       await expectText(page.locator("section.shopping"), /Desserts aren't counted, since you're losing weight\./, "dessert note");
+      // D65: the jump link lands the section's heading at the top, below the header.
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.getByRole("button", { name: "What's worth buying? ↓" }).click();
+      await page.waitForFunction(() => {
+        const top = document.getElementById("worth-buying")?.getBoundingClientRect().top ?? -1;
+        return top > 40 && top < 160;
+      }, null, { timeout: 5000 }).catch(async () => {
+        const top = await page.evaluate(() => document.getElementById("worth-buying")?.getBoundingClientRect().top);
+        throw new Error(`Worth buying should land near the top, but its heading is at ${top}px`);
+      });
       await tab(page, "Today").click();
     }],
     ["Done for today", async () => {
@@ -470,6 +482,8 @@ async function run(page) {
       await expectText(page.locator(".weight-card h2"), /trend 71\.8 kg/, "weight trend");
       // D45: a new kitchen uses the formula and says how far learning has got.
       await expectText(page.locator(".burn-line"), /What you burn: about [\d,]+ kcal a day.*0 of 10 complete days/, "burn line");
+      // D65: one weigh-in reads as one, not as "spread over 0 days".
+      await expectText(page.locator(".burn-line"), /1 weigh-in so far; the next ones should spread over 12 days/, "one weigh-in");
       await audit(page, "today, after logging");
     }],
     ["everything is still there after a reload", async () => {

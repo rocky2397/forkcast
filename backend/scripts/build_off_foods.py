@@ -3,7 +3,8 @@
 
     python backend/scripts/build_off_foods.py <cache dir>
 
-Oat drink, muesli, low-fat quark, skyr, 1.5% milk and yogurt (D63) are staples here and missing from
+Oat drink, muesli, low-fat quark, skyr, 1.5% milk and yogurt (D63), Greek
+yogurt and canned beans (D65) are staples here and missing from
 the USDA's SR Legacy (or only there as a US brand). For each, the 12
 most-scanned products sold in Germany with all four values per 100 g, from
 an Open Food Facts category search cached in <cache dir> (the same pages
@@ -27,19 +28,27 @@ HERE = Path(__file__).resolve().parent
 OUT = HERE / "off_foods.csv"
 TOP = 12
 
-# key in the app, Open Food Facts category, which products count (values, name)
+# key in the app, Open Food Facts category, which products count (values,
+# name, number of ingredients), and the form they replace ("" for the food)
 KINDS = [
-    ("oat_milk", "oat-based-drinks", lambda v, n: True),
-    ("muesli", "mueslis", lambda v, n: v["fat_g"] <= 10.0),  # not crunchy muesli, which is granola
-    ("quark", "quarks", lambda v, n: v["fat_g"] <= 1.0),  # Magerquark, under 1% fat
-    ("skyr", "skyrs", lambda v, n: v["carbs_g"] <= 6.0),  # plain, not fruit skyr
+    ("oat_milk", "oat-based-drinks", lambda v, n, i: True, ""),
+    ("muesli", "mueslis", lambda v, n, i: v["fat_g"] <= 10.0, ""),  # not crunchy muesli, which is granola
+    ("quark", "quarks", lambda v, n, i: v["fat_g"] <= 1.0, ""),  # Magerquark, under 1% fat
+    ("skyr", "skyrs", lambda v, n, i: v["carbs_g"] <= 6.0, ""),  # plain, not fruit skyr
     # D63: German milk at 1.5% fat; the USDA has 1% and 2%. A stage 7 dev kind,
     # so building from it doesn't touch the held-out half.
-    ("low_fat_milk", "semi-skimmed-milks", lambda v, n: 1.2 <= v["fat_g"] <= 1.8),
+    ("low_fat_milk", "semi-skimmed-milks", lambda v, n, i: 1.2 <= v["fat_g"] <= 1.8, ""),
     # D63: yogurt at 1.5 to 1.8% fat. The USDA's low-fat yogurt has added milk
     # solids (63 kcal, 7 g carbs), German ones don't (about 52 kcal). A stage 7
     # held-out kind: its results say yogurt no longer counts as unseen.
-    ("low_fat_yogurt", "plain-yogurts", lambda v, n: 1.0 <= v["fat_g"] <= 2.0 and not GREEK.search(n)),
+    ("low_fat_yogurt", "plain-yogurts", lambda v, n, i: 1.0 <= v["fat_g"] <= 2.0 and not GREEK.search(n), ""),
+    # D65: Greek yogurt as sold here is about 10% fat; the USDA's is 5%.
+    ("greek_yogurt", "plain-yogurts", lambda v, n, i: v["fat_g"] >= 8.0 and bool(GREEK.search(n)), ""),
+    # D65: canned and drained, as on the can: the USDA's canned chickpeas have
+    # 130 kcal, German cans 113 to 122. Plain cans only (beans, water, salt and
+    # at most a firming agent), not beans in sauce.
+    ("chickpea", "canned-chickpeas", lambda v, n, i: i is not None and i <= 4, "canned"),
+    ("kidney_bean", "canned-red-kidney-beans", lambda v, n, i: i is not None and i <= 4, "canned"),
 ]
 GREEK = re.compile(r"greek|griech", re.I)
 FIELDS = {"kcal": "energy-kcal", "protein_g": "proteins", "carbs_g": "carbohydrates", "fat_g": "fat", "fibre_g": "fiber"}
@@ -59,19 +68,25 @@ def values(p: dict) -> dict | None:
     return out if out["kcal"] > 0 else None
 
 
+def ingredients(p: dict) -> int | None:
+    n = p.get("ingredients_n")
+    return int(n) if isinstance(n, (int, float)) else None
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     cache = Path(sys.argv[1])
     rows = []
-    for key, category, keep in KINDS:
+    for key, category, keep, form in KINDS:
         products = json.loads((cache / f"{category}.json").read_text()).get("products", [])
-        picked = [v for p in products if (v := values(p)) and keep(v, p.get("product_name") or "")][:TOP]
+        picked = [v for p in products
+                  if (v := values(p)) and keep(v, p.get("product_name") or "", ingredients(p))][:TOP]
         med = {k: round(statistics.median(v[k] for v in picked), 1) for k in FIELDS}
-        rows.append({"canonical": key, **med, "n": len(picked), "category": category})
+        rows.append({"canonical": key, "form": form, **med, "n": len(picked), "category": category})
         print(f"{key:10} {len(picked)} products: {med}")
     with open(OUT, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["canonical", *FIELDS, "n", "category"])
+        w = csv.DictWriter(f, fieldnames=["canonical", "form", *FIELDS, "n", "category"])
         w.writeheader()
         w.writerows(rows)
 

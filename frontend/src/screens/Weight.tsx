@@ -42,6 +42,14 @@ function statusText(w: WeightSummary): string | null {
 
 const kcal = (n: number) => `${Math.round(n).toLocaleString("en")} kcal`;
 
+/** D65: one weigh-in spans no days yet, but it isn't nothing: say what's there. */
+function weighIns(count: number, span: number, needed: number): string {
+  if (count === 0) return `no weigh-ins yet (they need to spread over ${needed} days)`;
+  if (count === 1) return `1 weigh-in so far; the next ones should spread over ${needed} days`;
+  if (span === 0) return `${count} weigh-ins so far, to spread over ${needed} days`;
+  return `${count} weigh-ins spread over ${span} of the ${needed} days it needs`;
+}
+
 /** D45: what you burn, and whether it's learned yet. */
 function BurnLine({ b }: { b: BurnEstimate }) {
   if (b.measured == null) {
@@ -51,7 +59,7 @@ function BurnLine({ b }: { b: BurnEstimate }) {
       <p className="weight-status burn-line">
         <strong>What you burn: about {kcal(b.formula)} a day</strong>, from a formula for your body and activity. After
         about two weeks of complete days and weigh-ins, Forkcast learns your real number from them. So far:{" "}
-        {days} of {b.needed_days} complete days, and weigh-ins spread over {span} of the {b.needed_span} days it needs.
+        {days} of {b.needed_days} complete days, and {weighIns(b.weigh_ins ?? 0, span, b.needed_span)}.
       </p>
     );
   }

@@ -59,6 +59,7 @@ def estimate(formula: float, intake: list[float], weigh_ins: list[tuple[float, f
         "complete_days": len(intake),
         "needed_days": MIN_COMPLETE_DAYS,
         "weigh_in_days": round(span),
+        "weigh_ins": len(weigh_ins),  # D65: so one weigh-in doesn't read as none
         "needed_span": MIN_SPAN_DAYS,
         "window_days": WINDOW_DAYS,
     }
@@ -113,12 +114,17 @@ def learn(con: sqlite3.Connection, profile: Mapping, tz_minutes: int = 0) -> dic
             intake.append(kcal)
 
     origin = datetime.combine(start, datetime.min.time())
-    weigh_ins = []
+    weigh_ins, today_count = [], 0
     for r in con.execute("SELECT logged_at, weight_kg FROM weight_log ORDER BY logged_at, id"):
         when = datetime.strptime(r["logged_at"], "%Y-%m-%d %H:%M:%S") + timedelta(minutes=tz_minutes)
         if start <= when.date() < today:
             weigh_ins.append(((when - origin).total_seconds() / 86400.0, float(r["weight_kg"])))
-    return estimate(formula, intake, weigh_ins)
+        elif when.date() == today:
+            today_count += 1
+    est = estimate(formula, intake, weigh_ins)
+    # D65: what the screen counts includes today's weigh-in; the estimate waits for the day to end.
+    est["weigh_ins"] += today_count
+    return est
 
 
 def profile_with_burn(con: sqlite3.Connection, tz_minutes: int = 0) -> tuple[dict | None, dict | None]:
