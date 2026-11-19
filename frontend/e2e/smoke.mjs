@@ -210,6 +210,24 @@ async function run(page) {
       const saved = await page.evaluate(async (c) => (await fetch(`/api/nutrition/barcode/${c}`)).json(), code);
       if (saved.product?.source !== "saved" || saved.product.calories_100g !== 490) throw new Error(`not remembered: ${JSON.stringify(saved)}`);
     }],
+    ["a scanned product starts at one serving (D52)", async () => {
+      // Only the scan reply is faked: an Open Food Facts product with a 30 g serving.
+      await page.route("**/api/nutrition/scan", (route) => route.fulfill({
+        status: 200, contentType: "application/json",
+        body: JSON.stringify({ product: { barcode: "4012345678901", name: "Smoke test whey", brand: null,
+          calories_100g: 380, protein_g_100g: 78, carbs_g_100g: 6, fat_g_100g: 5, source: "openfoodfacts",
+          check: null, serving_g: 30, pack_g: 1000 } }),
+      }));
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      await page.locator('form input[type="file"]').setInputFiles({ name: "p.png", mimeType: "image/png", buffer: PHOTO });
+      await expectText(page.locator(".product-card"), /Starts at one serving, 30 g according to Open Food Facts \(the pack is 1,000 g\)\. Change it to what you had\./, "serving hint");
+      if ((await page.locator(".product-use input").inputValue()) !== "30") throw new Error("the card didn't start at one serving");
+      await page.getByRole("button", { name: "Add to meal" }).click();
+      await expectText(page.locator(".builder-total"), /Together: 114 kcal/, "one 30 g serving"); // 380 x 0.3
+      if ((await page.getByLabel("Unit for Smoke test whey").inputValue()) !== "0") throw new Error("the row isn't in servings");
+      await page.unroute("**/api/nutrition/scan");
+      await page.getByRole("button", { name: "Cancel" }).click();
+    }],
     ["a meal built from ingredients (D49)", async () => {
       await page.getByRole("button", { name: "Log a meal" }).click();
       const add = async (name) => {

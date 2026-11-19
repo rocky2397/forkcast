@@ -677,3 +677,28 @@ def test_logging_again_and_deleting_carry_the_products(foods_client, db):
     foods_client.delete(f"/api/meals/{first}")
     foods_client.delete(f"/api/meals/{again}")
     assert db.execute("SELECT COUNT(*) FROM meal_products").fetchone()[0] == 0
+
+
+# D52: serving and pack sizes from Open Food Facts.
+
+@pytest.mark.parametrize("value, unit, expected", [
+    (30, "g", 30.0), ("30", "g", 30.0), (250, "ml", 250.0), (30, None, 30.0),
+    (1, "oz", None), (0, "g", None), (5000, "g", None), ("a scoop", "g", None), (None, None, None),
+])
+def test_serving_sizes_are_grams_or_nothing(value, unit, expected):
+    from app import nutrition
+    assert nutrition._grams(value, unit, nutrition.MAX_SERVING_G) == expected
+
+
+def test_a_products_serving_is_kept_with_it(client, monkeypatch):
+    from app import nutrition
+    powder = {"barcode": "4012345678901", "name": "Whey protein", "brand": None, "calories_100g": 380,
+              "protein_g_100g": 78, "carbs_g_100g": 6, "fat_g_100g": 5, "source": "openfoodfacts",
+              "serving_g": 30.0, "pack_g": 1000.0}
+    calls = []
+    monkeypatch.setattr(nutrition, "fetch_off", lambda code: calls.append(code) or powder)
+    first = client.get("/api/nutrition/barcode/4012345678901").json()["product"]
+    again = client.get("/api/nutrition/barcode/4012345678901").json()["product"]
+    assert (first["serving_g"], first["pack_g"]) == (30.0, 1000.0)
+    assert (again["serving_g"], again["pack_g"]) == (30.0, 1000.0)  # from the cache
+    assert len(calls) == 1

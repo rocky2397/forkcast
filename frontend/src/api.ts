@@ -257,6 +257,9 @@ export interface Product {
   source: "openfoodfacts" | "label" | "saved";
   /** D36: a warning when label values are missing or don't add up. */
   check?: string | null;
+  /** D52: one serving and the whole pack in grams, when Open Food Facts says. */
+  serving_g?: number | null;
+  pack_g?: number | null;
 }
 
 export interface RecipeDetail {

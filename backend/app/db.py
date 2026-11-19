@@ -84,7 +84,9 @@ CREATE TABLE IF NOT EXISTS products (
     carbs_g_100g   REAL,
     fat_g_100g     REAL,
     source         TEXT NOT NULL,               -- 'openfoodfacts' | 'saved' (D48: read off a label)
-    fetched_at     TEXT NOT NULL DEFAULT (datetime('now'))
+    fetched_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    serving_g      REAL,                        -- D52: one serving, from Open Food Facts
+    pack_g         REAL                         -- D52: the whole pack
 );
 
 CREATE TABLE IF NOT EXISTS profile (
@@ -164,9 +166,13 @@ _MEAL_LOG_ADDED = {
 # D39: a goal weight and the pace to reach it.
 _PROFILE_ADDED = {"goal_weight_kg": "REAL", "pace": "TEXT"}
 
+# D52: serving and pack sizes for scanned products.
+_PRODUCTS_ADDED = {"serving_g": "REAL", "pack_g": "REAL"}
+
 
 def _migrate(con: sqlite3.Connection) -> None:
-    for table, added in (("meal_log", _MEAL_LOG_ADDED), ("profile", _PROFILE_ADDED)):
+    for table, added in (("meal_log", _MEAL_LOG_ADDED), ("profile", _PROFILE_ADDED),
+                         ("products", _PRODUCTS_ADDED)):
         have = {row["name"] for row in con.execute(f"PRAGMA table_info({table})")}
         for col, typ in added.items():
             if col not in have:

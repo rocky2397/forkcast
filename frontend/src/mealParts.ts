@@ -18,7 +18,16 @@ export function complete(p: Product): boolean {
   return [p.calories_100g, p.protein_g_100g, p.carbs_g_100g, p.fat_g_100g].every((v) => v != null);
 }
 
-/** A complete scanned product as a row of the meal being built, in grams. */
+/** D52: a scanned product's serving and pack, as portions like a banana's "1 medium". */
+function productPortions(p: Product): { label: string; grams: number }[] {
+  const out = [];
+  if (p.serving_g) out.push({ label: "1 serving", grams: p.serving_g });
+  if (p.pack_g && p.pack_g !== p.serving_g) out.push({ label: "1 pack", grams: p.pack_g });
+  return out;
+}
+
+/** A complete scanned product as a row of the meal being built. One serving
+ *  when that's the amount chosen on its card, else grams. */
 export function productPart(p: Product, grams: string): Part {
   const food: Food = {
     canonical: "",
@@ -32,10 +41,15 @@ export function productPart(p: Product, grams: string): Part {
       carbs_g: p.carbs_g_100g ?? 0,
       fat_g: p.fat_g_100g ?? 0,
     },
-    portions: [],
+    portions: productPortions(p),
     cooked: null,
   };
-  return { food, amount: grams, unit: -1, cooked: false, product: { barcode: p.barcode, source: p.source } };
+  const product = { barcode: p.barcode, source: p.source };
+  const serving = food.portions.findIndex((o) => o.label === "1 serving");
+  if (serving >= 0 && Number(grams) === food.portions[serving].grams) {
+    return { food, amount: "1", unit: serving, cooked: false, product };
+  }
+  return { food, amount: grams, unit: -1, cooked: false, product };
 }
 
 /** What the server is sent for a product row. */
