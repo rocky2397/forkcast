@@ -21,6 +21,8 @@ import { displayName } from "../format";
 import { Guide, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
 import { BackIcon, CloseIcon, ScanIcon } from "../Icons";
+import { MealBuilder } from "./MealBuilder";
+import { defaultName, gramsOf, type Part } from "../mealParts";
 
 const GOAL_WORDS: Record<Profile["goal"], string> = {
   cut: "losing fat",
@@ -120,6 +122,9 @@ export function Today() {
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
   const [meal, setMeal] = useState(EMPTY_MEAL);
+  // D49: a meal built from ingredients and amounts instead of typed numbers.
+  const [parts, setParts] = useState<Part[]>([]);
+  const [mealError, setMealError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [grams, setGrams] = useState("100");
@@ -157,21 +162,35 @@ export function Today() {
   async function addMeal() {
     if (busy) return;
     setBusy(true);
+    setMealError(null);
     try {
-      await api.addMeal({
-        name: meal.name.trim(),
-        calories: Number(meal.calories) || 0,
-        protein_g: Number(meal.protein_g) || 0,
-        carbs_g: Number(meal.carbs_g) || 0,
-        fat_g: Number(meal.fat_g) || 0,
-      });
+      if (parts.length > 0) {
+        // The server works the numbers out from the ingredients (D49).
+        await api.addMeal({
+          name: meal.name.trim() || defaultName(parts),
+          ingredients: parts.map((p) => ({ canonical: p.food.canonical, grams: gramsOf(p), cooked: p.cooked })),
+        });
+      } else {
+        await api.addMeal({
+          name: meal.name.trim(),
+          calories: Number(meal.calories) || 0,
+          protein_g: Number(meal.protein_g) || 0,
+          carbs_g: Number(meal.carbs_g) || 0,
+          fat_g: Number(meal.fat_g) || 0,
+        });
+      }
       setMeal(EMPTY_MEAL);
+      setParts([]);
       setAdding(false);
       await refresh();
+    } catch (e) {
+      setMealError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
   }
+
+  const partsReady = parts.length > 0 && parts.every((p) => gramsOf(p) > 0);
 
   async function removeMeal(id: number) {
     await api.deleteMeal(id);
@@ -224,6 +243,11 @@ export function Today() {
 
   async function useProduct() {
     if (!product) return;
+    if (parts.length > 0) {
+      // A product has its own values, not an ingredient's: it can't join the list (yet).
+      setMealError("A scanned product can't be mixed with ingredients yet. Log it as its own meal.");
+      return;
+    }
     if (savable(product)) await api.saveProduct(product).catch(() => null);
     const factor = (Number(grams) || 0) / 100;
     const scale = (v: number | null) => (v == null ? "" : String(Math.round(v * factor)));
@@ -307,8 +331,12 @@ export function Today() {
               text: "Worked out from your profile: a widely used estimate of what your body burns from your sex, age, height and weight, then your activity level and goal. After about two weeks of complete days and weigh-ins, Forkcast learns what you really burn from them and uses that instead (the Weight card says which). With a goal weight, the line under the ring says how much less or more than you burn to eat, and roughly how long it takes. Change them under Edit profile.",
             },
             {
+              term: "Log a meal",
+              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference.",
+            },
+            {
               term: "Liked · Not for me",
-              text: "Rate the recipes you cook. Recipes close to the dishes you cook move up the feed; ones you mark Not for me stop counting. Meals you type in can't be rated: they aren't recipes, so there's nothing for the feed to learn from.",
+              text: "Rate the recipes you cook and the meals you build from two or more ingredients. Recipes close to them move up the feed; ones you mark Not for me stop counting. Meals typed in as numbers, and single foods like a banana, can't be rated: there's no dish for the feed to learn from.",
             },
             {
               term: "Weight",
@@ -363,7 +391,14 @@ export function Today() {
                     {fmt(m.calories ?? 0)} kcal · {fmt(m.protein_g ?? 0)} g protein · {fmt(m.carbs_g ?? 0)} g carbs ·{" "}
                     {fmt(m.fat_g ?? 0)} g fat
                   </span>
-                  {m.recipe_id !== null ? (
+                  {m.ingredients.length > 0 && (
+                    <span className="meal-ingredients">
+                      {m.ingredients
+                        .map((i) => `${i.name} ${fmt(i.grams)} g${i.cooked ? " cooked" : ""}`)
+                        .join(" · ")}
+                    </span>
+                  )}
+                  {m.rateable ? (
                     <span className="rate" role="group" aria-label={`Rate ${m.name}`}>
                       <button className="pill" aria-pressed={m.liked === 1} onClick={() => rate(m, true)}>
                         Liked
@@ -374,8 +409,12 @@ export function Today() {
                     </span>
                   ) : (
                     // A tester asked why these have no Liked button: ratings teach the
-                    // recipe feed, and a typed meal isn't a recipe it can learn from.
-                    <span className="rate-note">No rating: only recipes you cook teach the feed what you like.</span>
+                    // recipe feed, which needs a dish to learn from (D46, D49).
+                    <span className="rate-note">
+                      {m.ingredients.length > 0
+                        ? "No rating: a single food doesn't say what you like to cook. Meals with two or more ingredients can be rated."
+                        : "No rating: Forkcast can't tell what's in a meal typed as numbers. Add it by ingredients to rate it."}
+                    </span>
                   )}
                 </div>
                 <button className="remove" onClick={() => removeMeal(m.id)} aria-label={`Remove ${m.name}`}>
@@ -420,7 +459,7 @@ export function Today() {
               ) : (
                 <p className="field-hint">
                   Products on Open Food Facts fill in from the barcode. For anything else, photograph the
-                  nutrition table. Or type it in below.
+                  nutrition table. Homemade? Add the ingredients below.
                 </p>
               )}
               {isDemo() && scansOn() && (
@@ -489,15 +528,16 @@ export function Today() {
                   </div>
                 </div>
               )}
+              <MealBuilder parts={parts} onChange={setParts} />
               <label className="field">
-                What did you eat?
+                {parts.length > 0 ? "Name it (optional)" : "What did you eat?"}
                 <input
-                  placeholder="e.g. Skyr with berries"
+                  placeholder={parts.length > 0 ? defaultName(parts) : "e.g. Skyr with berries"}
                   value={meal.name}
                   onChange={(e) => setMeal({ ...meal, name: e.target.value })}
-                  autoFocus
                 />
               </label>
+              {parts.length === 0 && (
               <div className="meal-form-grid">
                 <label className="field">
                   kcal
@@ -516,8 +556,14 @@ export function Today() {
                   <input type="number" inputMode="decimal" value={meal.fat_g} onChange={(e) => setMeal({ ...meal, fat_g: e.target.value })} />
                 </label>
               </div>
+              )}
+              {mealError && <p className="feedback error">{mealError}</p>}
               <div className="form-actions">
-                <button type="submit" className="btn" disabled={busy || !meal.name.trim() || !meal.calories}>
+                <button
+                  type="submit"
+                  className="btn"
+                  disabled={busy || (parts.length > 0 ? !partsReady : !meal.name.trim() || !meal.calories)}
+                >
                   Log meal
                 </button>
                 <button
@@ -527,6 +573,8 @@ export function Today() {
                     setAdding(false);
                     setProduct(null);
                     setScanError(null);
+                    setParts([]);
+                    setMealError(null);
                   }}
                 >
                   Cancel

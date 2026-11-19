@@ -27,11 +27,11 @@ No training, fully explainable.
 
 import math
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
-from . import embeddings
+from . import embeddings, foods
 from .recipes import STAPLES
 
 MODEL = "cooc"
@@ -46,10 +46,15 @@ MEAN_SAMPLE = 4000  # recipes sampled to estimate the average dish
 
 @dataclass
 class Profile:
-    """What a recipe is compared against: your cooked, not-disliked dishes."""
+    """What a recipe is compared against: your cooked, not-disliked dishes.
+
+    Since D49 also meals you built from ingredients: they get negative ids
+    (minus their meal_log id) and their name in `names`.
+    """
 
     ids: list[int]
     dishes: np.ndarray  # (len(ids), dim), unit rows in dish space
+    names: dict[int, str] = field(default_factory=dict)
 
 
 _space_cache: dict[tuple, tuple[dict[str, float], np.ndarray]] = {}
@@ -131,8 +136,48 @@ def dish_vectors(con: sqlite3.Connection, recipe_ids: list[int]) -> dict[int, np
     return out
 
 
+def built_meals(con: sqlite3.Connection) -> list[dict]:
+    """Meals built from ingredients that say something about taste (D49).
+
+    The latest of each name only: a smoothie logged every morning is one dish,
+    not thirty that crowd out everything else you eat. Same rule as cooked
+    recipes, which count once each however often they're cooked.
+    """
+    rows = con.execute(
+        """SELECT ml.id, ml.name, ml.liked,
+                  (julianday('now') - julianday(ml.logged_at)) AS age_days,
+                  GROUP_CONCAT(mi.canonical) AS canonicals
+           FROM meal_log ml JOIN meal_ingredients mi ON mi.meal_id = ml.id
+           WHERE ml.recipe_id IS NULL
+           GROUP BY ml.id
+           ORDER BY ml.logged_at DESC, ml.id DESC"""
+    ).fetchall()
+    seen: set[str] = set()
+    out = []
+    for r in rows:
+        key = (r["name"] or "").strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        canonicals = r["canonicals"].split(",")
+        if foods.teaches_taste(canonicals):
+            out.append({"id": r["id"], "name": r["name"], "liked": r["liked"],
+                        "age_days": r["age_days"], "canonicals": canonicals})
+    return out
+
+
+def _centred(canonicals: list[str], idf: dict[str, float], mean) -> np.ndarray | None:
+    v = _weighted(canonicals, idf)
+    if v is None:
+        return None
+    if mean is not None:
+        v = v - mean
+    n = np.linalg.norm(v)
+    return v / n if n > 0 else None
+
+
 def taste_profile(con: sqlite3.Connection) -> Profile | None:
-    """Your cooked dishes that weren't disliked, or None before the first one."""
+    """Your cooked dishes and built meals that weren't disliked, or None before the first."""
     ids = [
         r[0] for r in con.execute(
             "SELECT DISTINCT recipe_id FROM meal_log"
@@ -141,9 +186,20 @@ def taste_profile(con: sqlite3.Connection) -> Profile | None:
     ]
     vecs = dish_vectors(con, ids)
     kept = [rid for rid in ids if rid in vecs]
+    rows = [vecs[rid] for rid in kept]
+    names: dict[int, str] = {}
+    meals = [m for m in built_meals(con) if m["liked"] != 0]
+    if meals:
+        idf, mean = _space(con)
+        for m in meals:
+            v = _centred(m["canonicals"], idf, mean)
+            if v is not None:
+                kept.append(-m["id"])
+                rows.append(v)
+                names[-m["id"]] = m["name"]
     if not kept:
         return None
-    return Profile(ids=kept, dishes=np.stack([vecs[rid] for rid in kept]))
+    return Profile(ids=kept, dishes=np.stack(rows), names=names)
 
 
 def match_recipes(
@@ -191,18 +247,19 @@ def recipe_vector(canonicals: list[str]) -> np.ndarray | None:
 
 def taste_vector(con: sqlite3.Connection) -> tuple[np.ndarray | None, int]:
     """(unit taste vector | None, number of meals it is based on)."""
-    meals = con.execute(
+    meals = [dict(r) for r in con.execute(
         """SELECT recipe_id, liked,
                   (julianday('now') - julianday(logged_at)) AS age_days
            FROM meal_log WHERE recipe_id IS NOT NULL"""
-    ).fetchall()
+    )]
+    meals += built_meals(con)  # D49: they carry their own ingredients
     if not meals:
         return None, 0
 
     acc = None
     used = 0
     for meal in meals:
-        canonicals = [
+        canonicals = meal.get("canonicals") or [
             r["canonical"] for r in con.execute(
                 "SELECT DISTINCT canonical FROM recipe_ingredients"
                 " WHERE recipe_id = ? AND canonical IS NOT NULL",

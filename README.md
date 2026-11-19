@@ -134,6 +134,30 @@ Each recipe gets a score
 from 0 to 1 for how well its mix of protein, carbs and fat matches what is
 still missing today. When you are short on protein, high-protein dishes move up.
 
+### Logging what you eat
+
+A meal gets into Today in one of three ways: cook a recipe and tap "I cooked
+this", scan a product's barcode or nutrition label, or build it from
+ingredients. For a smoothie or a homemade sauce you add each ingredient and
+how much of it ("Haferflocken, 50 g", "banana, 1 medium") and Forkcast adds
+up the calories and macros.
+
+<p align="center"><img src="docs/screenshots/log-ingredients.jpg" width="300" alt="Building a meal on a phone: oats 50 g (190 kcal), milk 200 g (122 kcal) and one medium banana of 118 g (105 kcal), each naming the USDA food it uses, together 417 kcal, 14 g protein, 70 g carbs and 10 g fat, named Oat porridge"></p>
+
+The values per ingredient come from the USDA's food tables (FoodData
+Central), matched to Forkcast's ingredient list: 743 of the 1,790 ingredients
+have values. The 300 used most in recipes, 96% of all ingredient mentions,
+were checked by hand, and the first automatic match was wrong for 134 of them
+(flour had become soy flour, egg the yolk). Checking 80 of the remaining
+matches found 67 right (84%), so the app shows which USDA food it used and
+marks the ones matched by name only. Rice, pasta, beans and other grains can
+be weighed dry or cooked: 150 g of rice is about 550 kcal dry and 195 cooked.
+
+Rating a meal teaches the recipe feed what you like, so a rating needs a
+dish: a cooked recipe, or a meal built from two or more ingredients ("Like
+your oat porridge"). A single food or a meal typed in as numbers can't be
+rated.
+
 ## Evaluation
 
 The app makes promises you act on. Six are tested: five on data from outside
@@ -346,9 +370,9 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 416 pytest tests in about three seconds, offline and without the
+- **Tests:** 439 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
-  all in CI. 48 of the pytest tests need the Epicure weights; CI caches them and
+  all in CI. 54 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
 
 ## Design
@@ -375,7 +399,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 48 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 49 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -394,7 +418,7 @@ can and cannot do. A few that shaped the app:
 ## Stack
 
 FastAPI · SQLite · numpy · Epicure embeddings (Hugging Face) · Claude Haiku
-(vision, structured outputs) · Open Food Facts · React + TypeScript + Vite PWA ·
+(vision, structured outputs) · Open Food Facts · USDA FoodData Central · React + TypeScript + Vite PWA ·
 Docker · GitHub Actions
 
 ## Running it
@@ -425,7 +449,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-The 48 tests that need the Epicure weights (swaps and taste ranking) skip
+The 54 tests that need the Epicure weights (swaps and taste ranking) skip
 themselves locally unless the weights are cached. CI downloads and caches
 them first and sets `FORKCAST_REQUIRE_EMBEDDINGS=1`, so there a missing
 download fails the run instead of quietly skipping them. The suite runs with
@@ -441,7 +465,7 @@ ops/e2e.sh            # needs Google Chrome, the corpus and the Epicure weights
 It starts the app on an empty data dir and makes a first visit in Chrome:
 a profile with a goal weight, the kitchen, the recipe feed, a cooked recipe
 and what ran out, a typed meal, a product that isn't on Open Food Facts (the
-label reader faked, the rest real), "Done for today", a weigh-in and a reload.
+label reader faked, the rest real), a meal built from ingredients, "Done for today", a weigh-in and a reload.
 It fails if a screen doesn't show what it should, on any JavaScript or
 console error, on any API error, and on a serious accessibility problem
 (axe-core) on any screen. Breaking the app on purpose (a renamed API field,
@@ -466,6 +490,9 @@ the same recipe corpus as the demo.
   (Majumder et al., [EMNLP 2019](https://aclanthology.org/D19-1613/)). Not
   redistributed here; only food.com user ids for the frozen test split are.
 - **Packaged food:** [Open Food Facts](https://world.openfoodfacts.org), ODbL.
+- **Ingredient nutrition:** U.S. Department of Agriculture, Agricultural
+  Research Service, [FoodData Central](https://fdc.nal.usda.gov), SR Legacy
+  (2018), public domain. `backend/app/ingredient_nutrition.json` is derived from it.
 
 ## License
 

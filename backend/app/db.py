@@ -100,6 +100,16 @@ CREATE TABLE IF NOT EXISTS profile (
     pace       TEXT               -- D39: gentle | steady
 );
 
+-- D49: what a meal built from ingredients was made of. Its totals are worked
+-- out once, when it's logged, and kept on meal_log like any typed meal.
+CREATE TABLE IF NOT EXISTS meal_ingredients (
+    meal_id   INTEGER NOT NULL,   -- meal_log.id
+    canonical TEXT NOT NULL,
+    grams     REAL NOT NULL,
+    cooked    INTEGER NOT NULL DEFAULT 0   -- 1: weighed cooked (rice, pasta, beans...)
+);
+CREATE INDEX IF NOT EXISTS idx_mi_meal ON meal_ingredients(meal_id);
+
 -- D41: weigh-ins, for the trend and the projection to the goal weight.
 CREATE TABLE IF NOT EXISTS weight_log (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,

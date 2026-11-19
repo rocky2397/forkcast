@@ -22,6 +22,7 @@ ACTIONS = {
     "rating_cleared": "Ratings cleared",
     "profile_saved": "Profiles changed",
     "meal_typed": "Meals typed in",
+    "meal_built": "Meals built from ingredients",
     "photo_scan_tried": "Tried photo scanning (off in the demo)",
     "label_scan_tried": "Tried label scanning (off in the demo)",
     "barcode_lookup": "Barcode lookups",

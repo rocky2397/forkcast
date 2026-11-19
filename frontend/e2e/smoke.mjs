@@ -154,7 +154,7 @@ async function run(page) {
       await page.getByRole("button", { name: "Log meal" }).click();
       await expectText(page.locator(".meal-list"), /Smoke test salad/, "meal list");
       await expectText(page.locator(".meal-list li").filter({ hasText: "Smoke test salad" }).locator(".rate-note"),
-        /only recipes you cook teach the feed/, "why a typed meal has no rating");
+        /Add it by ingredients to rate it/, "why a typed meal has no rating");
     }],
     ["a product that isn't on Open Food Facts (D48)", async () => {
       // Only the label reader (Claude) is faked; saving and the barcode lookup are real.
@@ -202,6 +202,34 @@ async function run(page) {
       // Next time the barcode alone fills it in, from the saved reading.
       const saved = await page.evaluate(async (c) => (await fetch(`/api/nutrition/barcode/${c}`)).json(), code);
       if (saved.product?.source !== "saved" || saved.product.calories_100g !== 490) throw new Error(`not remembered: ${JSON.stringify(saved)}`);
+    }],
+    ["a meal built from ingredients (D49)", async () => {
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      const add = async (name) => {
+        await page.getByPlaceholder("e.g. banana, Haferflocken, rice").fill(name);
+        await page.getByPlaceholder("e.g. banana, Haferflocken, rice").press("Enter");
+      };
+      await add("Haferflocken"); // German, found as oats
+      await page.getByLabel("How much oat").waitFor();
+      await add("Milch");
+      await page.getByLabel("How much milk").waitFor();
+      await add("banana"); // a whole piece by default: 1 medium, 118 g
+      await page.getByLabel("How much banana").waitFor();
+      await page.getByLabel("How much oat").fill("50");
+      await page.getByLabel("How much milk").fill("200");
+      // 50 g oats 190 + 200 g milk 122 + 1 medium banana 105
+      await expectText(page.locator(".builder-total"), /Together: 417 kcal/, "built meal total");
+      await expectText(page.locator(".builder-source").first(), /USDA: Cereals, oats/, "which USDA food");
+      await add("Magerquark"); // a known ingredient the USDA table doesn't have
+      await expectText(page.locator(".builder .feedback"), /No nutrition values for quark yet/, "quark");
+      await audit(page, "today, meal built from ingredients");
+      await page.getByLabel("Name it (optional)").fill("Smoke test porridge");
+      await page.getByRole("button", { name: "Log meal" }).click();
+      const meal = page.locator(".meal-list li").filter({ hasText: "Smoke test porridge" });
+      await expectText(meal.locator(".meal-macros"), /417 kcal/, "server total");
+      await expectText(meal.locator(".meal-ingredients"), /oat 50 g · milk 200 g · banana 118 g/, "what it was made of");
+      await meal.getByRole("button", { name: "Liked" }).click(); // two or more ingredients: it can teach the feed
+      await expectText(meal.locator(".rate"), /Liked/, "built meal rated");
     }],
     ["Done for today", async () => {
       await page.getByRole("button", { name: "Done for today" }).click();

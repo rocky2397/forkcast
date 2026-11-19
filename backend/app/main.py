@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from . import adaptive, auth, demo, embeddings, goals, nutrition, progress, recipes, shopping, stats, stats_page, substitutions, taste, weight
+from . import adaptive, auth, demo, embeddings, foods, goals, nutrition, progress, recipes, shopping, stats, stats_page, substitutions, taste, weight
 from .food_classes import NAME_TO_CLASS
 from .db import connect, current_db
 from .normalize import Normalizer, packaged
@@ -388,7 +388,7 @@ def cookable_recipes(
             results.sort(key=lambda r: (r["ingredients_missing"], -_rank_score(r)))
             results = results[:limit]
         if profile is not None:
-            _annotate_like_your(con, results, matches)
+            _annotate_like_your(con, results, matches, profile)
         _annotate_subs(con, results)
         _annotate_signature(con, results)
     return {
@@ -430,15 +430,16 @@ TASTE_WEIGHT = 0.6
 MACRO_WEIGHT = 0.4
 
 
-def _annotate_like_your(con, results: list[dict], matches: dict) -> None:
-    """Name the cooked dish a recipe is closest to, when it is close (D31)."""
+def _annotate_like_your(con, results: list[dict], matches: dict, profile) -> None:
+    """Name the cooked dish (or built meal, D49) a recipe is closest to, when it is close (D31)."""
     named = {rid: d for rid, (_, d) in matches.items() if d is not None}
     if not named:
         return
-    ids = sorted(set(named.values()))
+    ids = sorted(d for d in set(named.values()) if d > 0)
     names = dict(con.execute(
         f"SELECT id, name FROM recipes WHERE id IN ({','.join('?' * len(ids))})", ids
-    ).fetchall())
+    ).fetchall()) if ids else {}
+    names.update(profile.names)
     for r in results:
         d = named.get(r["id"])
         if d is not None and d in names:
@@ -620,24 +621,58 @@ def put_profile(body: ProfileIn, tz: int = Query(0, ge=-840, le=840)):
             "plan": goals.plan(profile), "burn": est}
 
 
+@app.get("/api/foods")
+def find_food(q: str = Query(..., min_length=1, max_length=100)):
+    """A typed food or ingredient -> its USDA values per 100 g and portions (D49)."""
+    return foods.lookup(normalizer, q)
+
+
+class MealIngredient(BaseModel):
+    canonical: str = Field(min_length=1, max_length=80)
+    grams: float = Field(gt=0, le=5000)
+    cooked: bool = False
+
+
 class MealAdd(BaseModel):
     name: str = Field(min_length=1, max_length=200)
-    calories: float = Field(ge=0, le=5000)
-    protein_g: float = Field(ge=0, le=500)
-    carbs_g: float = Field(ge=0, le=1000)
-    fat_g: float = Field(ge=0, le=500)
+    # Typed in (or filled from a scanned product): the four numbers.
+    calories: float | None = Field(None, ge=0, le=5000)
+    protein_g: float | None = Field(None, ge=0, le=500)
+    carbs_g: float | None = Field(None, ge=0, le=1000)
+    fat_g: float | None = Field(None, ge=0, le=500)
+    # D49: or built from ingredients; the server works the numbers out.
+    ingredients: list[MealIngredient] | None = Field(None, min_length=1, max_length=30)
 
 
 @app.post("/api/meals")
 def add_meal(body: MealAdd):
+    items = [i.model_dump() for i in body.ingredients or []]
+    if items:
+        try:
+            values = foods.totals(items)
+        except KeyError as e:
+            raise HTTPException(422, f"No nutrition values for {foods.label(e.args[0])}.") from None
+        except ValueError as e:
+            raise HTTPException(422, f"{foods.label(e.args[0]).capitalize()} has no cooked form.") from None
+        if values["calories"] > 5000:
+            raise HTTPException(422, "That's over 5,000 kcal for one meal. Check the amounts.")
+    else:
+        missing = [k for k in foods.MACROS if getattr(body, k) is None]
+        if missing:
+            raise HTTPException(422, "Give the meal's calories, protein, carbs and fat, or its ingredients.")
+        values = {k: getattr(body, k) for k in foods.MACROS}
     with connect() as con:
         cur = con.execute(
             "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g) VALUES (?, ?, ?, ?, ?)",
-            (body.name, body.calories, body.protein_g, body.carbs_g, body.fat_g),
+            (body.name, *(values[k] for k in foods.MACROS)),
+        )
+        con.executemany(
+            "INSERT INTO meal_ingredients (meal_id, canonical, grams, cooked) VALUES (?, ?, ?, ?)",
+            [(cur.lastrowid, i["canonical"], i["grams"], int(i["cooked"])) for i in items],
         )
         con.commit()
-    stats.event("meal_typed")  # that one was typed, never what
-    return {"logged": True, "meal_log_id": cur.lastrowid}
+    stats.event("meal_built" if items else "meal_typed")  # how, never what
+    return {"logged": True, "meal_log_id": cur.lastrowid, **values}
 
 
 class MealRating(BaseModel):
@@ -663,6 +698,7 @@ def rate_meal(meal_id: int, body: MealRating):
 def delete_meal(meal_id: int):
     with connect() as con:
         cur = con.execute("DELETE FROM meal_log WHERE id = ?", (meal_id,))
+        con.execute("DELETE FROM meal_ingredients WHERE meal_id = ?", (meal_id,))
         con.commit()
     if cur.rowcount == 0:
         raise HTTPException(404, f"no logged meal {meal_id}")
@@ -700,7 +736,15 @@ def day_summary(
             (shift, day),
         ).fetchall()
         profile, est = adaptive.profile_with_burn(con, tz or 0)
+        made_of = _meal_ingredients(con, [r["id"] for r in rows])
     meals = [dict(r) for r in rows]
+    for m in meals:
+        m["ingredients"] = made_of.get(m["id"], [])
+        # D49: cooked recipes teach the feed, and so do meals built from
+        # two or more real ingredients; typed numbers and single foods don't.
+        m["rateable"] = m["recipe_id"] is not None or foods.teaches_taste(
+            [i["canonical"] for i in m["ingredients"]]
+        )
     totals = {
         key: round(sum(m[key] or 0.0 for m in meals), 1)
         for key in ("calories", "protein_g", "carbs_g", "fat_g")
@@ -713,6 +757,22 @@ def day_summary(
         "plan": goals.plan(profile) if profile is not None else None,  # D39
         "burn": est,  # D45
     }
+
+
+def _meal_ingredients(con, ids: list[int]) -> dict[int, list[dict]]:
+    if not ids:
+        return {}
+    out: dict[int, list[dict]] = {}
+    for r in con.execute(
+        f"SELECT meal_id, canonical, grams, cooked FROM meal_ingredients"
+        f" WHERE meal_id IN ({','.join('?' * len(ids))}) ORDER BY rowid",
+        ids,
+    ):
+        out.setdefault(r["meal_id"], []).append(
+            {"canonical": r["canonical"], "name": foods.label(r["canonical"]),
+             "grams": r["grams"], "cooked": bool(r["cooked"])}
+        )
+    return out
 
 
 @app.get("/api/progress")
