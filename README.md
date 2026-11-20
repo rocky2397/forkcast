@@ -5,6 +5,23 @@ have, finds which of 87,861 recipes you can cook with it right now, puts the
 ones that suit your taste and today's calorie and protein budget first, and
 tells you what to buy to unlock more.
 
+**At a glance**
+
+- **Live, with testers.** The [demo](https://rockyyyy2397-forkcast.hf.space)
+  has been online since November 2026. Clearer scan messages and meals built
+  from ingredients came straight from a tester's requests.
+- **Measured, not assumed.** Seven tests on data from outside the app. Listed
+  recipes you can really cook: 65% → 92%. Suggested swaps a cook would use:
+  33% → 95%. A typed German food within 10% of the calories on its pack:
+  64% → 76%. [How the tests work](#evaluation)
+- **Decisions in writing.** 67 product decisions, each with the options turned
+  down and why ([APP_DECISIONS.md](APP_DECISIONS.md)).
+- **Built to ship.** 499 tests and a browser test of a first visit on every
+  change, a check of the live demo after every deploy, and no serious
+  accessibility problems on any screen.
+- **Built with AI.** Claude Code wrote most of the code; the product calls
+  were mine ([how it was built](#how-this-was-built)).
+
 **[Try the demo](https://rockyyyy2397-forkcast.hf.space)**: you get your own
 copy of a demo kitchen (25 ingredients and two dishes cooked earlier in the
 week), set up your own profile and start with an empty day. It is private to
@@ -464,6 +481,15 @@ can and cannot do. A few that shaped the app:
   model plus a mandatory checklist beats an expensive model trusted blindly.
 - **Shared password, not accounts (D15).** Real multi-user means a `user_id`
   migration across every table. Deferred until someone needs their own kitchen.
+
+## How this was built
+
+I built Forkcast with Claude Code, Anthropic's coding agent, which wrote most
+of the code; the commits it co-wrote carry its name. My part was the product:
+deciding what to build next and what to leave out, testing it with people and
+turning their feedback into changes, choosing what each test measures and what
+counts as good enough, and approving every change before it went live. The
+decision log is the record of those calls.
 
 ## Stack
 
