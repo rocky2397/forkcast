@@ -72,6 +72,9 @@ def test_actions_and_funnel_are_counted_once_per_visitor(app):
     assert s["funnel"]["cooked"]["share"] == 0.5
     assert s["top_ingredients_added"] == [{"ingredient": "saffron", "times": 1}]
     assert s["top_recipes_opened"] == [{"id": 7, "name": "saffron rice", "times": 1}]
+    # Scanning is on in the demo since D38; the page must not say otherwise.
+    page = app.get("/stats").text
+    assert "Photo scans tried" in page and "off in the demo" not in page
 
 
 def test_nothing_personal_is_ever_written(app, tmp_path):

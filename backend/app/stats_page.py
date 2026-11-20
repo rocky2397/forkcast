@@ -24,8 +24,8 @@ ACTIONS = {
     "meal_typed": "Meals typed in",
     "meal_built": "Meals built from ingredients",
     "meal_again": "Meals logged again",
-    "photo_scan_tried": "Tried photo scanning (off in the demo)",
-    "label_scan_tried": "Tried label scanning (off in the demo)",
+    "photo_scan_tried": "Photo scans tried",
+    "label_scan_tried": "Label scans tried",
     "barcode_lookup": "Barcode lookups",
 }
 
