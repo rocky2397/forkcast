@@ -280,6 +280,8 @@ export interface FoodLine {
 }
 
 export interface FoodLookup {
+  /** D66: set by the app when the lookup itself failed (no connection). */
+  error?: string;
   query: string;
   canonical: string | null;
   food: Food | null;
@@ -423,8 +425,40 @@ export class ApiError extends Error {
   }
 }
 
+/** D66: what a request says when the server can't be reached at all. */
+export const OFFLINE = "Couldn't reach Forkcast. Check your connection and try again.";
+
+/** D66: the network failed, rather than the server answering no. */
+export class OfflineError extends Error {
+  constructor() {
+    super(OFFLINE);
+    this.name = "OfflineError";
+  }
+}
+
+// D66: a save already on its way. A second identical one while it's in flight
+// (a double tap on a slow connection) gets the first one's answer instead of
+// logging the meal twice. Once it's answered, the same save works again.
+const inFlight = new Map<string, Promise<unknown>>();
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, withKitchen(init));
+  const method = (init?.method ?? "GET").toUpperCase();
+  if (method === "GET" || (init?.body != null && typeof init.body !== "string")) return send<T>(path, init);
+  const key = `${method} ${path} ${init?.body ?? ""}`;
+  const pending = inFlight.get(key);
+  if (pending) return pending as Promise<T>;
+  const p = send<T>(path, init).finally(() => inFlight.delete(key));
+  inFlight.set(key, p);
+  return p;
+}
+
+async function send<T>(path: string, init?: RequestInit): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(path, withKitchen(init));
+  } catch {
+    throw new OfflineError();
+  }
   rememberKitchen(res);
   if (res.status === 401) {
     onUnauthorized?.();
@@ -481,7 +515,7 @@ export const api = {
   inventory: () => req<{ items: InventoryItem[] }>("/api/inventory"),
   addInventory: (items: string[]) =>
     // D46: suggestions holds "Did you mean…?" names for what wasn't recognised.
-    req<{ added: string[]; added_names?: string[]; unknown: string[]; suggestions?: Record<string, string[]> }>("/api/inventory", {
+    req<{ added: string[]; added_names?: string[]; already?: string[]; unknown: string[]; suggestions?: Record<string, string[]> }>("/api/inventory", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ items }),

@@ -64,13 +64,13 @@ def test_actions_and_funnel_are_counted_once_per_visitor(app):
     app.post("/api/vision/scan", files={"photo": ("p.jpg", b"\xff", "image/jpeg")}, headers={H: a})
 
     s = stats.summary(lambda ids: {7: "saffron rice"})
-    assert s["events"]["ingredient_added"] == 2
+    assert s["events"]["ingredient_added"] == 1  # D66: adding it again isn't a second add
     assert s["events"]["recipe_cooked"] == 1
     assert s["events"]["rated_liked"] == 1
     assert s["events"]["photo_scan_tried"] == 1
     assert {k: v["visitors"] for k, v in s["funnel"].items()} == {"visited": 2, "added": 1, "opened": 1, "cooked": 1}
     assert s["funnel"]["cooked"]["share"] == 0.5
-    assert s["top_ingredients_added"] == [{"ingredient": "saffron", "times": 2}]
+    assert s["top_ingredients_added"] == [{"ingredient": "saffron", "times": 1}]
     assert s["top_recipes_opened"] == [{"id": 7, "name": "saffron rice", "times": 1}]
 
 

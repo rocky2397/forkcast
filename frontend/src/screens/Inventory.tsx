@@ -4,9 +4,12 @@ import { ScanConfirm } from "./ScanConfirm";
 import { foodColor, kitchenGroup, KITCHEN_GROUPS } from "../format";
 import { Guide, GuideHint, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
+import { LoadError, errorText } from "../LoadError";
 import { CloseIcon, ScanIcon } from "../Icons";
 
-type Feedback = { added: string[]; unknown: string[]; suggestions: Record<string, string[]> } | { error: string };
+type Feedback =
+  | { added: string[]; already?: string[]; unknown: string[]; suggestions: Record<string, string[]> }
+  | { error: string };
 
 export function Inventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -19,11 +22,16 @@ export function Inventory() {
   const fileRef = useRef<HTMLInputElement>(null);
   const guide = useGuide("forkcast.kitchenguide.v1");
 
+  const [loadError, setLoadError] = useState<string | null>(null);
   const refresh = () =>
-    api.inventory().then((r) => {
-      setItems(r.items);
-      setLoaded(true);
-    });
+    api
+      .inventory()
+      .then((r) => {
+        setItems(r.items);
+        setLoaded(true);
+        setLoadError(null);
+      })
+      .catch((e) => setLoadError(errorText(e)));
   useEffect(() => {
     refresh();
   }, []);
@@ -36,11 +44,16 @@ export function Inventory() {
       // comma-separated batch entry supported
       const parts = raw.split(",").map((s) => s.trim()).filter(Boolean);
       const res = await api.addInventory(parts);
-      setFeedback({ added: res.added_names ?? res.added.map(pretty), unknown: res.unknown, suggestions: res.suggestions ?? {} });
+      setFeedback({
+        added: res.added_names ?? res.added.map(pretty),
+        already: res.already ?? [],
+        unknown: res.unknown,
+        suggestions: res.suggestions ?? {},
+      });
       setInput("");
       await refresh();
     } catch (e) {
-      setFeedback({ error: String(e) });
+      setFeedback({ error: errorText(e) });
     } finally {
       setBusy(false);
     }
@@ -59,7 +72,7 @@ export function Inventory() {
       );
       await refresh();
     } catch (e) {
-      setFeedback({ error: String(e) });
+      setFeedback({ error: errorText(e) });
     } finally {
       setBusy(false);
     }
@@ -78,7 +91,7 @@ export function Inventory() {
       const res = await api.scanPhoto(file);
       setProposals(res.proposals);
     } catch (e) {
-      setFeedback({ error: `The scan didn't work: ${e}` });
+      setFeedback({ error: `The scan didn't work: ${errorText(e)}` });
     } finally {
       setScanning(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -206,6 +219,8 @@ export function Inventory() {
           ) : (
             <>
               {feedback.added.length > 0 && <p>Added {feedback.added.join(", ")}.</p>}
+              {/* D66: re-adding something isn't "added" twice. */}
+              {(feedback.already?.length ?? 0) > 0 && <p>Already in your kitchen: {feedback.already?.join(", ")}.</p>}
               {feedback.unknown
                 .filter((u) => feedback.suggestions[u]?.length)
                 .map((u) => (
@@ -242,6 +257,7 @@ export function Inventory() {
         </div>
       )}
 
+      {loadError && <LoadError error={loadError} onRetry={refresh} />}
       {loaded && items.length === 0 && (
         <p className="empty-note">Nothing here yet. Scan your shopping or add a few ingredients to see what you can cook.</p>
       )}

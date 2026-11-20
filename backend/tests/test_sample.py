@@ -13,8 +13,10 @@ def test_a_sample_person_looks_like_a_real_one(tmp_path, persona, direction):
     con = db.connect(tmp_path / "u.db", attach_corpus=False)
     profile = sample.seed_history(con, persona, datetime.now(timezone.utc).replace(tzinfo=None))
     row = con.execute("SELECT * FROM profile").fetchone()
-    s = progress.summary(con, row, 60)
-    w = weight.summary(con, row, 60)
+    # Read in the same time zone the history is made in (UTC): at UTC+1 the
+    # hour after midnight is still yesterday in UTC, and the test failed then.
+    s = progress.summary(con, row, 0)
+    w = weight.summary(con, row, 0)
     assert goals.plan(profile)["direction"] == direction
     assert 5 <= s["streak"] <= 12  # human, not perfect
     assert s["totals"]["below_minimum"] == 0 and s["totals"]["not_logged"] >= 1

@@ -441,15 +441,26 @@ def test_health_says_what_is_running_when_the_image_says(client, monkeypatch):
 def test_unrecognised_ingredients_get_did_you_mean_suggestions(client, db):
     # D46: a close spelling is offered, never added on its own; a brand gets nothing.
     r = client.post("/api/inventory", json={"items": ["chiken", "Arla", "onion"]}).json()
-    assert r["added"] == ["onion"] and r["unknown"] == ["chiken", "Arla"]
+    assert r["added"] + r["already"] == ["onion"] and r["unknown"] == ["chiken", "Arla"]
     assert r["suggestions"] == {"chiken": ["chicken"]}
     kitchen = {row["canonical"] for row in db.execute("SELECT canonical FROM inventory")}
     assert "chiken" not in kitchen and "Arla" not in kitchen
 
 
+def test_the_kitchen_adds_each_food_once_and_says_what_was_there(client, db):
+    # D66: "Tomaten, tomatoes" said "Added tomato, tomato" though tomato was there.
+    db.execute("DELETE FROM inventory WHERE canonical IN ('onion', 'yeast')")
+    db.commit()
+    client.post("/api/inventory", json={"items": ["onion"]})
+    r = client.post("/api/inventory", json={"items": ["Zwiebeln", "onions", "yeast", "Hefe"]}).json()
+    assert r["added"] == ["yeast"] and r["already"] == ["onion"]
+    assert client.post("/api/inventory", json={"items": ["x" * 101]}).status_code == 422
+    assert client.post("/api/inventory", json={"items": ["rice"] * 51}).status_code == 422
+
+
 def test_german_names_can_be_added_to_the_kitchen(client, db):
     r = client.post("/api/inventory", json={"items": ["Zwiebeln", "Hähnchenbrust"]}).json()
-    assert r["added"] == ["onion", "chicken"] and r["unknown"] == []
+    assert r["added"] + r["already"] == ["onion", "chicken"] and r["unknown"] == []
 
 
 def test_the_kitchen_knows_the_logging_words_and_says_oats(client, monkeypatch):
@@ -852,7 +863,7 @@ def test_a_typed_line_adds_several_foods_with_amounts(foods_client):
     assert [m["query"] for m in body["missing"]] == ["Blubberkraut"]
     # D62: a dish is its parts, and logging them gives the dish's values.
     capp = foods_client.get("/api/foods/line", params={"q": "Cappuccino"}).json()
-    assert capp["dishes"] == ["Cappuccino"] and [p["dish"] for p in capp["parts"]] == ["Cappuccino"] * 2
+    assert capp["dishes"] == ["cappuccino"] and [p["dish"] for p in capp["parts"]] == ["cappuccino"] * 2
 
 
 def test_a_canned_ingredient_is_logged_kept_and_put_back(foods_client):
