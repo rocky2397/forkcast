@@ -91,6 +91,15 @@ _ALIASES = {
     "low_fat_milk": ["fettarme milch", "halbfettmilch", "teilentrahmte milch", "milch fettarm",
                      "low fat milk", "lowfat milk", "semi skimmed milk", "reduced fat milk"],
     "skim_milk": ["magermilch", "entrahmte milch", "skim milk", "skimmed milk", "fat free milk", "nonfat milk"],
+    # D67: found missing in a review.
+    "wine": ["wein", "glas wein", "wine"],
+    "pretzel": ["brezel", "brezeln", "breze", "brezn", "laugenbrezel", "pretzel", "soft pretzel"],
+    "rice_cake": ["reiswaffel", "reiswaffeln", "rice cake", "rice cakes"],
+    "nut": ["nuesse", "nuss", "nussmischung", "gemischte nuesse", "mixed nuts", "nuts"],
+    "fried_egg": ["spiegelei", "spiegeleier", "fried egg", "fried eggs"],
+    "hamburger": ["burger", "hamburger"],
+    "lasagna": ["lasagne", "lasagna", "lasagne bolognese"],
+    "apple_juice": ["apfelsaft", "apple juice"],
     "low_fat_yogurt": ["fettarmer joghurt", "fettarmer jogurt", "joghurt fettarm", "fettarmjoghurt",
                        "low fat yogurt", "lowfat yogurt", "low fat yoghurt", "magerjoghurt"],
 }
@@ -102,7 +111,7 @@ _CANNED = re.compile(r"\b(dose|dosen|canned|tinned|konserve|from a can|aus der d
 _CANNED_FILLER = {"aus", "der", "dose", "dosen", "canned", "tinned", "konserve", "from", "can"}
 
 # Drinks get a glass as a portion; grams and millilitres are near enough the same.
-DRINKS = {"milk", "low_fat_milk", "skim_milk", "oat_milk", "almond_milk", "soy_milk", "rice_milk", "buttermilk", "kefir",
+DRINKS = {"wine", "red_wine", "white_wine", "water", "milk", "low_fat_milk", "skim_milk", "oat_milk", "almond_milk", "soy_milk", "rice_milk", "buttermilk", "kefir",
           "fruit_juice", "orange_juice", "apple_juice", "beer", "coffee", "tea"}
 GLASS = {"label": "1 glass", "grams": 250.0}
 
@@ -111,19 +120,31 @@ GLASS = {"label": "1 glass", "grams": 250.0}
 # typical servings, not measured: a single espresso is 30 ml, a cappuccino cup
 # about 150 ml, a portion of pasta 100 g dry (about 250 g cooked), a Döner a
 # 100 g flatbread with about 120 g cooked meat. The app says it's a typical
-# one. (name, names people type, [(food, grams, weighed cooked)])
+# one. (name as it reads mid-sentence, names people type, [(food, grams,
+# weighed cooked)]): "a typical cappuccino", "a typical Käsebrot" (D67).
 _DISHES = [
-    ("Cappuccino", ["cappuccino", "cappucino", "capuccino"],
+    ("cappuccino", ["cappuccino", "cappucino", "capuccino"],
      [("espresso", 30, False), ("milk", 120, False)]),
-    ("Latte macchiato", ["latte macchiato", "latte", "caffe latte", "cafe latte", "milchkaffee mit espresso"],
+    ("latte macchiato", ["latte macchiato", "latte", "caffe latte", "cafe latte", "milchkaffee mit espresso"],
      [("espresso", 30, False), ("milk", 200, False)]),
-    ("Flat white", ["flat white"], [("espresso", 60, False), ("milk", 110, False)]),
-    ("Coffee with milk", ["coffee with milk", "kaffee mit milch", "milchkaffee", "white coffee", "cafe au lait"],
+    ("flat white", ["flat white"], [("espresso", 60, False), ("milk", 110, False)]),
+    ("coffee with milk", ["coffee with milk", "kaffee mit milch", "milchkaffee", "white coffee", "cafe au lait"],
      [("coffee", 200, False), ("milk", 50, False)]),
-    ("Spaghetti bolognese", ["spaghetti bolognese", "spaghetti bolognaise", "spaghetti bolo", "pasta bolognese",
+    ("spaghetti bolognese", ["spaghetti bolognese", "spaghetti bolognaise", "spaghetti bolo", "pasta bolognese",
                              "nudeln bolognese", "spaghetti mit bolognese", "bolognese", "spag bol"],
      [("pasta", 250, True), ("beef", 75, True), ("pasta_sauce", 150, False), ("onion", 30, False),
       ("olive_oil", 5, False), ("parmesan_cheese", 10, False)]),
+    # D67: German everyday dishes from the second review.
+    ("Käsebrot", ["kaesebrot", "kaesebrote", "brot mit kaese", "cheese sandwich", "kaesebrot mit butter"],
+     [("bread", 50, False), ("butter", 5, False), ("cheese", 30, False)]),
+    ("Butterbrot", ["butterbrot", "butterbrote", "brot mit butter", "bread and butter"],
+     [("bread", 50, False), ("butter", 10, False)]),
+    ("Apfelschorle", ["apfelschorle", "apfelsaftschorle", "apple spritzer", "schorle"],
+     [("apple_juice", 150, False), ("water", 150, False)]),
+    ("Currywurst", ["currywurst", "curry wurst"],
+     [("sausage", 120, False), ("ketchup", 40, False), ("curry_powder", 1, False)]),
+    ("Schnitzel", ["schnitzel", "wiener schnitzel", "schweineschnitzel", "schnitzel wiener art"],
+     [("pork", 140, False), ("bread_crumbs", 15, False), ("egg", 15, False), ("oil", 15, False)]),
     ("Döner", ["doener", "doener kebab", "doenerkebab", "doner", "doner kebab", "kebab", "kebap", "doener kebap",
                "doener im brot", "doener sandwich"],
      [("pita_bread", 100, False), ("beef", 120, True), ("lettuce", 20, False), ("tomato", 30, False),
@@ -152,6 +173,9 @@ _JOINERS = re.compile(r"\s+(?:with|and|mit|und|plus|&|\+)\s+", re.I)
 # mit Butter" was 100 g of each, 1,000 kcal; a slice and a spoon are what
 # people have. Drinks stay in grams: "200" next to "× glass" would be 50 litres.
 _STARTS = [r"^1 (medium|large)$", r"^1 slice$", r"^1 slice\b", r"^1 (tbsp|tablespoon)$"]
+# D67: foods eaten as a whole portion that no rule above finds: a lasagne is a
+# 255 g piece, not 100 g.
+_START_AT = {"lasagna": "1 piece center", "hamburger": "1 sandwich"}
 
 
 def default_portion(portions: list[dict]) -> str | None:
@@ -200,7 +224,9 @@ def food(canonical: str) -> dict | None:
         if canonical in DRINKS:
             portions = [GLASS, *portions]
         return {
-            "default_portion": None if canonical in DRINKS else default_portion(portions),
+            "default_portion": None if canonical in DRINKS else (
+                _START_AT[canonical] if canonical in _START_AT and any(p["label"] == _START_AT[canonical] for p in portions)
+                else default_portion(portions)),
             "usda": r["usda"],
             # D55: where the numbers come from: the USDA's tables, or the
             # median of German packs on Open Food Facts.
@@ -292,6 +318,26 @@ def _amount(text: str) -> tuple[str, dict | None]:
     return rest, {"count": n}
 
 
+# D67: spoons, slices and a handful, in German and English: "2 EL Olivenöl",
+# "1 TL Zucker", "1 Scheibe Brot", "eine Handvoll Nüsse". A spoon or slice is
+# the food's own portion where the USDA has one; else these grams.
+_SPOONS = {"el": "tbsp", "essloeffel": "tbsp", "tbsp": "tbsp", "tablespoon": "tbsp", "tablespoons": "tbsp",
+           "tl": "tsp", "teeloeffel": "tsp", "tsp": "tsp", "teaspoon": "tsp", "teaspoons": "tsp",
+           "scheibe": "slice", "scheiben": "slice", "slice": "slice", "slices": "slice",
+           "handvoll": "handful", "handful": "handful", "handfuls": "handful"}
+_SPOON_PORTIONS = {"tbsp": r"^1 (tbsp|tablespoon)\b", "tsp": r"^1 (tsp|teaspoon)\b", "slice": r"^1 slice\b"}
+_SPOON_GRAMS = {"tbsp": 15.0, "tsp": 5.0, "handful": 30.0}
+
+
+def _spoon(text: str, amount: dict | None) -> tuple[str, dict | None]:
+    """"EL Olivenöl", 2 -> ("Olivenöl", {"count": 2, "unit": "tbsp"})."""
+    first, _, rest = text.partition(" ")
+    unit = _SPOONS.get(_clean(first))
+    if unit is None or not rest.strip() or (amount and "grams" in amount):
+        return text, amount
+    return rest.strip(), {"count": amount["count"] if amount else 1, "unit": unit}
+
+
 def _piece(food_: dict) -> str | None:
     """The portion a count means: "2 eggs" is 2 of "1 large", "2 Toast" 2 slices,
     a glass for drinks; else the first "1 ..." portion there is."""
@@ -324,11 +370,11 @@ def parse(normalizer, raw: str) -> dict:
             prev, _ = segments[-1]
             segments[-1] = (prev, _amount(f"{seg} {prev}")[1])
             continue
-        text, amount = _amount(seg)
+        text, amount = _spoon(*_amount(seg))
         if _JOINERS.search(text) and not _known_whole(text):
             subs = [x for x in _JOINERS.split(text) if x.strip()]
             segments.append((subs[0], amount))  # "2 Toast mit Butter": the 2 is the toast
-            segments += [_amount(x) for x in subs[1:]]
+            segments += [_spoon(*_amount(x)) for x in subs[1:]]
         else:
             segments.append((text, amount))
     parts, missing, dish_names = [], [], []
@@ -349,6 +395,14 @@ def parse(normalizer, raw: str) -> dict:
         part = {"food": f, "cooked": f["start_cooked"], "canned": f["start_canned"]}
         if amount and "grams" in amount:
             part["grams"] = amount["grams"]
+        elif amount and "unit" in amount:
+            form = f["canned"] if f.get("start_canned") else f["cooked"] if f.get("start_cooked") else f
+            pattern = _SPOON_PORTIONS.get(amount["unit"])
+            own = next((p["label"] for p in form["portions"] if pattern and re.match(pattern, p["label"])), None)
+            if own:
+                part["count"], part["portion"] = amount["count"], own
+            elif amount["unit"] in _SPOON_GRAMS:
+                part["grams"] = round(amount["count"] * _SPOON_GRAMS[amount["unit"]], 1)
         elif amount and (portion := _piece(f)):
             part["count"], part["portion"] = amount["count"], portion
         parts.append(part)

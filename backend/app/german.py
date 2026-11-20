@@ -52,6 +52,9 @@ WORDS = {
     "brokkoli": "broccoli", "blumenkohl": "cauliflower",
     "kohl": "cabbage", "weisskohl": "cabbage", "rotkohl": "red cabbage",
     "gruenkohl": "kale", "lauch": "leek", "porree": "leek",
+    # D67: found in a review, each read as the wrong food before.
+    "rosenkohl": "brussels sprout", "spitzkohl": "cabbage", "wirsing": "cabbage",
+    "baerlauch": "wild garlic", "knoblauchzehe": "garlic", "knoblauchzehen": "garlic",
     "sellerie": "celery", "staudensellerie": "celery",
     "kuerbis": "pumpkin", "mais": "corn", "erbsen": "pea", "bohnen": "bean",
     "kichererbsen": "chickpea", "linsen": "lentil",
@@ -78,6 +81,7 @@ WORDS = {
     "pute": "turkey", "putenbrust": "turkey breast", "truthahn": "turkey",
     "rindfleisch": "beef", "rinderhack": "ground beef", "hackfleisch": "ground beef",
     "schweinefleisch": "pork", "schinken": "ham",
+    "kochschinken": "ham", "schweinefilet": "pork", "schweinelende": "pork", "schweinekotelett": "pork chop",
     "wurst": "sausage", "wuerstchen": "sausage",
     "lachs": "salmon", "thunfisch": "tuna", "garnelen": "shrimp", "krabben": "shrimp",
     "fisch": "fish", "kabeljau": "cod", "forelle": "trout", "ente": "duck", "lamm": "lamb",
@@ -173,6 +177,17 @@ def compound(word: str) -> list[str]:
     head, tail = parts
     front = FRONTS.get(head) or WORDS.get(head) or head
     return [front + WORDS[tail], f"{front} {WORDS[tail]}"]
+
+
+def head_known(word: str) -> bool:
+    """Whether a compound's front part is a known German word (D67).
+
+    "Vollmilch": voll is known. "Basmatireis": basmati isn't, and is kept as
+    it is, which is right for a loanword but turned the typo "Knöblauch" into
+    leek; such readings must then name an ingredient exactly.
+    """
+    parts = split_compound(word)
+    return parts is not None and (parts[0] in FRONTS or parts[0] in WORDS)
 
 
 def split_compound(word: str) -> tuple[str, str] | None:
