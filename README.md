@@ -179,7 +179,9 @@ foods the USDA table lacks (quark, skyr, oat drink, muesli) use the median of
 12 German packs on Open Food Facts, which the app names as the source.
 
 One line can hold a whole meal: "2 Eier, Haferflocken 50 g, Kaffee mit Milch"
-adds each food with its amount. A cappuccino, a Döner or spaghetti bolognese
+adds each food with its amount, and "1 TL Zucker" or "2 EL Olivenöl" are
+spoons. A double tap on a slow connection still logs a meal once, and when the
+server can't be reached the app says so rather than showing an empty kitchen. A cappuccino, a Döner, a Käsebrot or a Schnitzel
 adds the foods of a typical serving, each with its own values, and the app
 says it's a typical one so the part that differs can be changed. Milk and
 yogurt come in the fat levels German shelves have (1.5% milk is 47 kcal,
@@ -418,7 +420,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 495 pytest tests in about three seconds, offline and without the
+- **Tests:** 499 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -447,7 +449,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 65 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 67 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -514,9 +516,10 @@ It starts the app on an empty data dir and makes a first visit in Chrome:
 a profile with a goal weight, the kitchen, the recipe feed, a cooked recipe
 and what ran out, a typed meal, a product that isn't on Open Food Facts (the
 label reader faked, the rest real) added to a meal with a banana, a product that starts at one serving, a meal built from ingredients and logged again,
-everyday words, a line with amounts and a dish, fat levels and a can, editing
-a meal, Undo, servings and an earlier day, the calmer screens and recipe notes
-from the UX reviews, "Done for today", a weigh-in and a reload.
+everyday words, a line with amounts and a dish, fat levels and a can, German
+spoons and a typo, double taps, editing a meal, Undo, servings and an earlier
+day, the calmer screens and recipe notes from the UX reviews, the back button,
+a lost connection, "Done for today", a weigh-in and a reload.
 It fails if a screen doesn't show what it should, on any JavaScript or
 console error, on any API error, and on a serious accessibility problem
 (axe-core) on any screen. Breaking the app on purpose (a renamed API field,
