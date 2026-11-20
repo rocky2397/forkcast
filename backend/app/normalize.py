@@ -358,8 +358,13 @@ class Normalizer:
             # D53: "vollmilch" -> "whole milk", "buttermilch" -> "buttermilk".
             # Both parts are translated; never the main noun alone, which
             # would make Mandelmilch (almond milk) plain milk.
+            # D67: with a front part that isn't German ("basmati"), only an
+            # exact ingredient counts ("basmati rice"); else "Knöblauch" (a
+            # typo) read as "knoeb leek" and the matcher kept just the leek.
+            known = german.head_known(t)
             for english in german.compound(t):
-                if (hit := self._match_english(english)) is not None:
+                hit = self._match_english(english) if known else self._lookup(english)
+                if hit is not None:
                     break
         return hit
 

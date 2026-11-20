@@ -212,7 +212,7 @@ def check_visit(url: str) -> None:
         # D61: one typed line, several foods with their amounts.
         _, _, line = get_json(url + "/api/foods/line?q=" + urllib.parse.quote("2 Eier, Cappuccino"), headers=k)
         parts = [(p["food"]["canonical"], p.get("count")) for p in (line or {}).get("parts", [])]
-        check(parts[:1] == [("egg", 2)] and (line or {}).get("dishes") == ["Cappuccino"],
+        check(parts[:1] == [("egg", 2)] and (line or {}).get("dishes") in (["cappuccino"], ["Cappuccino"]),  # D67 lower-cased it
               f"a typed line reads amounts and dishes ({len(parts)} parts)")
 
         profile = {"sex": "f", "age": 31, "height_cm": 170, "weight_kg": 72, "activity": "moderate",

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LoadError, errorText } from "../LoadError";
 import {
   api,
   pretty,
@@ -27,7 +28,17 @@ export function Recipes() {
   const [tasteInfo, setTasteInfo] = useState<TasteProfile | null>(null);
   const [focus, setFocus] = useState<MacroFocus | null>(null);
   const [basket, setBasket] = useState<ShoppingItem[]>([]);
-  const [openId, setOpenId] = useState<number | null>(null);
+  // D66: an open recipe on a phone is a step in the browser's history: Back closes it.
+  const [openId, setOpenId] = useState<number | null>(() => history.state?.recipe ?? null);
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => setOpenId(e.state?.recipe ?? null);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  const closeRecipe = () => {
+    if (history.state?.recipe != null) history.back();
+    else setOpenId(null);
+  };
   const [loading, setLoading] = useState(true);
   // D58: "Worth buying" takes a few seconds; say so while it works.
   const [basketLoading, setBasketLoading] = useState(true);
@@ -62,22 +73,26 @@ export function Recipes() {
     }
   }
 
+  const [feedError, setFeedError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     setLoading(true);
+    setFeedError(null);
     api
       .cookable(maxMissing, true)
       .then((r) => {
         setRecipes(r.recipes);
         setFocus(r.macro_focus);
       })
+      .catch((e) => setFeedError(errorText(e)))
       .finally(() => setLoading(false));
-  }, [maxMissing]);
+  }, [maxMissing, attempt]);
 
   // On a wide screen something is always open: the top recipe by default.
   const selected = openId ?? (wide ? recipes[0]?.id ?? null : null);
 
   if (!wide && openId !== null) {
-    return <RecipeView id={openId} onBack={() => setOpenId(null)} />;
+    return <RecipeView id={openId} onBack={closeRecipe} />;
   }
 
   const leans = tasteInfo && tasteInfo.meals_logged > 0
@@ -147,7 +162,8 @@ export function Recipes() {
             ))}
           </div>
         )}
-        {!loading && recipes.length === 0 && (
+        {feedError && <LoadError error={feedError} onRetry={() => setAttempt((n) => n + 1)} />}
+        {!loading && !feedError && recipes.length === 0 && (
           <p className="empty">
             {maxMissing === 0
               ? "Nothing is cookable yet. Add what's in your kitchen, or look one ingredient away."
@@ -166,7 +182,10 @@ export function Recipes() {
                   onOpen={() => {
                     setOpenId(r.id);
                     // On a phone the recipe replaces the list: start at its top.
-                    if (!wide) window.scrollTo(0, 0);
+                    if (!wide) {
+                      history.pushState({ tab: "recipes", recipe: r.id }, "");
+                      window.scrollTo(0, 0);
+                    }
                   }}
                 />
               </li>
@@ -216,7 +235,7 @@ export function Recipes() {
 
       {wide && selected !== null && (
         <aside className="detail-pane" aria-label="Selected recipe">
-          <RecipeView key={selected} id={selected} onBack={() => setOpenId(null)} />
+          <RecipeView key={selected} id={selected} onBack={closeRecipe} />
         </aside>
       )}
     </div>

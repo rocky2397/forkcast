@@ -39,10 +39,27 @@ export default function App() {
   // D58: tapping the tab you're on starts it over (a recipe back to the list).
   const [tabKey, setTabKey] = useState(0);
   function go(id: Tab) {
-    if (id === tab) setTabKey((k) => k + 1);
-    else setTab(id);
+    if (id === tab) {
+      // Starting the tab over closes an open recipe for good, not just until Back.
+      if (history.state?.recipe != null) history.replaceState({ tab: id }, "");
+      setTabKey((k) => k + 1);
+    } else {
+      setTab(id);
+      // D66: each tab is a step in the browser's history, so the phone's back
+      // button goes back to the last tab instead of leaving Forkcast.
+      history.pushState({ tab: id }, "");
+    }
     window.scrollTo(0, 0); // a new screen starts at its top, not where the last one was
   }
+  useEffect(() => {
+    if (!history.state?.tab) history.replaceState({ tab: "today" }, "");
+    const onPop = (e: PopStateEvent) => {
+      const next = (e.state?.tab as Tab | undefined) ?? "today";
+      setTab(next);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
   const [gate, setGate] = useState<Gate>("checking");
   // Remounts the tabs after login so screens refetch with the session cookie.
   const [sessionKey, setSessionKey] = useState(0);

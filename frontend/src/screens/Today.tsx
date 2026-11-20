@@ -181,7 +181,8 @@ export function Today() {
   // the meal being edited, and the last one removed, for Undo.
   const [viewDay, setViewDay] = useState(localToday);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [undo, setUndo] = useState<{ name: string; meal: MealSnapshot } | null>(null);
+  // D66: every meal removed while the bar shows, so Undo puts them all back.
+  const [undo, setUndo] = useState<{ name: string; meal: MealSnapshot }[] | null>(null);
   const isToday = viewDay === localToday();
   const loggedAt = isToday ? undefined : noonOf(viewDay);
 
@@ -199,7 +200,7 @@ export function Today() {
         setLoadError(null);
         setLoaded(true);
       })
-      .catch((e) => setLoadError(String(e)));
+      .catch((e) => setLoadError(e instanceof Error ? e.message : String(e)));
   useEffect(() => {
     refresh(viewDay);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -279,14 +280,16 @@ export function Today() {
   async function removeMeal(m: DayMeal) {
     const res = await api.deleteMeal(m.id);
     // D56: a mis-tap costs nothing: Undo puts it back as it was.
-    setUndo({ name: m.name ? (m.recipe_id !== null ? displayName(m.name) : m.name) : "the meal", meal: res.meal });
+    const removed = { name: m.name ? (m.recipe_id !== null ? displayName(m.name) : m.name) : "the meal", meal: res.meal };
+    setUndo((u) => [...(u ?? []), removed]);
     await refresh();
   }
 
   async function undoRemove() {
     if (!undo) return;
-    await api.restoreMeal(undo.meal);
+    const meals = undo;
     setUndo(null);
+    for (const r of meals) await api.restoreMeal(r.meal);
     await refresh();
   }
 
@@ -404,7 +407,7 @@ export function Today() {
   if (loadError && !loaded) {
     return (
       <div className="screen">
-        <p className="empty">Couldn't reach the Forkcast server.</p>
+        <p className="empty">Couldn't load your day.</p>
         <p className="feedback">{loadError}</p>
         <button className="btn" onClick={() => refresh()}>Try again</button>
       </div>
@@ -807,7 +810,7 @@ export function Today() {
       </div>
       {undo && (
         <div className="undo-bar" role="status">
-          <span>Removed {undo.name}.</span>
+          <span>Removed {undo.length === 1 ? undo[0].name : `${undo.length} meals`}.</span>
           <button className="link-button" onClick={undoRemove}>
             Undo
           </button>

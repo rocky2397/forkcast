@@ -113,6 +113,10 @@ async function run(page) {
       await expectText(page.locator(".kitchen-group").filter({ hasText: /yogurt/i }), /yogurt/i, "skyr as yogurt");
       // D47: German names work too.
       await expectText(page.locator(".kitchen-group").filter({ hasText: /lemon/i }), /lemon/i, "Zitrone as lemon");
+      // D66: adding what's there says so, once.
+      await field.fill("Zwiebeln, onions");
+      await page.getByRole("button", { name: "Add", exact: true }).click();
+      await expectText(page.locator("main"), /Already in your kitchen: onion\./, "already there");
       await field.fill("tomatoe");
       await page.getByRole("button", { name: "Add", exact: true }).click();
       await expectText(page.locator(".did-you-mean"), /Couldn't match “tomatoe”\. Add instead/, "did you mean");
@@ -145,7 +149,8 @@ async function run(page) {
       const first = page.locator(".scan-list li").first();
       usedUp = (await first.locator(".scan-name").innerText()).split("(")[0].trim();
       await first.getByRole("checkbox").check();
-      await page.getByRole("button", { name: "Log it and remove 1 from your kitchen" }).click();
+      // D66: a double tap logs the recipe once (counted on Today below).
+      await page.getByRole("button", { name: "Log it and remove 1 from your kitchen" }).evaluate((b) => { b.click(); b.click(); });
       await page.getByRole("button", { name: "Logged. Enjoy!" }).waitFor();
       // D60: the recipe now reads against what's left: what ran out is missing.
       await expectText(page.locator(".recipe-detail"), /1 ingredient away/i, "recipe after cooking");
@@ -160,6 +165,8 @@ async function run(page) {
       await tab(page, "Today").click();
       await page.locator(".ring").waitFor();
       await expectText(page.locator(".meal-list"), new RegExp(cooked.slice(0, 12).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "cooked recipe on Today");
+      const cookedCount = await page.locator(".meal-list li").count();
+      if (cookedCount !== 1) throw new Error(`a double tap on Log it logged the recipe ${cookedCount} times`);
       await page.getByRole("button", { name: "Log a meal" }).click();
       await page.getByRole("button", { name: "Or type the calories yourself" }).click();
       await page.getByPlaceholder("e.g. Skyr with berries").fill("Smoke test salad");
@@ -359,14 +366,30 @@ async function run(page) {
       await expectText(page.locator(".builder-source").first(), /Open Food Facts: median of 12 products sold in Germany/, "values from German cans");
       await page.getByRole("button", { name: "Cancel" }).click();
     }],
+    ["German words, spoons and typos (D67)", async () => {
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      const box = page.getByPlaceholder("e.g. 2 eggs, 50 g oats");
+      await box.fill("1 TL Zucker, Käsebrot, Knöblauch");
+      await box.press("Enter");
+      await page.getByLabel("How much sugar").waitFor();
+      await expectText(page.getByLabel("Unit for sugar").locator("option:checked"), /^× tsp/, "a teaspoon", "attached");
+      await expectText(page.locator(".builder-dish"), /A typical Käsebrot\. /, "Käsebrot is a dish, its name as it reads");
+      // A typo is offered the right food, not turned into leek.
+      await expectText(page.locator(".builder .feedback"), /Couldn't find "Knöblauch"[\s\S]*garlic/, "typo offered garlic");
+      await page.getByRole("button", { name: "Cancel" }).click();
+    }],
     ["log again, and a favourite (D50)", async () => {
       const again = page.locator(".again");
       await expectText(again, /Smoke test porridge[\s\S]*Smoke test salad/, "recent meals, latest first");
       await page.getByRole("button", { name: "Star Smoke test salad: keep it at the top" }).click();
       await expectText(again.locator(".again-item").first(), /Smoke test salad/, "the starred meal moved to the top");
       await audit(page, "today, log again");
-      await page.getByRole("button", { name: "Log Smoke test porridge again" }).click();
+      // D66: a double tap logs it once.
+      await page.getByRole("button", { name: "Log Smoke test porridge again" }).evaluate((b) => { b.click(); b.click(); });
       await expectText(page.locator(".meal-list"), /Smoke test porridge[\s\S]*Smoke test porridge/, "logged a second time");
+      await page.waitForTimeout(800);
+      const porridges = await page.locator(".meal-list li").filter({ hasText: "Smoke test porridge" }).count();
+      if (porridges !== 2) throw new Error(`a double tap on Log again logged ${porridges - 1} copies`);
       const copy = page.locator(".meal-list li").filter({ hasText: "Smoke test porridge" }).last();
       await expectText(copy.locator(".meal-ingredients"), /oats 50 g · milk 200 g · banana 118 g/, "with its ingredients");
     }],
@@ -380,8 +403,14 @@ async function run(page) {
       // Remove, then Undo.
       await page.getByRole("button", { name: "Remove Smoke test salad" }).click();
       await expectText(page.locator(".undo-bar"), /Removed Smoke test salad\./, "undo bar");
+      // D66: a second removal joins the first; Undo puts both back.
+      await page.locator(".meal-list li").filter({ hasText: "Smoke test salad" }).waitFor({ state: "detached" });
+      const before = await page.locator(".meal-list li").count();
+      await page.getByRole("button", { name: "Remove Smoke test porridge" }).first().click();
+      await expectText(page.locator(".undo-bar"), /Removed 2 meals\./, "undo bar for two");
       await page.locator(".undo-bar").getByRole("button", { name: "Undo" }).click();
       await expectText(page.locator(".meal-list"), /Smoke test salad/, "salad back");
+      await page.waitForFunction((n) => document.querySelectorAll(".meal-list li").length === n, before + 1);
       // Servings of the cooked recipe.
       const cookedMeal = page.locator(".meal-list li").filter({ has: page.locator(".servings select") }).first();
       const kcal = async () => Number((await cookedMeal.locator(".meal-macros").innerText()).match(/([\d,]+) kcal/)[1].replace(",", ""));
@@ -478,13 +507,57 @@ async function run(page) {
     }],
     ["a weigh-in, and what you burn", async () => {
       await page.getByPlaceholder("Today's weight, kg").fill("71.8");
-      await page.getByRole("button", { name: "Log weight" }).click();
+      // D66: a double tap is one weigh-in (checked below: "1 weigh-in so far").
+      await page.getByRole("button", { name: "Log weight" }).evaluate((b) => { b.click(); b.click(); });
       await expectText(page.locator(".weight-card h2"), /trend 71\.8 kg/, "weight trend");
       // D45: a new kitchen uses the formula and says how far learning has got.
       await expectText(page.locator(".burn-line"), /What you burn: about [\d,]+ kcal a day.*0 of 10 complete days/, "burn line");
       // D65: one weigh-in reads as one, not as "spread over 0 days".
       await expectText(page.locator(".burn-line"), /1 weigh-in so far; the next ones should spread over 12 days/, "one weigh-in");
       await audit(page, "today, after logging");
+    }],
+    ["the back button stays in the app (D66)", async () => {
+      await tab(page, "Recipes").click();
+      await page.locator(".recipe-card").first().click();
+      await page.locator(".recipe-detail h1").waitFor();
+      await page.goBack();
+      await page.locator(".recipe-card").first().waitFor();
+      if (await page.locator(".recipe-detail").count()) throw new Error("Back didn't close the recipe");
+      await page.goBack();
+      await page.locator(".ring").waitFor(); // the tab before: Today
+      if (!page.url().startsWith("http://127.0.0.1") && !page.url().startsWith("http://localhost")) throw new Error(`Back left the app: ${page.url()}`);
+      // Tapping Recipes while a recipe is open still goes back to the list (D58).
+      await tab(page, "Recipes").click();
+      await page.locator(".recipe-card").first().click();
+      await page.locator(".recipe-detail h1").waitFor();
+      await tab(page, "Recipes").click();
+      await page.locator(".recipe-card").first().waitFor();
+      if (await page.locator(".recipe-detail").count()) throw new Error("the Recipes tab didn't go back to the list");
+      await tab(page, "Today").click();
+    }],
+    ["a failed request says so (D66)", async () => {
+      // No connection used to look like an empty kitchen and "nothing cookable".
+      const blocked = ["/api/inventory", "/api/recipes/cookable", "/api/foods/line"];
+      for (const path of blocked) expectedErrors.add(path);
+      const offline = (url) => blocked.includes(url.pathname);
+      const abort = (route) => route.abort();
+      await page.route(offline, abort);
+      await tab(page, "Recipes").click();
+      await expectText(page.locator(".load-error"), /Couldn't reach Forkcast/, "recipes say they couldn't load");
+      await tab(page, "Today").click();
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      const box = page.getByPlaceholder("e.g. 2 eggs, 50 g oats");
+      await box.fill("Banane");
+      await box.press("Enter");
+      await expectText(page.locator(".builder .feedback"), /Couldn't reach Forkcast/, "not \"couldn't find\"");
+      await page.getByRole("button", { name: "Cancel" }).click();
+      await tab(page, "Kitchen").click();
+      await expectText(page.locator(".load-error"), /Couldn't reach Forkcast/, "kitchen says it couldn't load");
+      await page.unroute(offline, abort);
+      await page.locator(".load-error").getByRole("button", { name: "Try again" }).click();
+      await page.locator(".kitchen-group").first().waitFor();
+      for (const path of blocked) expectedErrors.delete(path);
+      await tab(page, "Today").click();
     }],
     ["everything is still there after a reload", async () => {
       await page.reload();

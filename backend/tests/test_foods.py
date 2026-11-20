@@ -87,9 +87,9 @@ def test_with_and_and_split_unless_they_name_one_food():
 
 def test_dishes_are_their_typical_parts():
     parts, missing, dishes = _line("Cappuccino")
-    assert dishes == ["Cappuccino"] and missing == []
+    assert dishes == ["cappuccino"] and missing == []
     assert parts == [("espresso", 30, None, None, False), ("milk", 120, None, None, False)]
-    assert _line("Kaffee mit Milch")[2] == ["Coffee with milk"]  # a dish, not black coffee
+    assert _line("Kaffee mit Milch")[2] == ["coffee with milk"]  # a dish, not black coffee
     assert [p[1] for p in _line("2 Cappuccino")[0]] == [60, 240]
     bolo, _, _ = _line("Spaghetti Bolognese")
     assert ("pasta", 250, None, None, True) in bolo and any(p[0] == "beef" for p in bolo)
@@ -99,8 +99,11 @@ def test_dishes_are_their_typical_parts():
 
 def test_every_dish_adds_up_to_a_plausible_serving():
     # Typical servings, so typical totals: catches a part with the wrong values.
-    expect = {"Cappuccino": (60, 130), "Latte macchiato": (100, 180), "Flat white": (60, 130),
-              "Coffee with milk": (15, 60), "Spaghetti bolognese": (600, 900), "Döner": (550, 800)}
+    expect = {"cappuccino": (60, 130), "latte macchiato": (100, 180), "flat white": (60, 130),
+              "coffee with milk": (15, 60), "spaghetti bolognese": (600, 900), "Döner": (550, 800),
+              # D67
+              "Käsebrot": (200, 320), "Butterbrot": (150, 250), "Apfelschorle": (40, 100),
+              "Currywurst": (380, 560), "Schnitzel": (380, 600)}
     for name, typed, parts in foods._DISHES:
         assert foods.dishes()[foods._clean(typed[0])][0] == name
         kcal = foods.totals([{"canonical": c, "grams": g, "cooked": cooked} for c, g, cooked in parts])["calories"]
@@ -166,3 +169,29 @@ def test_a_food_starts_at_a_portion_people_have():
                      "butter": "1 tbsp", "olive_oil": "1 tablespoon", "honey": "1 tbsp", "milk": None,
                      "rice": None}
     assert _line("2 Toast")[0] == [("toast", None, 2, "1 slice", False)]
+
+
+# D67: everyday German words and spoons, found missing in the second review.
+
+def test_everyday_german_foods_are_found():
+    from app.normalize import Normalizer
+    n = Normalizer(LINE_VOCAB + ["wine", "pretzel", "rice_cake", "nut", "sugar", "olive_oil", "honey", "bread"])
+    found = {q: [p["food"]["canonical"] for p in foods.parse(n, q)["parts"]]
+             for q in ["Wein", "Brezel", "Spiegelei", "Burger", "Lasagne", "Reiswaffel", "Apfelsaft"]}
+    assert found == {"Wein": ["wine"], "Brezel": ["pretzel"], "Spiegelei": ["fried_egg"], "Burger": ["hamburger"],
+                     "Lasagne": ["lasagna"], "Reiswaffel": ["rice_cake"], "Apfelsaft": ["apple_juice"]}
+    assert foods.parse(n, "Käsebrot")["dishes"] == ["Käsebrot"]  # not plain bread
+    assert foods.food("lasagna")["default_portion"] == "1 piece center"  # 255 g, not 100 g
+    assert foods.parse(n, "Brot mit Käse")["dishes"] == ["Käsebrot"]
+
+
+def test_spoons_slices_and_a_handful():
+    from app.normalize import Normalizer
+    n = Normalizer(LINE_VOCAB + ["nut", "sugar", "olive_oil", "honey", "bread"])
+    one = lambda q: [(p["food"]["canonical"], p.get("grams"), p.get("count"), p.get("portion"))
+                     for p in foods.parse(n, q)["parts"]]
+    assert one("1 TL Zucker") == [("sugar", None, 1, "1 tsp")]  # not a sugar packet
+    assert one("2 EL Olivenöl") == [("olive_oil", None, 2, "1 tablespoon")]
+    assert one("1 Scheibe Brot") == [("bread", None, 1, "1 slice")]
+    assert one("3 TL Honig") == [("honey", 15.0, None, None)]  # no teaspoon portion: 5 g each
+    assert one("eine Handvoll Nüsse") == [("nut", 30.0, None, None)]

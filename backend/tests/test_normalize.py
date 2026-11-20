@@ -326,3 +326,15 @@ def test_a_word_that_ends_in_no_known_word_is_not_a_compound():
     assert german.split_compound("milch") is None  # a word on its own
     assert german.split_compound("tomatenmark") is None  # "mark" isn't a food word here
     assert german.compound("buttermilch") == ["buttermilk", "butter milk"]
+
+
+def test_an_unknown_front_needs_an_exact_ingredient():
+    # D67: "Knöblauch" (a typo for Knoblauch) read as "knoeb leek" and became
+    # leek; "Rosenkohl" became cabbage. A front part that isn't German is kept
+    # only when the whole reading is an ingredient: Basmatireis, Kidneybohnen.
+    n = Normalizer(VOCAB + ["leek", "garlic", "cabbage", "basmati_rice", "kidney_bean", "rice", "bean"])
+    assert n.match("Knöblauch") is None and "garlic" in n.suggest("Knöblauch")
+    assert n.match("Basmatireis") == "basmati_rice"
+    assert n.match("Kidneybohnen") == "kidney_bean"
+    assert n.match("Spitzkohl") == "cabbage"  # a German word of its own now
+    assert Normalizer(VOCAB + ["brussels_sprout", "cabbage"]).match("Rosenkohl") == "brussels_sprout"

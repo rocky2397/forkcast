@@ -71,7 +71,7 @@ export function MealBuilder({
       // D61: one line can hold several foods and their amounts: "2 Eier, Toast, 150 g Reis".
       const res = await api.foodLine(text);
       if (res.parts.length > 0) onChange([...parts, ...res.parts.map(linePart)]);
-      if (res.dishes.length === 1 && parts.length === 0 && res.parts.every((p) => p.dish)) onDish?.(res.dishes[0]);
+      if (res.dishes.length === 1 && parts.length === 0 && res.parts.every((p) => p.dish)) onDish?.(cap(res.dishes[0]));
       if (res.missing.length > 0) {
         setMiss(res.missing[0]);
         setQuery(res.missing.map((m) => m.query).join(", "));
@@ -79,8 +79,8 @@ export function MealBuilder({
         setQuery("");
       }
     } catch (e) {
-      setMiss({ query: text, canonical: null, food: null, suggestions: [] });
-      console.warn(e);
+      // D66: no connection isn't "couldn't find".
+      setMiss({ query: text, canonical: null, food: null, suggestions: [], error: e instanceof Error ? e.message : String(e) });
     } finally {
       setBusy(false);
     }
@@ -110,6 +110,7 @@ export function MealBuilder({
         <input
           id="builder-query"
           placeholder="e.g. 2 eggs, 50 g oats"
+          maxLength={200}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
@@ -126,7 +127,9 @@ export function MealBuilder({
       </div>
       {miss && (
         <p className="feedback warning" role="status">
-          {miss.canonical
+          {miss.error
+            ? miss.error
+            : miss.canonical
             ? `No nutrition values for ${miss.canonical.replace(/_/g, " ")} yet. ` +
               (parts.length > 0
                 ? "Log it as a meal of its own: scan its barcode or type its numbers."
@@ -160,7 +163,7 @@ export function MealBuilder({
               <Fragment key={i}>
               {firstOfDish && (
                 <li className="builder-dish">
-                  A typical {p.dish === "Döner" ? p.dish : p.dish?.toLowerCase()}. Change any amount that's different.
+                  A typical {p.dish}. Change any amount that's different.
                 </li>
               )}
               <li className="builder-item">

@@ -15,7 +15,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Query, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Literal
 
 from . import adaptive, auth, demo, embeddings, foods, goals, nutrition, progress, recipes, shopping, stats, stats_page, substitutions, taste, weight
@@ -240,7 +240,15 @@ def ingredient_neighbors(
 
 
 class InventoryAdd(BaseModel):
-    items: list[str]
+    # D66: bounded like the meal box: 50 names of up to 100 characters.
+    items: list[str] = Field(max_length=50)
+
+    @field_validator("items")
+    @classmethod
+    def _short(cls, v: list[str]) -> list[str]:
+        if any(len(x) > 100 for x in v):
+            raise ValueError("Each ingredient name can be up to 100 characters.")
+        return v
 
 
 @app.get("/api/inventory")
@@ -254,21 +262,29 @@ def get_inventory():
 
 @app.post("/api/inventory")
 def add_inventory(body: InventoryAdd):
-    added, unknown = [], []
+    added, unknown, already = [], [], []
     with connect() as con:
+        have = {r["canonical"] for r in con.execute("SELECT canonical FROM inventory")}
         for raw in body.items:
             canonical = foods.kitchen_match(normalizer, raw)
             if canonical is None:
                 unknown.append(raw)
                 continue
+            # D66: "Tomaten, tomatoes" is one tomato, and one already there is said so.
+            if canonical in have:
+                if canonical not in added and canonical not in already:
+                    already.append(canonical)
+                continue
             con.execute("INSERT OR IGNORE INTO inventory (canonical) VALUES (?)", (canonical,))
             added.append(canonical)
+            have.add(canonical)
         con.commit()
     for canonical in added:
         stats.event("ingredient_added", item=canonical, stage="added")
     # D46: "Did you mean…?" for what wasn't recognised (never counted or stored).
     suggestions = {raw: normalizer.suggest(raw) for raw in unknown}
-    return {"added": added, "added_names": [foods.kitchen_label(c) for c in added], "unknown": unknown,
+    return {"added": added, "added_names": [foods.kitchen_label(c) for c in added],
+            "already": [foods.kitchen_label(c) for c in already], "unknown": unknown,
             "suggestions": {k: v for k, v in suggestions.items() if v}}
 
 
