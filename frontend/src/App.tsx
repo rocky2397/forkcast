@@ -17,8 +17,10 @@ const TABS: { id: Tab; label: string; Icon: typeof TodayIcon }[] = [
 ];
 type Gate = "checking" | "locked" | "open";
 
-// Bump the suffix to show the walkthrough again after the loop changes.
-const INTRO_SEEN = "forkcast.intro.v1";
+// D68: whether this browser has been through the first two welcome screens.
+// Without a profile it comes back at the profile step; with one, never.
+const WELCOMED = "forkcast.welcome.v2";
+type FirstVisit = "checking" | "welcome" | "done";
 
 async function deleteMyData() {
   const sure = window.confirm(
@@ -63,15 +65,26 @@ export default function App() {
   const [gate, setGate] = useState<Gate>("checking");
   // Remounts the tabs after login so screens refetch with the session cookie.
   const [sessionKey, setSessionKey] = useState(0);
-  // Private-mode Safari throws on localStorage; the walkthrough is not worth
-  // a blank app, so treat any failure as "already seen".
-  const [introDone, setIntroDone] = useState(() => {
+  const [firstVisit, setFirstVisit] = useState<FirstVisit>("checking");
+  // Private-mode Safari throws on localStorage; then the welcome starts at its
+  // first screen each time, which is harmless.
+  const [welcomed] = useState(() => {
     try {
-      return localStorage.getItem(INTRO_SEEN) === "1";
+      return localStorage.getItem(WELCOMED) === "1";
     } catch {
-      return true;
+      return false;
     }
   });
+
+  // D68: the welcome is for anyone without a profile, since nothing can fit
+  // their day until they have one. Checked once the gate is open.
+  useEffect(() => {
+    if (gate !== "open" || firstVisit !== "checking") return;
+    api
+      .profile()
+      .then((p) => setFirstVisit(p.profile ? "done" : "welcome"))
+      .catch(() => setFirstVisit("done")); // offline or down: the tabs show their own errors
+  }, [gate, firstVisit]);
 
   useEffect(() => {
     setUnauthorizedHandler(() => setGate("locked"));
@@ -97,20 +110,25 @@ export default function App() {
     );
 
   // After the gate, so a stranger with the link meets the password first.
-  if (!introDone)
+  if (firstVisit === "checking") return <div className="app" />;
+  if (firstVisit === "welcome")
     return (
       <div className="app">
         <Intro
-          onStart={() => {
+          startAt={welcomed ? "profile" : "value"}
+          onWelcomed={() => {
             try {
-              localStorage.setItem(INTRO_SEEN, "1");
+              localStorage.setItem(WELCOMED, "1");
             } catch {
-              // Unwritable storage just means it shows again next launch.
+              // Unwritable storage just means it starts at the beginning next time.
             }
-            setIntroDone(true);
           }}
-          // "for now" is literal: skipping does not record it as seen.
-          onSkip={() => setIntroDone(true)}
+          onDone={(next) => {
+            setTab(next);
+            history.replaceState({ tab: next }, "");
+            window.scrollTo(0, 0);
+            setFirstVisit("done");
+          }}
         />
       </div>
     );

@@ -14,9 +14,9 @@ tells you what to buy to unlock more.
   recipes you can really cook: 65% → 92%. Suggested swaps a cook would use:
   33% → 95%. A typed German food within 10% of the calories on its pack:
   64% → 76%. [How the tests work](#evaluation)
-- **Decisions in writing.** 67 product decisions, each with the options turned
+- **Decisions in writing.** 68 product decisions, each with the options turned
   down and why ([APP_DECISIONS.md](APP_DECISIONS.md)).
-- **Built to ship.** 499 tests and a browser test of a first visit on every
+- **Built to ship.** 504 tests and a browser test of a first visit on every
   change, a check of the live demo after every deploy, and no serious
   accessibility problems on any screen.
 - **Built with AI.** Claude Code wrote most of the code; the product calls
@@ -31,7 +31,7 @@ to 10 scans a day. After two days without visitors the server sleeps, and the
 next visit takes about a minute while it wakes up. Usage is counted only as
 [anonymous totals](https://rockyyyy2397-forkcast.hf.space/stats).
 
-<p align="center"><img src="docs/screenshots/demo.gif" width="300" alt="A 30-second walkthrough on a phone: the three-step welcome, adding avocado and lime to the kitchen, the recipe list naming the cooked dish each recipe is like, its help panel explaining the coloured dots, a recipe one ingredient away that suggests red onion for the missing shallot, cook mode one step at a time, and the Today screen with calories and macros left"></p>
+<p align="center"><img src="docs/screenshots/demo.gif" width="300" alt="A 40-second walkthrough on a phone: the welcome (what you get, three steps a day, the profile typed in, and the day it gives: calories and protein), the meal picks, adding avocado and lime to the kitchen, the recipe list naming the cooked dish each recipe is like, its help panel explaining the coloured dots, a recipe one ingredient away that suggests red onion for the missing shallot, cook mode one step at a time, and the Today screen with calories and macros left"></p>
 
 <img src="docs/screenshots/desktop.jpg" alt="Forkcast on a laptop: the recipe feed on the left with coloured ingredient dots and the dish each recipe is like, the open recipe on the right with its ingredients ticked against the kitchen">
 
@@ -437,7 +437,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 499 pytest tests in about three seconds, offline and without the
+- **Tests:** 504 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -449,8 +449,9 @@ food colours used sparingly, so recipes read like a cookbook page rather than a
 dashboard. It is built phone-first and switches to a two-column layout on a
 laptop, with the open recipe beside the list.
 
-The app should explain itself. A short three-step walkthrough runs on first
-open, and each main screen has a **?** button that explains what you are looking at
+The app should explain itself. A first visit says what you get, then how it
+works, then asks for the profile and shows your day in numbers; the demo offers
+a sample person for anyone just looking around. Each main screen has a **?** button that explains what you are looking at
 in plain words (for example what the coloured dots and "Like your …"
 mean). Labels say what they mean instead of using internal terms.
 
@@ -466,7 +467,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 67 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 68 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -539,7 +540,7 @@ ops/e2e.sh            # needs Google Chrome, the corpus and the Epicure weights
 ```
 
 It starts the app on an empty data dir and makes a first visit in Chrome:
-a profile with a goal weight, the kitchen, the recipe feed, a cooked recipe
+the welcome, a profile with a goal weight and the day it gives, the kitchen, the recipe feed, a cooked recipe
 and what ran out, a typed meal, a product that isn't on Open Food Facts (the
 label reader faked, the rest real) added to a meal with a banana, a product that starts at one serving, a meal built from ingredients and logged again,
 everyday words, a line with amounts and a dish, fat levels and a can, German

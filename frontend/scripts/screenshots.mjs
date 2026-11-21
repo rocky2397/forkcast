@@ -97,9 +97,9 @@ async function context(browser, viewport, deviceScaleFactor) {
     reducedMotion: "reduce",
     serviceWorkers: "block",
   });
-  // Walkthrough and guides already seen: the screenshots show the screens.
+  // Guides already seen (the welcome only shows without a profile, D68).
   await ctx.addInitScript(() => {
-    for (const k of ["intro", "feedguide", "todayguide", "kitchenguide"]) {
+    for (const k of ["feedguide", "todayguide", "kitchenguide"]) {
       localStorage.setItem(`forkcast.${k}.v1`, "1");
     }
   });
@@ -187,22 +187,49 @@ async function recordDemo(browser, videoDir) {
     colorScheme: "light",
     serviceWorkers: "block",
   });
-  // The walkthrough shows (a first visit); the guides start closed.
+  // The guides start closed.
   await ctx.addInitScript(() => {
     for (const k of ["feedguide", "todayguide", "kitchenguide"]) localStorage.setItem(`forkcast.${k}.v1`, "1");
   });
   await ctx.addInitScript(showTaps);
   const page = await ctx.newPage();
   const pause = (ms) => page.waitForTimeout(ms);
+  // D68: the welcome is for visitors without a profile. The seeded kitchen has
+  // the README person's, so the app's first look at it is answered with none;
+  // the profile typed in below is the same one, so nothing else changes.
+  let firstLook = true;
+  await page.route((url) => url.pathname === "/api/profile", (route) => {
+    if (firstLook && route.request().method() === "GET") {
+      firstLook = false;
+      return route.fulfill({ json: { profile: null, targets: null, plan: null, burn: null } });
+    }
+    return route.continue();
+  });
 
   await page.goto(base);
-  await page.getByRole("button", { name: "Get started" }).waitFor();
+  await page.getByRole("heading", { name: "Meals that fit your fridge and your goal." }).waitFor();
   await pause(300); // fonts settle before the first frame
 
   const stop = await capture(ctx, page);
-  await pause(3200);
+  await pause(2600);
   await page.getByRole("button", { name: "Get started" }).click();
-  await page.locator(".ring").waitFor();
+  await pause(3400);
+  await page.getByRole("button", { name: "Set my targets" }).click();
+  await page.getByRole("heading", { name: "Your daily targets" }).waitFor();
+  await pause(900);
+  await glide(page, await yOf(page.getByLabel("Sex")) - 160, 700);
+  await page.getByLabel("Sex").selectOption(PROFILE.sex);
+  for (const [label, value] of [["Age", PROFILE.age], ["Height (cm)", PROFILE.height_cm], ["Weight (kg)", PROFILE.weight_kg]]) {
+    await page.getByLabel(label).pressSequentially(String(value), { delay: 70 });
+    await pause(150);
+  }
+  await page.getByLabel("Activity").selectOption(PROFILE.activity);
+  await pause(500);
+  await page.getByRole("button", { name: "Save and work out my targets" }).click();
+  await page.getByRole("heading", { name: "Here's your day" }).waitFor();
+  await pause(2800);
+  await page.getByRole("button", { name: "See meals that fit" }).click();
+  await page.locator(".recipe-card").first().waitFor();
   await pause(1600);
 
   // Stock the kitchen.

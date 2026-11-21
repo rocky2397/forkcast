@@ -22,6 +22,7 @@ import {
 import { DayCheck, ProgressCard } from "./Progress";
 import { WeightCard } from "./Weight";
 import { ProfileForm } from "./ProfileForm";
+import { rememberSample, usingSample } from "../sample";
 import { detectBarcode } from "../barcode";
 import { displayName } from "../format";
 import { Guide, GuideHint, HelpButton } from "../Guide";
@@ -71,7 +72,7 @@ function CalorieRing({ eaten, target }: { eaten: number; target: number }) {
 }
 
 /** D39: the goal-weight plan in one or two plain sentences. */
-function PlanLine({ plan }: { plan: WeightPlan }) {
+export function PlanLine({ plan }: { plan: WeightPlan }) {
   const goal = `${plan.goal_weight_kg} kg`; // not rounded: 72.5 stays 72.5
   let text: string;
   if (plan.direction === "keep") {
@@ -155,6 +156,7 @@ export function Today() {
   const [weight, setWeight] = useState<WeightSummary | null>(null);
   const [recent, setRecent] = useState<RecentMeal[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [sample, setSample] = useState(usingSample);
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -211,7 +213,9 @@ export function Today() {
     return () => clearTimeout(t);
   }, [undo]);
 
-  function onSaved(p: Profile, _targets: Targets) {
+  function onSaved(p: Profile, _targets: Targets, _plan: unknown, sample: boolean) {
+    rememberSample(sample); // D68: your own numbers replace the sample person
+    setSample(sample);
     setProfile(p);
     setEditing(false);
     refresh();
@@ -428,7 +432,12 @@ export function Today() {
             <BackIcon size={20} /> Today
           </button>
         )}
-        <ProfileForm initial={profile} onSaved={onSaved} />
+        {/* D60: the sample person's numbers never pre-fill "your own". */}
+        <ProfileForm
+          initial={sample ? null : profile}
+          kicker={sample ? "Your own numbers" : undefined}
+          onSaved={onSaved}
+        />
       </div>
     );
   }
@@ -463,10 +472,22 @@ export function Today() {
         <HelpButton open={guide.open} onToggle={guide.toggle} label="How this page works" controls="today-guide" />
       </div>
       <p className="lead">
-        Targets for {GOAL_WORDS[profile.goal]}, from your profile.{" "}
-        <button className="link" onClick={() => setEditing(true)}>
-          Edit profile
-        </button>
+        {sample ? (
+          // D68: say whose targets these are until someone puts in their own.
+          <>
+            Targets for a <strong>sample person</strong> (34, 168 cm, 68 kg, aiming for 64 kg).{" "}
+            <button className="link" onClick={() => setEditing(true)}>
+              Use my own numbers
+            </button>
+          </>
+        ) : (
+          <>
+            Targets for {GOAL_WORDS[profile.goal]}, from your profile.{" "}
+            <button className="link" onClick={() => setEditing(true)}>
+              Edit profile
+            </button>
+          </>
+        )}
         {!isToday && (
           <>
             {" "}

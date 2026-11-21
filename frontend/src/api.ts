@@ -487,6 +487,15 @@ export const api = {
     usageStats = Boolean(s.stats);
     return s;
   },
+  /** D68: a first-visit step only the browser sees, for the demo's anonymous funnel. */
+  step: (name: "welcome_finished") => {
+    if (!demo || !usageStats) return;
+    req("/api/stats/step", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ step: name }),
+    }).catch(() => {}); // a lost count is not worth an error on screen
+  },
   /** Public demo (D34): delete this visitor's kitchen; the next request starts a new one. */
   deleteMyData: async () => {
     await req<{ deleted: boolean }>("/api/demo/kitchen", { method: "DELETE" });
@@ -548,8 +557,9 @@ export const api = {
     return req<{ proposals: ScanProposal[] }>("/api/vision/scan", { method: "POST", body: form });
   },
   profile: () => req<{ profile: Profile | null; targets: Targets | null }>(`/api/profile?tz=${tzMinutes()}`),
-  saveProfile: (p: Profile) =>
-    req<{ profile: Profile; targets: Targets }>(`/api/profile?tz=${tzMinutes()}`, {
+  /** D68: `sample` says it's the demo's made-up person (counted, never stored as such). */
+  saveProfile: (p: Profile, sample = false) =>
+    req<{ profile: Profile; targets: Targets; plan: WeightPlan | null }>(`/api/profile?tz=${tzMinutes()}${sample ? "&sample=true" : ""}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(p),
