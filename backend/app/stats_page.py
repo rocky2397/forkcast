@@ -8,6 +8,9 @@ from html import escape
 
 STEPS = {
     "visited": "Opened the demo",
+    "welcomed": "Finished the welcome",
+    "profiled": "Saved a profile",
+    "picks": "Saw meal picks",
     "added": "Added an ingredient",
     "opened": "Opened a recipe",
     "cooked": "Marked a recipe as cooked",
@@ -27,6 +30,9 @@ ACTIONS = {
     "photo_scan_tried": "Photo scans tried",
     "label_scan_tried": "Label scans tried",
     "barcode_lookup": "Barcode lookups",
+    "welcome_finished": "Welcomes finished",
+    "sample_profile_used": "Sample profiles used",
+    "picks_seen": "Meal picks shown",
 }
 
 ROUTES = {
@@ -46,8 +52,9 @@ ROUTES = {
     "DELETE /api/meals/{meal_id:int}": "Remove a meal",
     "GET /api/taste": "Taste summary",
     "GET /api/nutrition/barcode/{code}": "Barcode lookup",
-    "POST /api/vision/scan": "Photo scan (off)",
-    "POST /api/nutrition/scan": "Label scan (off)",
+    "POST /api/vision/scan": "Photo scan",
+    "POST /api/nutrition/scan": "Label scan",
+    "POST /api/stats/step": "Count a step",
     "GET /api/normalize": "Match an ingredient name",
     "GET /api/ingredients/{name}/neighbors": "Similar ingredients",
     "other": "Unknown addresses",
@@ -179,7 +186,8 @@ def render(s: dict) -> str:
 </div>
 
 <h2>How far visitors get</h2>
-<p>Share of visitors who did each at least once.</p>
+<p>Share of visitors who did each at least once. The welcome, profile and meal-pick steps are counted
+from 21 November 2026, out of the visitors since then.</p>
 {funnel}
 
 <h2>Visitors per day</h2>
@@ -201,7 +209,9 @@ def render(s: dict) -> str:
 
 <h2>How this is counted</h2>
 <p class="note">A visitor is a new demo kitchen. Someone who clears their browser or switches device counts twice,
-and a server restart can count a step twice. Days are UTC. Times are grouped by type of action,
+and a server restart can count a step twice. Until 21 November 2026 a restart could also count one
+visitor many times: on 19 November, when seven updates went live, a handful of people show up as 137.
+Days are UTC. Times are grouped by type of action,
 never by the address asked for, and measured on the server, so they leave out the network.</p>
 <p class="note">Nothing personal is stored: no IP addresses, no browser details, no times finer than the day,
 nothing anyone typed, no profile values and nothing per visitor. Only these totals, one small file per day.</p>

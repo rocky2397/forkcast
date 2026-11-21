@@ -38,8 +38,13 @@ log = logging.getLogger("forkcast.stats")
 
 FLUSH_SECONDS = 300
 # Stages a visitor can reach, in order; "visited" is the new kitchen itself.
-FUNNEL = ("visited", "added", "opened", "cooked")
+# "welcomed", "profiled" and "picks" came with D68 (21 November 2026); days
+# written before then don't have them, and their shares leave those days out.
+FUNNEL = ("visited", "welcomed", "profiled", "picks", "added", "opened", "cooked")
+# Steps only the browser sees, which it reports by name (POST /api/stats/step).
+STEPS = {"welcome_finished": "welcomed"}
 EVENTS = frozenset({
+    "welcome_finished", "sample_profile_used", "picks_seen",
     "ingredient_added", "ingredient_removed",
     "recipe_opened", "recipe_cooked",
     "rated_liked", "rated_not_for_me", "rating_cleared",
@@ -91,6 +96,7 @@ def _empty(day: str) -> dict:
         "timing": {},  # route -> {"buckets": [...], "count": n, "total_ms": x}
         "errors": {"server": {}, "not_found": {}},  # route -> count
         "starts": [],  # seconds from the app starting to being ready
+        "counted": set(FUNNEL),  # stages this day counted; files keep only theirs
     }
 
 
@@ -102,6 +108,7 @@ def _day(day: str) -> dict:
         try:
             saved = json.loads(path.read_text())
             _merge(data, saved)
+            data["counted"] = set(FUNNEL)  # from now on this process counts every stage
         except FileNotFoundError:
             pass
         except (OSError, ValueError) as e:
@@ -117,6 +124,7 @@ def _merge(into: dict, other: dict) -> None:
     for k, v in other.get("funnel", {}).items():
         if k in FUNNEL:
             into["funnel"][k] += int(v)
+            into["counted"].add(k)
     for name, counts in other.get("items", {}).items():
         if name in ITEMS:
             bucket = into["items"][name]
@@ -256,7 +264,7 @@ def flush() -> None:
     if not enabled():
         return
     with _lock:
-        pending = {day: json.dumps(_days[day], sort_keys=True) for day in _dirty}
+        pending = {day: json.dumps(_stored(_days[day]), sort_keys=True) for day in _dirty}
         _dirty.clear()
     for day, text in pending.items():
         path = directory() / f"{day}.json"
@@ -278,6 +286,11 @@ def flush() -> None:
                 _days.pop(day, None)
 
 
+def _stored(data: dict) -> dict:
+    """A day as written to its file: "counted" is implied by the funnel's keys."""
+    return {k: v for k, v in data.items() if k != "counted"}
+
+
 def all_days() -> list[dict]:
     """Every day's totals: the files, with today's unsaved counts on top."""
     found: dict[str, dict] = {}
@@ -286,13 +299,16 @@ def all_days() -> list[dict]:
         for path in sorted(d.glob("????-??-??.json")):
             try:
                 data = _empty(path.stem)
+                data["counted"] = {"visited"}
                 _merge(data, json.loads(path.read_text()))
                 found[path.stem] = data
             except (OSError, ValueError):
                 continue
     with _lock:
         for day, data in _days.items():
-            found[day] = json.loads(json.dumps(data))
+            copy = json.loads(json.dumps(_stored(data)))
+            copy["counted"] = set(data["counted"])
+            found[day] = copy
     return [found[k] for k in sorted(found)]
 
 
@@ -303,6 +319,8 @@ def summary(recipe_names) -> dict:
     events: dict[str, int] = {}
     funnel = {s: 0 for s in FUNNEL}
     items: dict[str, dict[str, int]] = {name: {} for name in ITEMS}
+    # A stage's share is out of the visitors on days that counted it (D68).
+    counted_visitors = {s: sum(d["funnel"]["visited"] for d in days if s in d["counted"]) for s in FUNNEL}
     for d in days:
         for k, v in d["events"].items():
             events[k] = events.get(k, 0) + v
@@ -355,7 +373,7 @@ def summary(recipe_names) -> dict:
         "since": days[0]["day"] if days else None,
         "visitors": visitors,
         "per_day": [{"day": d["day"], "visitors": d["funnel"]["visited"]} for d in days[-14:]],
-        "funnel": {s: {"visitors": funnel[s], "share": round(funnel[s] / visitors, 3) if visitors else None} for s in FUNNEL},
+        "funnel": {s: _share(funnel[s], counted_visitors[s]) for s in FUNNEL},
         "events": dict(sorted(events.items())),
         "top_ingredients_added": [{"ingredient": k, "times": v} for k, v in top("ingredient_added")],
         "top_recipes_opened": [{"id": int(k), "name": names.get(int(k)), "times": v} for k, v in opened],
@@ -363,6 +381,10 @@ def summary(recipe_names) -> dict:
         "errors_per_day": per_day_errors,
         "starts": starts[-20:],
     }
+
+
+def _share(reached: int, out_of: int) -> dict:
+    return {"visitors": reached, "out_of": out_of, "share": round(reached / out_of, 3) if out_of else None}
 
 
 def _reset_for_tests() -> None:

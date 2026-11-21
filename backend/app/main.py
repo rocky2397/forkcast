@@ -194,6 +194,22 @@ def delete_my_kitchen():
     return {"deleted": True}
 
 
+class Step(BaseModel):
+    step: str = Field(max_length=40)
+
+
+@app.post("/api/stats/step")
+def stats_step(body: Step):
+    """D68: a funnel step only the browser sees (finishing the welcome).
+
+    Only names in stats.STEPS count; anything else is dropped, never stored.
+    """
+    stage = stats.STEPS.get(body.step)
+    if stage:
+        stats.event(body.step, stage=stage)
+    return {"counted": bool(stage) and stats.enabled()}
+
+
 @app.post("/api/login")
 def login(body: Login, request: Request, response: Response):
     if not auth.required():
@@ -426,6 +442,7 @@ def cookable_recipes(
     first) by taste similarity once cooks have been logged, and by how well
     the serving fits what's left of today's macro budget (D20).
     """
+    stats.event("picks_seen", stage="picks")  # D68: the funnel step "saw meal picks"
     with connect() as con:
         profile = taste.taste_profile(con)
         budget = _remaining_today(con)
@@ -671,7 +688,7 @@ def get_profile(tz: int = Query(0, ge=-840, le=840)):
 
 
 @app.put("/api/profile")
-def put_profile(body: ProfileIn, tz: int = Query(0, ge=-840, le=840)):
+def put_profile(body: ProfileIn, tz: int = Query(0, ge=-840, le=840), sample: bool = False):
     data = body.model_dump()
     problem = goals.goal_problem(data)  # D39 guardrails
     if problem:
@@ -695,7 +712,9 @@ def put_profile(body: ProfileIn, tz: int = Query(0, ge=-840, le=840)):
         )
         con.commit()
         profile, est = adaptive.profile_with_burn(con, tz)  # D45: the learned burn, if any
-    stats.event("profile_saved")  # that it changed, never the values
+    stats.event("profile_saved", stage="profiled")  # that it changed, never the values
+    if sample:  # D68: the demo's "Use a sample person" (how many, not who)
+        stats.event("sample_profile_used")
     return {"profile": adaptive.public(profile), "targets": goals.targets(profile),
             "plan": goals.plan(profile), "burn": est}
 

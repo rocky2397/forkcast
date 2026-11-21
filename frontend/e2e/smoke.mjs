@@ -66,11 +66,14 @@ async function run(page) {
   const steps = [
     ["the welcome screen", async () => {
       await page.goto(base);
-      await page.getByRole("button", { name: "Get started" }).waitFor();
-      // D57: the welcome says what the app is now: cooking, and logging what you eat.
-      await expectText(page.locator(".intro"), /Cook what fits[\s\S]*Log what you eat/, "welcome steps");
+      // D68: what you get first, then how, with no way to skip the profile.
+      await page.getByRole("heading", { name: "Meals that fit your fridge and your goal." }).waitFor();
+      if (await page.getByRole("button", { name: /Skip/ }).count()) throw new Error("the welcome can be skipped");
       await audit(page, "welcome");
       await page.getByRole("button", { name: "Get started" }).click();
+      await expectText(page.locator(".intro"), /Your kitchen[\s\S]*Pick a meal[\s\S]*Say you ate it/, "welcome steps");
+      await audit(page, "how it works");
+      await page.getByRole("button", { name: "Set my targets" }).click();
     }],
     ["a new profile with a goal weight", async () => {
       await page.getByRole("heading", { name: "Your daily targets" }).waitFor();
@@ -97,8 +100,22 @@ async function run(page) {
       await expectText(page.locator(".profile-form"), /gentle is 0\.5% a week, steady 0\.75%/, "pace hint");
       await page.getByRole("button", { name: "Save and work out my targets" }).click();
     }],
+    ["the welcome ends on your day", async () => {
+      // D68: the payoff before any tab: your numbers and the plan, said to be an estimate.
+      await page.getByRole("heading", { name: "Here's your day" }).waitFor();
+      await expectText(page.locator(".day-targets"), /[\d,]+ kcal a day[\s\S]*\d+ g protein/, "targets");
+      await expectText(page.locator(".intro .plan-line"), /To reach 66 kg/, "plan on the payoff");
+      await expectText(page.locator(".intro"), /formula's estimate/, "said to be an estimate");
+      if (await page.getByRole("button", { name: "Use a sample person" }).count()) throw new Error("sample person outside the demo");
+      await audit(page, "your day");
+      await page.getByRole("button", { name: "Go to today" }).click();
+    }],
     ["Today shows the targets and the plan", async () => {
       await page.locator(".ring").waitFor();
+      // With a profile, the welcome never comes back.
+      await page.reload();
+      await page.locator(".ring").waitFor();
+      if (await page.locator(".intro").count()) throw new Error("welcome shown again with a profile");
       await expectText(page.locator(".plan-line"), /To reach 66 kg: about [\d,]+ kcal a day/, "plan line");
       await expectText(page.locator(".macros"), /Protein[\s\S]*Carbs[\s\S]*Fat/, "macro bars");
       await audit(page, "today");

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { api, type Profile, type Targets } from "../api";
+import { api, type Profile, type Targets, type WeightPlan } from "../api";
+import { SAMPLE_PERSON } from "../sample";
 
 const ACTIVITIES: { value: Profile["activity"]; label: string }[] = [
   { value: "sedentary", label: "Sedentary (desk job, little exercise)" },
@@ -27,9 +28,15 @@ const EMPTY = {
 export function ProfileForm({
   initial,
   onSaved,
+  kicker,
+  offerSample = false,
 }: {
   initial: Profile | null;
-  onSaved: (profile: Profile, targets: Targets) => void;
+  onSaved: (profile: Profile, targets: Targets, plan: WeightPlan | null, sample: boolean) => void;
+  /** Overrides the line above the heading (the welcome says which step this is). */
+  kicker?: string;
+  /** D68: in the demo's welcome, a one-tap way past this screen without typing. */
+  offerSample?: boolean;
 }) {
   // D60: a new profile starts empty. Filled-in sample numbers looked like
   // yours, and saving them gave targets for someone else's body.
@@ -60,8 +67,8 @@ export function ProfileForm({
     return null;
   }
 
-  async function save() {
-    const missing = problem();
+  async function save(sample = false) {
+    const missing = sample ? null : problem();
     if (missing) {
       setError(missing);
       return;
@@ -69,8 +76,10 @@ export function ProfileForm({
     setBusy(true);
     setError(null);
     try {
-      const res = await api.saveProfile({ ...form, pace: form.pace ?? "steady" });
-      onSaved(res.profile, res.targets);
+      const res = sample
+        ? await api.saveProfile(SAMPLE_PERSON, true)
+        : await api.saveProfile({ ...form, pace: form.pace ?? "steady" });
+      onSaved(res.profile, res.targets, res.plan ?? null, sample);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -87,8 +96,21 @@ export function ProfileForm({
         save();
       }}
     >
-      <p className="kicker">{initial ? "Your profile" : "One-time setup"}</p>
+      <p className="kicker">{kicker ?? (initial ? "Your profile" : "One-time setup")}</p>
       <h1 className="display">Your daily targets</h1>
+      {offerSample && (
+        // D68 (changes D60 for the demo only): the form stays empty, so nothing
+        // looks like your numbers; the made-up person is a separate, named choice.
+        <div className="sample-offer">
+          <p>
+            <strong>Just looking around?</strong> Use a made-up person (34, 168 cm, 68 kg, aiming for 64 kg) and
+            see the app working. You can put in your own numbers later under Edit profile.
+          </p>
+          <button type="button" className="btn secondary" disabled={busy} onClick={() => save(true)}>
+            Use a sample person
+          </button>
+        </div>
+      )}
       <p className="lead">
         Forkcast uses this only to work out how many calories and how much protein, carbs and fat suit you each
         day. It starts from a widely used estimate of what your body burns, based on your sex, age, height and

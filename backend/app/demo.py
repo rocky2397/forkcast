@@ -69,6 +69,7 @@ _scans_day = ""
 _save_lock = threading.Lock()  # one save pass at a time
 _dirty: set[str] = set()  # kitchens with changes not yet saved
 _saved_on: dict[str, str] = {}  # kitchen id -> UTC day its saved copy was last written
+_deleted: set[str] = set()  # ids deleted by their visitor: never brought back
 _swept_saved_at = 0.0
 
 # The kitchen of the request being handled, set by the middleware in main.py.
@@ -181,12 +182,17 @@ def _sweep(now: float) -> None:
 
 
 def kitchen(requested: str | None) -> tuple[str, Path, bool]:
-    """(kitchen id, user DB path, newly created) for a request.
+    """(kitchen id, user DB path, new visitor) for a request.
 
     The visitor's own kitchen, or a new one.
 
-    Anything that isn't a live kitchen id, including a malformed header, gets a
-    fresh kitchen; the id is never used in a path unless it matches _ID.
+    A well-formed id whose kitchen is gone (lost in a restart before anything
+    was changed, or swept while idle) gets a fresh demo kitchen under the same
+    id. That browser is not a new visitor, and its requests already on the way
+    all land in that one kitchen instead of each making its own: on 19 November
+    seven restarts turned a handful of people into 137 "visitors". Anything
+    else, including a malformed header, gets a new id; the id is never used in
+    a path unless it matches _ID.
     """
     with _lock:
         if requested and _ID.match(requested):
@@ -205,7 +211,8 @@ def kitchen(requested: str | None) -> tuple[str, Path, bool]:
         now = time.time()
         kitchens_dir().mkdir(parents=True, exist_ok=True)
         _sweep(now)
-        new = secrets.token_urlsafe(16)
+        returning = bool(requested and _ID.match(requested) and requested not in _deleted)
+        new = requested if returning else secrets.token_urlsafe(16)
         path = kitchens_dir() / f"{new}.db"
         shutil.copyfile(template_path(), path)
         # D57: the seeded cooks are the same number of days back for every new
@@ -218,7 +225,7 @@ def kitchen(requested: str | None) -> tuple[str, Path, bool]:
             )
         con.commit()
         con.close()
-        return new, path, True
+        return new, path, not returning
 
 
 def changed(kitchen_id: str) -> None:
@@ -309,6 +316,9 @@ def delete(kitchen_id: str) -> None:
     with _save_lock, _lock:  # never while a save pass could write it back
         _dirty.discard(kitchen_id)
         _saved_on.pop(kitchen_id, None)
+        if len(_deleted) > 10_000:
+            _deleted.clear()
+        _deleted.add(kitchen_id)
         (kitchens_dir() / f"{kitchen_id}.db").unlink(missing_ok=True)
         if saved_dir():
             (saved_dir() / f"{kitchen_id}.db").unlink(missing_ok=True)

@@ -62,8 +62,8 @@ def test_the_same_id_keeps_the_same_kitchen(demo_app):
     assert "basil" not in items
 
 
-@pytest.mark.parametrize("bad", ["../../etc/passwd", "x" * 22 + "/..", "not-a-kitchen", "A" * 22])
-def test_unknown_or_malformed_ids_get_a_fresh_kitchen(demo_app, bad):
+@pytest.mark.parametrize("bad", ["../../etc/passwd", "x" * 22 + "/..", "not-a-kitchen", "A" * 21, "A" * 23])
+def test_malformed_ids_get_a_fresh_kitchen(demo_app, bad):
     kitchen, items = _visit(demo_app, bad)
     assert kitchen != bad
     assert items == set(demo.seed()["kitchen"])
@@ -92,7 +92,20 @@ def test_idle_kitchens_are_deleted(demo_app):
     os.utime(demo.kitchens_dir() / f"{old}.db", (stale, stale))
     _visit(demo_app)  # a newcomer triggers the sweep
     assert not (demo.kitchens_dir() / f"{old}.db").exists()
-    assert _visit(demo_app, old)[0] != old
+    # Back later: a fresh demo kitchen, under the id the browser already has.
+    again, items = _visit(demo_app, old)
+    assert again == old
+    assert items == set(demo.seed()["kitchen"])
+
+
+def test_a_lost_kitchen_comes_back_under_the_same_id(demo_app):
+    # A restart loses kitchens nobody changed. The browser still sends its id,
+    # often in several requests at once; they must all land in one kitchen.
+    old, _ = _visit(demo_app)
+    (demo.kitchens_dir() / f"{old}.db").unlink()
+    ids = {demo_app.get(p, headers={H: old}).headers[H] for p in ("/api/day", "/api/profile", "/api/inventory")}
+    assert ids == {old}
+    assert len(list(demo.kitchens_dir().glob("*.db"))) == 1
 
 
 def test_kitchens_are_capped(demo_app, monkeypatch):

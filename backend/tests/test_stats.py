@@ -53,6 +53,16 @@ def test_each_new_kitchen_is_one_visitor(app):
     assert stats.summary(lambda ids: {})["visitors"] == 2
 
 
+def test_a_kitchen_lost_in_a_restart_is_not_a_new_visitor(app):
+    # 19 November: seven restarts turned a handful of people into 137 visitors,
+    # because each request with a lost kitchen's id made and counted a new one.
+    a = _new_visitor(app)
+    (demo.kitchens_dir() / f"{a}.db").unlink()
+    for path in ("/api/day", "/api/profile", "/api/progress", "/api/weight"):
+        assert app.get(path, headers={H: a}).headers[H] == a
+    assert stats.summary(lambda ids: {})["visitors"] == 1
+
+
 def test_actions_and_funnel_are_counted_once_per_visitor(app):
     a = _new_visitor(app)
     _new_visitor(app)
@@ -68,13 +78,48 @@ def test_actions_and_funnel_are_counted_once_per_visitor(app):
     assert s["events"]["recipe_cooked"] == 1
     assert s["events"]["rated_liked"] == 1
     assert s["events"]["photo_scan_tried"] == 1
-    assert {k: v["visitors"] for k, v in s["funnel"].items()} == {"visited": 2, "added": 1, "opened": 1, "cooked": 1}
+    assert {k: v["visitors"] for k, v in s["funnel"].items()} == {
+        "visited": 2, "welcomed": 0, "profiled": 0, "picks": 0, "added": 1, "opened": 1, "cooked": 1}
     assert s["funnel"]["cooked"]["share"] == 0.5
     assert s["top_ingredients_added"] == [{"ingredient": "saffron", "times": 1}]
     assert s["top_recipes_opened"] == [{"id": 7, "name": "saffron rice", "times": 1}]
     # Scanning is on in the demo since D38; the page must not say otherwise.
     page = app.get("/stats").text
     assert "Photo scans tried" in page and "off in the demo" not in page
+
+
+def test_the_first_visit_steps_are_counted(app):
+    # D68: finished the welcome (only the browser knows), saved a profile, saw picks.
+    a = _new_visitor(app)
+    _new_visitor(app)
+    for _ in range(2):
+        assert app.post("/api/stats/step", json={"step": "welcome_finished"}, headers={H: a}).json() == {"counted": True}
+    assert app.post("/api/stats/step", json={"step": "made_up"}, headers={H: a}).json() == {"counted": False}
+    profile = {"sex": "f", "age": 32, "height_cm": 168, "weight_kg": 66, "activity": "moderate", "goal": "maintain"}
+    app.put("/api/profile?sample=true", json=profile, headers={H: a})
+    app.get("/api/recipes/cookable?max_missing=0", headers={H: a})
+    s = stats.summary(lambda ids: {})
+    assert {k: s["funnel"][k]["visitors"] for k in ("welcomed", "profiled", "picks")} == {
+        "welcomed": 1, "profiled": 1, "picks": 1}
+    assert s["funnel"]["welcomed"]["share"] == 0.5
+    assert s["events"]["welcome_finished"] == 2 and s["events"]["sample_profile_used"] == 1
+    assert "made_up" not in s["events"]
+    assert "Finished the welcome" in app.get("/stats").text
+
+
+def test_new_steps_are_shared_out_of_the_days_that_counted_them(app, tmp_path):
+    # A day written before D68 has no "welcomed": its visitors don't dilute the share.
+    (tmp_path / "stats" / "2026-11-19.json").write_text(json.dumps(
+        {"day": "2026-11-19", "funnel": {"visited": 137, "added": 2, "opened": 3, "cooked": 2}}))
+    a = _new_visitor(app)
+    app.post("/api/stats/step", json={"step": "welcome_finished"}, headers={H: a})
+    s = stats.summary(lambda ids: {})
+    assert s["visitors"] == 138
+    assert s["funnel"]["welcomed"] == {"visitors": 1, "out_of": 1, "share": 1.0}
+    assert s["funnel"]["opened"]["out_of"] == 138
+    stats.flush()  # and today's file says what it counted
+    today = json.loads((tmp_path / "stats" / f"{stats.today()}.json").read_text())
+    assert "counted" not in today and "welcomed" in today["funnel"]
 
 
 def test_nothing_personal_is_ever_written(app, tmp_path):
