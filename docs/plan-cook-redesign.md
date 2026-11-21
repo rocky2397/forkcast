@@ -67,11 +67,12 @@ Baseline, 15 to 21 November, from /stats:
 So without the double counts, about one visitor in nine opened a recipe and
 about one in eleven or twelve changed a profile (a count of saves, not of
 people). The new steps (finished the welcome, saved a profile, saw meal picks)
-are counted from the D68 deploy on.
+are counted from 22 November 2026, the first full day after the D68 deploy.
 
 ## Stage 1: welcome and profile (D68, small)
 
-**Built 21 November 2026, not yet deployed.** As planned, with one change:
+**Built and deployed 21 November 2026** (late in the day, UTC, so the new
+steps count from 22 November, the first full day). As planned, with one change:
 the demo's profile form still starts empty (D60) and offers a separate "Use a
 sample person" button, so made-up numbers never look like yours.
 

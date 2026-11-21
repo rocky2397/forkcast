@@ -187,7 +187,7 @@ def render(s: dict) -> str:
 
 <h2>How far visitors get</h2>
 <p>Share of visitors who did each at least once. The welcome, profile and meal-pick steps are counted
-from 21 November 2026, out of the visitors since then.</p>
+from 22 November 2026, the first full day with the new welcome, out of the visitors since then.</p>
 {funnel}
 
 <h2>Visitors per day</h2>

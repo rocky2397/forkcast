@@ -23,6 +23,8 @@ def app(tmp_path, monkeypatch):
     monkeypatch.setenv("FORKCAST_STATS_DIR", str(tmp_path / "stats"))
     monkeypatch.setattr(db, "DATA_DIR", tmp_path)
     monkeypatch.setattr(main, "normalizer", SimpleNamespace(match=lambda s: s.strip().lower() or None))
+    # Tests count on today's date; the real start dates are tested on their own.
+    monkeypatch.setattr(stats, "STAGE_FROM", {})
     demo.build_template(lambda s: s)
     con = db.connect(demo.template_path())
     con.execute(
@@ -120,6 +122,20 @@ def test_new_steps_are_shared_out_of_the_days_that_counted_them(app, tmp_path):
     stats.flush()  # and today's file says what it counted
     today = json.loads((tmp_path / "stats" / f"{stats.today()}.json").read_text())
     assert "counted" not in today and "welcomed" in today["funnel"]
+
+
+def test_the_new_steps_start_on_the_first_full_day(app, tmp_path, monkeypatch):
+    # D68 went live late on 21 November: that day's visitors mostly never saw the
+    # welcome, so the new steps count from 22 November, the older ones as before.
+    monkeypatch.setattr(stats, "STAGE_FROM", {"welcomed": "2026-11-22"})
+    full = {"visited": 0, "welcomed": 0, "profiled": 0, "picks": 0, "added": 0, "opened": 0, "cooked": 0}
+    for day, visited, welcomed, opened in (("2026-11-21", 40, 1, 4), ("2026-11-22", 10, 5, 2)):
+        funnel = {**full, "visited": visited, "welcomed": welcomed, "opened": opened}
+        (tmp_path / "stats" / f"{day}.json").write_text(json.dumps({"day": day, "funnel": funnel}))
+    s = stats.summary(lambda ids: {})
+    assert s["funnel"]["welcomed"]["visitors"] == 5
+    assert s["funnel"]["welcomed"]["out_of"] == 10
+    assert s["funnel"]["opened"] == {"visitors": 6, "out_of": 50, "share": 0.12}
 
 
 def test_nothing_personal_is_ever_written(app, tmp_path):

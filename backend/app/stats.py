@@ -38,9 +38,12 @@ log = logging.getLogger("forkcast.stats")
 
 FLUSH_SECONDS = 300
 # Stages a visitor can reach, in order; "visited" is the new kitchen itself.
-# "welcomed", "profiled" and "picks" came with D68 (21 November 2026); days
-# written before then don't have them, and their shares leave those days out.
+# "welcomed", "profiled" and "picks" came with D68, which went live late on
+# 21 November 2026 (UTC). Their shares count only days from STAGE_FROM on: days
+# before have no such step, and 21 November was mostly visitors who never saw
+# the welcome.
 FUNNEL = ("visited", "welcomed", "profiled", "picks", "added", "opened", "cooked")
+STAGE_FROM = {"welcomed": "2026-11-22", "profiled": "2026-11-22", "picks": "2026-11-22"}
 # Steps only the browser sees, which it reports by name (POST /api/stats/step).
 STEPS = {"welcome_finished": "welcomed"}
 EVENTS = frozenset({
@@ -320,12 +323,16 @@ def summary(recipe_names) -> dict:
     funnel = {s: 0 for s in FUNNEL}
     items: dict[str, dict[str, int]] = {name: {} for name in ITEMS}
     # A stage's share is out of the visitors on days that counted it (D68).
-    counted_visitors = {s: sum(d["funnel"]["visited"] for d in days if s in d["counted"]) for s in FUNNEL}
+    def counts(d: dict, s: str) -> bool:
+        return s in d["counted"] and d["day"] >= STAGE_FROM.get(s, "")
+
+    counted_visitors = {s: sum(d["funnel"]["visited"] for d in days if counts(d, s)) for s in FUNNEL}
     for d in days:
         for k, v in d["events"].items():
             events[k] = events.get(k, 0) + v
         for s in FUNNEL:
-            funnel[s] += d["funnel"][s]
+            if counts(d, s):
+                funnel[s] += d["funnel"][s]
         for name in ITEMS:
             for k, v in d["items"][name].items():
                 items[name][k] = items[name].get(k, 0) + v
