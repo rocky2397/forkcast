@@ -27,3 +27,9 @@ e2e-failure/
 
 # Claude Code local settings
 .claude/settings.local.json
+# Test 8 fridge photos: kept local (the lists and answer key are committed)
+eval/data/fridge/*.jpg
+eval/data/fridge/*.jpeg
+eval/data/fridge/*.png
+eval/data/fridge/*.heic
+eval/data/fridge/*.webp

@@ -10,7 +10,7 @@ tells you what to buy to unlock more.
 - **Live, with testers.** The [demo](https://rockyyyy2397-forkcast.hf.space)
   has been online since November 2026. Clearer scan messages and meals built
   from ingredients came straight from a tester's requests.
-- **Measured, not assumed.** Seven tests on data from outside the app. Listed
+- **Measured, not assumed.** Eight tests on data from outside the app. Listed
   recipes you can really cook: 65% → 92%. Suggested swaps a cook would use:
   33% → 95%. A typed German food within 10% of the calories on its pack:
   64% → 76%. [How the tests work](#evaluation)
@@ -232,6 +232,7 @@ designed on:
 | 5. Label read with the right calories | 78% | **83%** | 150 fresh products |
 | 6. What you burn, off by (kcal a day, median) | 186 | **74** | 2,000 simulated people, 4 weeks |
 | 7. Typed food's calories within 10% of its label | 64% | **76%** | 33 held-out German products |
+| 8. Fridge photo: items found | 50% | **77%** with Haiku 5.5, not in the app yet | 51 photos of one staged fridge |
 
 **Test 4, photo scanning,** on phone photos from a public grocery dataset. A
 third of the misses were the ingredient matcher, not the camera: "orange
@@ -272,6 +273,16 @@ right for all four products, and with the median of German cans (D65) canned
 chickpeas are within 10% for three of four, which takes held-out calories
 within 10% to 85%. Those numbers are no longer unseen: the cans come from the
 same source as the test ([details](eval/RESULTS-stage7.md)).
+
+**Test 8, a photo of the whole fridge,** on a public set of photos of one
+fridge filled at random with 30 kinds of food, every item labelled. Today's
+scanner model, Claude Haiku 4.5, found half of what was in the photo. Claude
+Haiku 5.5 found 77% at a fifth of the price, and Claude Sonnet 5.5 80% for
+twenty times more. With Haiku 5.5, keeping only what it is at least 70% sure
+of leaves about 3 fixes per scan, against typing 11 items. Two answers first
+marked wrong were right: the "butter" is margarine and some "milk" is soy
+milk, as crops of the photos showed; both scores are reported. A lived-in
+fridge is harder than this staged one ([details](eval/RESULTS-stage8.md)).
 
 ### How the tests work
 
