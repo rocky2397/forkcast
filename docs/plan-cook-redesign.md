@@ -94,20 +94,57 @@ sample person" button, so made-up numbers never look like yours.
 **First a small test (Test 8),** because a whole fridge is much harder than
 the single groceries of Test 4 (76%):
 
-- About 10 photos of a real fridge on different days, each with a written list
-  of what is really in it.
-- Run the current model (Haiku 4.5) and Sonnet. Look up the current prices
-  first: Sonnet costs several times more per scan, and the demo's limit of
-  200 scans a day runs on a pay-per-use key.
-- Measure how many items it finds, how many wrong ones it adds, and whether
-  checking its list is quicker than typing. Choose the model and the
-  confidence line from this, and put the result in the README.
+- **Photos:** the public [aicook](https://universe.roboflow.com/karel-cornelis-q2qqg/aicook-lcv4d)
+  set (Karel Cornelis, MIT licence): one real fridge, door open, randomly
+  filled from 30 kinds of ingredient, every item labelled. Its own test
+  split: 51 photos, about 11 kinds each. Easier than a lived-in fridge (no
+  sauces, leftovers or packaging clutter), so the result is an upper bound.
+  The answer key maps each label to Forkcast ingredients and was written
+  before any scan (`build_aicook_truth.py`). The photos stay out of git.
+  Photos of a real household fridge can follow
+  ([how](../eval/data/fridge/README.md)).
+- Run the app's scanner unchanged, with only the model swapped: Haiku 4.5
+  (today's), Haiku 5.5 and Sonnet 5.5. Two runs per photo, to see whether
+  the same photo gives the same list. Opus 5.5 is left out to keep the test
+  under $5; it comes in only if Sonnet clearly beats the Haikus.
+- Measure how many visible items it finds, how many wrong ones it adds,
+  whether its confidence separates right from wrong (in Test 4 it didn't:
+  every miss had a proposal it was at least 80% sure of), and the fixes left
+  after a scan against typing the list. Choose the model and the confidence
+  line from this, and put the result in the README.
+- Scripts: `eval/scripts/build_fridge_truth.py` (lists to answer key),
+  `run_fridge.py`, `score_fridge.py`.
+
+**Prices (list prices, 22 November 2026).** A phone photo of a fridge plus
+the prompt, and a list of about 25 items back. The newer models read photos
+at higher resolution, so they see more of the fridge and pay for more image
+tokens (up to 4,784 against Haiku 4.5's 1,568). Estimates; Test 8 measures
+the real numbers.
+
+| Model | $ per million tokens in / out | Per scan | 200 scans (the demo's daily cap) |
+|---|---|---|---|
+| Haiku 4.5 (today) | 1 / 5 | about $0.006 | about $1.20 |
+| Haiku 5.5 | 0.10 / 0.50 | about $0.001 | about $0.20 |
+| Sonnet 5.5 | 2 / 10 | about $0.02 | about $4 |
+| Opus 5.5 | 4 / 20 | about $0.04 | about $8 |
+
+The cap is the worst case: since the scan limits went live (D38) the demo has had
+one photo scan and eleven label scans tried in all. Test 8 itself is about 300
+calls, roughly $2, with a hard cap per model in the runner (`--budget`):
+$0.60 for Haiku 4.5, $0.20 for Haiku 5.5, $2 for Sonnet 5.5, so at most
+$2.80 in all.
+
+**Test 8 done (22 November 2026),** [results](../eval/RESULTS-stage8.md):
+Haiku 4.5 finds 50% of what is in the photo, Haiku 5.5 77%, Sonnet 5.5 80%.
+Choice: Haiku 5.5, confidence line 70% (about 3 fixes per scan against
+typing 11 items). Cost $1.64. Still to do: real household fridge photos, and
+Test 4's grocery photos with Haiku 5.5.
 
 **Then build it:**
 
 - The scan returns a confidence for each item. The confirm screen shows
-  "Confident" (kept) and "Not sure" (kept only if tapped), plus "Missed
-  something? Add".
+  "Confident" (70% sure or more, kept) and "Not sure" (kept only if tapped),
+  plus "Missed something? Add".
 - Cupboard food (pasta, rice, tins, spices) isn't in a fridge photo: basics
   stay assumed as now, and the confirm screen offers quick chips for common
   cupboard items.
