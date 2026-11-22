@@ -106,7 +106,18 @@ async function context(browser, viewport, deviceScaleFactor) {
   return ctx;
 }
 
-const tab = (page, label) => page.locator(".tabbar button:visible, .topnav button:visible").filter({ hasText: label }).first();
+// D72: two tabs, Cook and Progress. Steps keep naming the screen they want:
+// "Today" is the Progress tab; "Kitchen" and "Recipes" open from Cook.
+const navButton = (page, label) =>
+  page.locator(".tabbar button:visible, .topnav button:visible").filter({ hasText: label }).first();
+const tab = (page, label) => ({
+  click: async () => {
+    if (label === "Today" || label === "Progress") return navButton(page, "Progress").click();
+    await navButton(page, "Cook").click();
+    if (label === "Cook") return;
+    await page.getByRole("button", { name: label === "Kitchen" ? "See what's in your fridge" : "See all meals" }).click();
+  },
+});
 
 // A ring where each tap lands: headless video has no cursor to follow.
 function showTaps() {
@@ -431,6 +442,11 @@ async function main() {
     // Phone: 390x844 at 2x, like a current iPhone.
     const phone = await (await context(browser, { width: 390, height: 844 }, 2)).newPage();
     await phone.goto(base);
+
+    // D72: Cook, the home screen.
+    await tab(phone, "Cook").click();
+    await phone.locator(".cook-picks .recipe-card").first().waitFor();
+    await shot(phone, "cook", "cook (phone)");
 
     await tab(phone, "Recipes").click();
     await phone.locator(".recipe-card").first().waitFor();

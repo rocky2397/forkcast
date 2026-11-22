@@ -38,7 +38,7 @@ export function Intro({
   startAt: "value" | "profile";
   onWelcomed: () => void;
   /** Where to go next: the meal picks, or Today. */
-  onDone: (next: "recipes" | "today") => void;
+  onDone: (next: "cook" | "today") => void;
 }) {
   const [stage, setStage] = useState<Stage>(startAt);
   const [saved, setSaved] = useState<{ targets: Targets; plan: WeightPlan | null; sample: boolean } | null>(null);
@@ -139,11 +139,11 @@ export function Intro({
         That's a formula's estimate. After about two weeks of weigh-ins and complete days, Forkcast learns what you
         really burn and adjusts it.
       </p>
-      <button className="btn" onClick={() => onDone("recipes")}>
+      <button className="btn" onClick={() => onDone("cook")}>
         See meals that fit
       </button>
       <button className="intro-skip" onClick={() => onDone("today")}>
-        Go to today
+        See my day
       </button>
     </div>
   );

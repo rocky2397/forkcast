@@ -164,7 +164,8 @@ used up. The sample fridge doesn't compare with your kitchen.
 "Don't have it" / "Have it", "I'm cooking this" (pinned on Today and
 Recipes), "I ate it" with meat, fish and greens pre-ticked and Undo. Part 2,
 the shopping list (D71, built 22 November 2026). Part 3, the Cook and
-Progress tabs.
+Progress tabs (D72, built 22 November 2026; the Kitchen is one tap from Cook,
+not a tab).
 
 - **Two tabs: Cook and Progress.** The kitchen list moves behind "See what's
   in your fridge" on Cook.
@@ -202,6 +203,6 @@ Test 8, the funnel after, and what's still weak.
 
 1. Sonnet for fridge scans in the demo: is the cost acceptable within the
    200-scans-a-day cap?
-2. Hide the Kitchen tab completely, or keep it one tap away?
+2. ~~Hide the Kitchen tab completely, or keep it one tap away?~~ One tap from Cook (D72).
 3. Ask the reviewer whether they may be credited by name in the decision log
    and case study.

@@ -14,7 +14,7 @@ tells you what to buy to unlock more.
   recipes you can really cook: 65% → 92%. Suggested swaps a cook would use:
   33% → 95%. A typed German food within 10% of the calories on its pack:
   64% → 76%. [How the tests work](#evaluation)
-- **Decisions in writing.** 71 product decisions, each with the options turned
+- **Decisions in writing.** 72 product decisions, each with the options turned
   down and why ([APP_DECISIONS.md](APP_DECISIONS.md)).
 - **Built to ship.** 514 tests and a browser test of a first visit on every
   change, a check of the live demo after every deploy, and no serious
@@ -31,14 +31,14 @@ to 10 scans a day. After two days without visitors the server sleeps, and the
 next visit takes about a minute while it wakes up. Usage is counted only as
 [anonymous totals](https://rockyyyy2397-forkcast.hf.space/stats).
 
-<p align="center"><img src="docs/screenshots/demo.gif" width="300" alt="A 40-second walkthrough on a phone: the welcome (what you get, three steps a day, the profile typed in, and the day it gives: calories and protein), the meal picks, adding avocado and lime to the kitchen, the recipe list naming the cooked dish each recipe is like, its help panel explaining the coloured dots, a recipe one ingredient away that suggests red onion for the missing shallot, "I'm cooking this" and cook mode one step at a time, and the Today screen with the recipe pinned and calories and macros left"></p>
+<p align="center"><img src="docs/screenshots/demo.gif" width="300" alt="A 40-second walkthrough on a phone: the welcome (what you get, three steps a day, the profile typed in, and the day it gives: calories and protein), the meal picks on Cook, adding avocado and lime to the kitchen, the recipe list naming the cooked dish each recipe is like, its help panel explaining the coloured dots, a recipe one ingredient away that suggests red onion for the missing shallot, "I'm cooking this" and cook mode one step at a time, and the Progress screen with the recipe pinned and calories and macros left"></p>
 
 <img src="docs/screenshots/desktop.jpg" alt="Forkcast on a laptop: the recipe feed on the left with coloured ingredient dots and the dish each recipe is like, the open recipe on the right with its ingredients ticked against the kitchen">
 
-| Recipes | Recipe | Worth buying | Today | Kitchen |
-|---|---|---|---|---|
-| <img src="docs/screenshots/recipes.jpg" width="160" alt="Recipe feed on a phone: tabs for cookable now, one away and two away; each recipe shows coloured dots for its main ingredients, how many you have, which cooked dish it is like (“Like your Foil Chicken Casserole for 1”), whether it fits what's left today, and a link down to what is worth buying"> | <img src="docs/screenshots/recipe.jpg" width="160" alt="Recipe page: title, a three-line author's note with Read more, calories and macros, and the ingredients you already have"> | <img src="docs/screenshots/shopping.jpg" width="160" alt="Worth buying, for someone losing weight: yeast unlocks 238 recipes, then onion 90 more, then baking powder 131 more, each with example dishes, and a note that desserts are not counted"> | <img src="docs/screenshots/today.jpg" width="160" alt="Today: a ring with calories left, protein, carbs and fat bars with grams to go, and today's meals"> | <img src="docs/screenshots/kitchen.jpg" width="160" alt="Kitchen: a scan button, an add-by-name field and the ingredients grouped by kind"> |
-| What you can cook, best first | What you have is ticked | Three buys that unlock the most | Calories and macros left | What Forkcast matches against |
+| Cook | Recipes | Recipe | Worth buying | Progress | Kitchen |
+|---|---|---|---|---|---|
+| <img src="docs/screenshots/cook.jpg" width="140" alt="Cook, the home screen on a phone: what's for lunch, calories and protein left today, the recipe being cooked, the fridge (how many things are in the kitchen and on the shopping list, a scan button and See what's in your fridge) and the three meals that fit best"> | <img src="docs/screenshots/recipes.jpg" width="140" alt="Recipe feed on a phone: tabs for cookable now, one away and two away; each recipe shows coloured dots for its main ingredients, how many you have, which cooked dish it is like (“Like your Foil Chicken Casserole for 1”), whether it fits what's left today, and a link down to what is worth buying"> | <img src="docs/screenshots/recipe.jpg" width="140" alt="Recipe page: title, a three-line author's note with Read more, calories and macros, and the ingredients you already have"> | <img src="docs/screenshots/shopping.jpg" width="140" alt="Worth buying, for someone losing weight: yeast unlocks 238 recipes, then onion 90 more, then baking powder 131 more, each with example dishes, and a note that desserts are not counted"> | <img src="docs/screenshots/today.jpg" width="140" alt="Progress, your day: a ring with calories left, protein, carbs and fat bars with grams to go, and today's meals"> | <img src="docs/screenshots/kitchen.jpg" width="140" alt="Kitchen, one tap from Cook: a scan button, an add-by-name field, the shopping list and the ingredients grouped by kind"> |
+| Fridge, pick, ate it | What you can cook, best first | What you have, and one-tap fixes | Three buys that unlock the most | Calories and macros left | What Forkcast matches against |
 
 ### Goals and progress
 
@@ -475,7 +475,11 @@ laptop, with the open recipe beside the list.
 
 The app should explain itself. A first visit says what you get, then how it
 works, then asks for the profile and shows your day in numbers; the demo offers
-a sample person for anyone just looking around. Each main screen has a **?** button that explains what you are looking at
+a sample person for anyone just looking around. After that there are two
+tabs. **Cook** is home: what's left of today, the fridge (scan it, or see the
+kitchen list and the shopping list), the three meals that fit best and "Ate
+something else? Log it". **Progress** is your day, your weight and your
+streak. Each main screen has a **?** button that explains what you are looking at
 in plain words (for example what the coloured dots and "Like your …"
 mean). Labels say what they mean instead of using internal terms.
 
@@ -491,7 +495,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 71 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 72 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -564,7 +568,7 @@ ops/e2e.sh            # needs Google Chrome, the corpus and the Epicure weights
 ```
 
 It starts the app on an empty data dir and makes a first visit in Chrome:
-the welcome, a profile with a goal weight and the day it gives, the kitchen, the recipe feed, a cooked recipe
+the welcome, a profile with a goal weight and the day it gives, the Cook screen, the kitchen, the recipe feed, a cooked recipe
 and what ran out, fixing the kitchen on a recipe, cooking and eating with Undo, the shopping list, a fridge scan (the model's
 answer faked), a typed meal, a product that isn't on Open Food Facts (the
 label reader faked, the rest real) added to a meal with a banana, a product that starts at one serving, a meal built from ingredients and logged again,

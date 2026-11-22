@@ -151,7 +151,10 @@ function mealTime(m: DayMeal): string {
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export function Today({ onOpenRecipe }: { onOpenRecipe?: (id: number) => void } = {}) {
+export function Today({
+  onOpenRecipe,
+  startLogging = false,
+}: { onOpenRecipe?: (id: number) => void; startLogging?: boolean } = {}) {
   const [day, setDay] = useState<DaySummary | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [weight, setWeight] = useState<WeightSummary | null>(null);
@@ -159,8 +162,13 @@ export function Today({ onOpenRecipe }: { onOpenRecipe?: (id: number) => void } 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [sample, setSample] = useState(usingSample);
   const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    if (startLogging && loaded)
+      requestAnimationFrame(() => document.querySelector(".meal-form")?.scrollIntoView({ block: "start" }));
+  }, [startLogging, loaded]);
   const [editing, setEditing] = useState(false);
-  const [adding, setAdding] = useState(false);
+  // D72: "Ate something else? Log it" on Cook opens Progress with the form open.
+  const [adding, setAdding] = useState(startLogging);
   const [meal, setMeal] = useState(EMPTY_MEAL);
   // D49: a meal built from ingredients and amounts instead of typed numbers.
   const [parts, setParts] = useState<Part[]>([]);

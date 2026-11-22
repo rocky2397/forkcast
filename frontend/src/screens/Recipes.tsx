@@ -13,6 +13,7 @@ import { useMediaQuery } from "../useMediaQuery";
 import { Guide, GuideHint, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
 import { RecipeView } from "./RecipeView";
+import { BackIcon } from "../Icons";
 import { CookingCard } from "../CookingCard";
 
 const MACRO_LABELS: Record<MacroFocus["macro"], string> = {
@@ -23,7 +24,7 @@ const MACRO_LABELS: Record<MacroFocus["macro"], string> = {
 
 const FILTERS = ["Cookable now", "One away", "Two away"];
 
-export function Recipes() {
+export function Recipes({ onBack }: { onBack?: () => void } = {}) {
   const [maxMissing, setMaxMissing] = useState(0);
   const [recipes, setRecipes] = useState<CookableRecipe[]>([]);
   const [tasteInfo, setTasteInfo] = useState<TasteProfile | null>(null);
@@ -122,6 +123,11 @@ export function Recipes() {
   return (
     <div className="recipes-layout">
       <section className="screen" aria-label="Recipes">
+        {onBack && (
+          <button className="back" onClick={onBack}>
+            <BackIcon size={20} /> Cook
+          </button>
+        )}
         <p className="kicker">{weekday} · {mealOfDay()}</p>
         <h1 className="display">What's for {mealOfDay()}?</h1>
         {(leans || (focus && focus.grams > 0)) && (
@@ -282,7 +288,7 @@ export function Recipes() {
   );
 }
 
-function RecipeCard({
+export function RecipeCard({
   recipe: r,
   focus,
   current,
