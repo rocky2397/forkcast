@@ -2,19 +2,22 @@ import { useEffect, useState } from "react";
 import { Today } from "./screens/Today";
 import { Inventory } from "./screens/Inventory";
 import { Recipes } from "./screens/Recipes";
+import { Cook } from "./screens/Cook";
 import { Login } from "./screens/Login";
 import { Intro } from "./screens/Intro";
 import { api, isDemo, keepsStats, savesKitchens, setUnauthorizedHandler } from "./api";
-import { KitchenIcon, RecipesIcon, TodayIcon } from "./Icons";
+import { RecipesIcon, TodayIcon } from "./Icons";
 import "./App.css";
 
-type Tab = "today" | "inventory" | "recipes";
+// D72: two tabs. Cook is home; the kitchen and the full recipe list open from
+// it ("See what's in your fridge", "See all meals"). Progress is your day.
+type Tab = "cook" | "inventory" | "recipes" | "today";
 
-const TABS: { id: Tab; label: string; Icon: typeof TodayIcon }[] = [
-  { id: "today", label: "Today", Icon: TodayIcon },
-  { id: "inventory", label: "Kitchen", Icon: KitchenIcon },
-  { id: "recipes", label: "Recipes", Icon: RecipesIcon },
+const TABS: { id: Tab; label: string; Icon: typeof TodayIcon; owns: Tab[] }[] = [
+  { id: "cook", label: "Cook", Icon: RecipesIcon, owns: ["cook", "inventory", "recipes"] },
+  { id: "today", label: "Progress", Icon: TodayIcon, owns: ["today"] },
 ];
+const tabOf = (t: Tab) => TABS.find((x) => x.owns.includes(t))!.id;
 type Gate = "checking" | "locked" | "open";
 
 // D68: whether this browser has been through the first two welcome screens.
@@ -37,10 +40,19 @@ async function deleteMyData() {
 }
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("today");
+  // A reload stays where you were (the browser keeps the history entry).
+  const [tab, setTab] = useState<Tab>(() => {
+    const was = history.state?.tab as Tab | undefined;
+    return was && TABS.some((x) => x.owns.includes(was)) ? was : "cook";
+  });
+  // D72: Progress opened from Cook's "Log it" starts with the meal form open.
+  const [startLogging, setStartLogging] = useState(false);
+  // D72: a scan started on Cook, handed to the Kitchen screen to read and confirm.
+  const [startScan, setStartScan] = useState<{ file: File } | { sample: true } | null>(null);
   // D58: tapping the tab you're on starts it over (a recipe back to the list).
   const [tabKey, setTabKey] = useState(0);
-  function go(id: Tab) {
+  function go(id: Tab, opts: { log?: boolean } = {}) {
+    setStartLogging(!!opts.log);
     if (id === tab) {
       // Starting the tab over closes an open recipe for good, not just until Back.
       if (history.state?.recipe != null) history.replaceState({ tab: id }, "");
@@ -53,7 +65,7 @@ export default function App() {
     }
     window.scrollTo(0, 0); // a new screen starts at its top, not where the last one was
   }
-  /** D70: open a recipe from anywhere (the "Cooking now" card on Today). */
+  /** D70: open a recipe from anywhere (the "Cooking now" card on Cook or Progress). */
   function openRecipe(id: number) {
     setTab("recipes");
     history.pushState({ tab: "recipes", recipe: id }, "");
@@ -61,10 +73,10 @@ export default function App() {
     window.scrollTo(0, 0);
   }
   useEffect(() => {
-    if (!history.state?.tab) history.replaceState({ tab: "today" }, "");
+    if (!history.state?.tab) history.replaceState({ tab: "cook" }, "");
     const onPop = (e: PopStateEvent) => {
-      const next = (e.state?.tab as Tab | undefined) ?? "today";
-      setTab(next);
+      const next = (e.state?.tab as Tab | undefined) ?? "cook";
+      setTab(TABS.some((x) => x.owns.includes(next)) ? next : "cook");
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -148,7 +160,7 @@ export default function App() {
           {/* Desktop navigation; phones get the tab bar at the bottom. */}
           <nav className="topnav" aria-label="Main">
             {TABS.map(({ id, label }) => (
-              <button key={id} aria-current={tab === id ? "page" : undefined} onClick={() => go(id)}>
+              <button key={id} aria-current={tabOf(tab) === id ? "page" : undefined} onClick={() => go(id)}>
                 {label}
               </button>
             ))}
@@ -180,16 +192,31 @@ export default function App() {
       )}
       <main className="main">
         {tab === "today" ? (
-          <Today key={tabKey} onOpenRecipe={openRecipe} />
-        ) : tab === "inventory" ? (
-          <Inventory key={tabKey} />
+          <Today key={tabKey} onOpenRecipe={openRecipe} startLogging={startLogging} />
+        ) : tab === "cook" ? (
+          <Cook
+            key={tabKey}
+            onOpenRecipe={openRecipe}
+            onKitchen={() => go("inventory")}
+            onScan={(start) => {
+              setStartScan(start);
+              go("inventory");
+            }}
+            onAllMeals={() => go("recipes")}
+            onLog={() => go("today", { log: true })}
+            onDay={() => go("today")}
+          />
         ) : (
-          <Recipes key={tabKey} />
+          tab === "inventory" ? (
+            <Inventory key={tabKey} onBack={() => go("cook")} start={startScan} onStarted={() => setStartScan(null)} />
+          ) : (
+            <Recipes key={tabKey} onBack={() => go("cook")} />
+          )
         )}
       </main>
       <nav className="tabbar" aria-label="Main">
         {TABS.map(({ id, label, Icon }) => (
-          <button key={id} aria-current={tab === id ? "page" : undefined} onClick={() => go(id)}>
+          <button key={id} aria-current={tabOf(tab) === id ? "page" : undefined} onClick={() => go(id)}>
             <Icon />
             {label}
           </button>

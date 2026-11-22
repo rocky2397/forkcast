@@ -6,7 +6,7 @@ import { foodColor, kitchenGroup, KITCHEN_GROUPS } from "../format";
 import { Guide, GuideHint, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
 import { LoadError, errorText } from "../LoadError";
-import { CloseIcon, ScanIcon } from "../Icons";
+import { BackIcon, CloseIcon, ScanIcon } from "../Icons";
 
 type Feedback =
   | { added: string[]; already?: string[]; unknown: string[]; suggestions: Record<string, string[]>; removed?: string[] }
@@ -15,7 +15,16 @@ type Feedback =
 /** D69: what the confirm screen shows: the proposals and the photo they came from. */
 type Scan = { proposals: ScanProposal[]; photo: string | null; credit: string | null; sample?: boolean };
 
-export function Inventory() {
+export function Inventory({
+  onBack,
+  start,
+  onStarted,
+}: {
+  onBack?: () => void;
+  /** D72: a scan started on Cook: a photo to read, or the sample fridge. */
+  start?: { file: File } | { sample: true } | null;
+  onStarted?: () => void;
+} = {}) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [input, setInput] = useState("");
@@ -116,6 +125,18 @@ export function Inventory() {
     }
   }
 
+  // D72: take over a scan started on Cook, once the kitchen has loaded (D69:
+  // the confirm screen compares with it).
+  const started = useRef(false);
+  useEffect(() => {
+    if (!start || !loaded || started.current) return;
+    started.current = true;
+    onStarted?.();
+    if ("file" in start) onPhoto(start.file);
+    else sampleFridge();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [start, loaded]);
+
   if (scan) {
     return (
       <ScanConfirm
@@ -124,11 +145,12 @@ export function Inventory() {
         photo={scan.photo}
         credit={scan.credit}
         compare={!scan.sample}
-        onDone={(outcome: ScanOutcome | null) => {
+        onDone={async (outcome: ScanOutcome | null) => {
+          // Reload first, so the note and the updated list show together.
+          await refresh();
           if (scan.photo?.startsWith("blob:")) URL.revokeObjectURL(scan.photo);
           setScan(null);
           if (outcome) setFeedback(outcome);
-          refresh();
         }}
       />
     );
@@ -141,6 +163,11 @@ export function Inventory() {
 
   return (
     <div className="screen">
+      {onBack && (
+        <button className="back" onClick={onBack}>
+          <BackIcon size={20} /> Cook
+        </button>
+      )}
       <p className="kicker">Your kitchen</p>
       <div className="title-row">
         <h1 className="display">Kitchen</h1>

@@ -44,8 +44,18 @@ async function audit(page, screen) {
   }
 }
 
-const tab = (page, label) =>
+// D72: two tabs, Cook and Progress. Steps keep naming the screen they want:
+// "Today" is the Progress tab; "Kitchen" and "Recipes" open from Cook.
+const navButton = (page, label) =>
   page.locator(".tabbar button:visible, .topnav button:visible").filter({ hasText: label }).first();
+const tab = (page, label) => ({
+  click: async () => {
+    if (label === "Today" || label === "Progress") return navButton(page, "Progress").click();
+    await navButton(page, "Cook").click();
+    if (label === "Cook") return;
+    await page.getByRole("button", { name: label === "Kitchen" ? "See what's in your fridge" : "See all meals" }).click();
+  },
+});
 
 /** Wait until the element shows text matching pattern (the UI updates after the API answers). */
 async function expectText(locator, pattern, what, state = "visible") {
@@ -108,7 +118,7 @@ async function run(page) {
       await expectText(page.locator(".intro"), /formula's estimate/, "said to be an estimate");
       if (await page.getByRole("button", { name: "Use a sample person" }).count()) throw new Error("sample person outside the demo");
       await audit(page, "your day");
-      await page.getByRole("button", { name: "Go to today" }).click();
+      await page.getByRole("button", { name: "See my day" }).click();
     }],
     ["Today shows the targets and the plan", async () => {
       await page.locator(".ring").waitFor();
@@ -119,6 +129,23 @@ async function run(page) {
       await expectText(page.locator(".plan-line"), /To reach 66 kg: about [\d,]+ kcal a day/, "plan line");
       await expectText(page.locator(".macros"), /Protein[\s\S]*Carbs[\s\S]*Fat/, "macro bars");
       await audit(page, "today");
+    }],
+    ["Cook, the home screen (D72)", async () => {
+      await navButton(page, "Cook").click();
+      if ((await page.locator(".tabbar button").count()) !== 2) throw new Error("two tabs: Cook and Progress");
+      await expectText(page.locator(".cook h1"), /What's for (breakfast|lunch|dinner)\?/, "cook heading");
+      await expectText(page.locator(".cook .lead"), /kcal (left|over) today/, "what's left of today");
+      await expectText(page.locator(".fridge-card"), /things? in your kitchen/, "the fridge card");
+      await audit(page, "cook");
+      // "Log it" opens Progress with the meal form ready.
+      await page.getByRole("button", { name: "Log it" }).click();
+      await page.locator(".meal-form").waitFor();
+      await navButton(page, "Cook").click();
+      // The kitchen and the full list open from Cook and lead back to it.
+      await page.getByRole("button", { name: "See what's in your fridge" }).click();
+      await page.getByRole("heading", { name: "Kitchen" }).waitFor();
+      await page.getByRole("button", { name: "Cook", exact: true }).first().click();
+      await page.getByRole("button", { name: "See all meals" }).waitFor();
     }],
     ["stock the kitchen by name", async () => {
       await tab(page, "Kitchen").click();
@@ -272,7 +299,12 @@ async function run(page) {
       await page.getByRole("button", { name: "+ Pasta" }).click();
       await page.getByRole("button", { name: "Update kitchen: add 3, remove 1" }).click();
       await expectText(page.locator(".notice"), new RegExp(`Removed ${goneName}`, "i"), "used up removed");
-      const list = (await page.locator(".kitchen-group").allTextContents()).join(" ").toLowerCase();
+      // The kitchen list reloads after the update; give a slow machine a moment.
+      let list = "";
+      for (const until = Date.now() + 10_000; Date.now() < until; await new Promise((r) => setTimeout(r, 200))) {
+        list = (await page.locator(".kitchen-group").allTextContents()).join(" ").toLowerCase();
+        if (["egg", "leek", "pasta"].every((w) => list.includes(w)) && !list.includes(goneName.toLowerCase())) break;
+      }
       for (const want of ["egg", "leek", "pasta"]) if (!list.includes(want)) throw new Error(`${want} should be in the kitchen after the scan`);
       if (list.includes(goneName.toLowerCase())) throw new Error(`${goneName} was ticked as used up but is still there`);
       await page.unroute("**/api/vision/scan");
@@ -640,15 +672,17 @@ async function run(page) {
       await page.locator(".recipe-card").first().waitFor();
       if (await page.locator(".recipe-detail").count()) throw new Error("Back didn't close the recipe");
       await page.goBack();
-      await page.locator(".ring").waitFor(); // the tab before: Today
+      await page.locator(".cook h1").waitFor(); // D72: the list opened from Cook
+      await page.goBack();
+      await page.locator(".ring").waitFor(); // the tab before: Progress
       if (!page.url().startsWith("http://127.0.0.1") && !page.url().startsWith("http://localhost")) throw new Error(`Back left the app: ${page.url()}`);
-      // Tapping Recipes while a recipe is open still goes back to the list (D58).
+      // Tapping Cook while a recipe is open goes back to Cook (D58, D72).
       await tab(page, "Recipes").click();
       await page.locator(".recipe-card").first().click();
       await page.locator(".recipe-detail h1").waitFor();
-      await tab(page, "Recipes").click();
-      await page.locator(".recipe-card").first().waitFor();
-      if (await page.locator(".recipe-detail").count()) throw new Error("the Recipes tab didn't go back to the list");
+      await navButton(page, "Cook").click();
+      await page.locator(".cook h1").waitFor();
+      if (await page.locator(".recipe-detail").count()) throw new Error("the Cook tab didn't close the recipe");
       await tab(page, "Today").click();
     }],
     ["a failed request says so (D66)", async () => {

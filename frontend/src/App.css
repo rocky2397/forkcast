@@ -993,7 +993,7 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .intro .plan-line { margin: 0; text-align: left; font-size: 15px; }
 .day-note { margin: 0 0 8px; font-size: 13px; color: var(--ink-3); }
 
-/* D70: the recipe you're cooking, pinned on Today and Recipes */
+/* D70: the recipe you're cooking, pinned on Cook, Progress and Recipes */
 .cooking-card {
   display: flex;
   flex-wrap: wrap;
@@ -1016,3 +1016,21 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .buy-done { margin: 10px 0 4px; }
 .list-add { display: inline-block; margin: 8px 0 4px; padding: 0; font-size: 14px; text-align: left; }
 .list-done { margin: 8px 0 4px; }
+
+/* D72: Cook, the home screen */
+.cook .lead strong { font-weight: 600; }
+.fridge-card {
+  margin: 16px 0 24px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.fridge-card .group-label { color: var(--ink-3); margin: 0 0 2px; }
+.fridge-card p { margin: 0 0 12px; }
+.fridge-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.fridge-actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 1 1 200px; }
+.cook-picks { display: grid; gap: 12px; margin: 8px 0 14px; }
+@media (min-width: 720px) { .cook-picks { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.see-all { width: 100%; }
+@media (min-width: 720px) { .see-all { width: auto; } }
+.cook-log { margin: 24px 0 8px; color: var(--ink-2); }
