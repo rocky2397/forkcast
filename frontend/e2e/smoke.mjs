@@ -178,6 +178,40 @@ async function run(page) {
       const list = (await page.locator(".kitchen-group").allTextContents()).join(" ").toLowerCase();
       if (list.includes(usedUp.toLowerCase())) throw new Error(`"${usedUp}" was ticked as used up but is still in the kitchen`);
     }],
+    ["a fridge scan: confident, not sure, looks gone (D69)", async () => {
+      // Only the model's reply is faked: what Haiku 5.5 returns, as the scan route shapes it.
+      await page.route("**/api/vision/scan", (route) => route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ proposals: [
+          { seen: "eggs", quantity: "6", confidence: 0.9, canonical: "egg", sure: true },
+          { seen: "leek", quantity: null, confidence: 0.55, canonical: "leek", sure: false },
+          { seen: "onions", quantity: "2", confidence: 0.9, canonical: "onion", sure: true },
+          { seen: "leftovers", quantity: null, confidence: 0.5, canonical: null, sure: false },
+        ] }),
+      }));
+      await tab(page, "Kitchen").click();
+      await page.locator(".kitchen-actions input[type=file]").setInputFiles({ name: "fridge.png", mimeType: "image/png", buffer: PHOTO });
+      await page.getByRole("heading", { name: "Found in your photo" }).waitFor();
+      const section = (name) => page.locator(".scan-section").filter({ has: page.getByRole("heading", { name, exact: true }) });
+      // Sure: ticked. Not sure: offered, not ticked. Already there: named, not offered again.
+      if (!(await section("Confident").getByRole("checkbox", { name: /egg/i }).isChecked())) throw new Error("a sure item should start ticked");
+      if (await section("Not sure").getByRole("checkbox", { name: /leek/i }).isChecked()) throw new Error("an unsure item should start unticked");
+      await expectText(page.locator(".scan-still"), /Already in your kitchen: onion\./, "already in the kitchen");
+      // Looks gone: kitchen food the photo didn't show is offered, never removed on its own.
+      const gone = section("Looks gone").getByRole("checkbox").first();
+      if (await gone.isChecked()) throw new Error("nothing should be removed without a tick");
+      const goneName = (await section("Looks gone").locator(".scan-name").first().innerText()).trim();
+      await audit(page, "fridge scan confirm");
+      await section("Not sure").getByRole("checkbox", { name: /leek/i }).check();
+      await gone.check();
+      await page.getByRole("button", { name: "+ Pasta" }).click();
+      await page.getByRole("button", { name: "Update kitchen: add 3, remove 1" }).click();
+      await expectText(page.locator(".notice"), new RegExp(`Removed ${goneName}`, "i"), "used up removed");
+      const list = (await page.locator(".kitchen-group").allTextContents()).join(" ").toLowerCase();
+      for (const want of ["egg", "leek", "pasta"]) if (!list.includes(want)) throw new Error(`${want} should be in the kitchen after the scan`);
+      if (list.includes(goneName.toLowerCase())) throw new Error(`${goneName} was ticked as used up but is still there`);
+      await page.unroute("**/api/vision/scan");
+    }],
     ["log a meal by hand", async () => {
       await tab(page, "Today").click();
       await page.locator(".ring").waitFor();

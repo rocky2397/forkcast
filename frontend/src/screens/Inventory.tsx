@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api, isDemo, pretty, scansOn, type InventoryItem, type ScanProposal } from "../api";
-import { ScanConfirm } from "./ScanConfirm";
+import { ScanConfirm, type ScanOutcome } from "./ScanConfirm";
 import { foodColor, kitchenGroup, KITCHEN_GROUPS } from "../format";
 import { Guide, GuideHint, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
@@ -8,8 +8,11 @@ import { LoadError, errorText } from "../LoadError";
 import { CloseIcon, ScanIcon } from "../Icons";
 
 type Feedback =
-  | { added: string[]; already?: string[]; unknown: string[]; suggestions: Record<string, string[]> }
+  | { added: string[]; already?: string[]; unknown: string[]; suggestions: Record<string, string[]>; removed?: string[] }
   | { error: string };
+
+/** D69: what the confirm screen shows: the proposals and the photo they came from. */
+type Scan = { proposals: ScanProposal[]; photo: string | null; credit: string | null; sample?: boolean };
 
 export function Inventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -18,7 +21,7 @@ export function Inventory() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [busy, setBusy] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [proposals, setProposals] = useState<ScanProposal[] | null>(null);
+  const [scan, setScan] = useState<Scan | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const guide = useGuide("forkcast.kitchenguide.v1");
 
@@ -89,7 +92,7 @@ export function Inventory() {
     setFeedback(null);
     try {
       const res = await api.scanPhoto(file);
-      setProposals(res.proposals);
+      setScan({ proposals: res.proposals, photo: URL.createObjectURL(file), credit: null });
     } catch (e) {
       setFeedback({ error: `The scan didn't work: ${errorText(e)}` });
     } finally {
@@ -98,12 +101,32 @@ export function Inventory() {
     }
   }
 
-  if (proposals) {
+  /** D69: the demo's recorded scan of a public fridge photo. */
+  async function sampleFridge() {
+    setScanning(true);
+    setFeedback(null);
+    try {
+      const res = await api.sampleScan();
+      setScan({ proposals: res.proposals, photo: `${import.meta.env.BASE_URL}${res.photo}`, credit: res.credit, sample: true });
+    } catch (e) {
+      setFeedback({ error: `The sample didn't load: ${errorText(e)}` });
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  if (scan) {
     return (
       <ScanConfirm
-        proposals={proposals}
-        onDone={() => {
-          setProposals(null);
+        proposals={scan.proposals}
+        kitchen={items}
+        photo={scan.photo}
+        credit={scan.credit}
+        compare={!scan.sample}
+        onDone={(outcome: ScanOutcome | null) => {
+          if (scan.photo?.startsWith("blob:")) URL.revokeObjectURL(scan.photo);
+          setScan(null);
+          if (outcome) setFeedback(outcome);
           refresh();
         }}
       />
@@ -136,8 +159,8 @@ export function Inventory() {
           onClose={guide.close}
           items={[
             {
-              term: "Scan groceries",
-              text: "Photograph your shopping. You get a checklist of what was recognised and nothing is saved until you confirm.",
+              term: "Scan your fridge",
+              text: "Photograph your open fridge, or your shopping. You get a checklist: what the reader is sure of is ticked, what it isn't sure of isn't, and nothing changes until you confirm. A later scan also lists what looks used up.",
             },
             {
               term: "Add by name",
@@ -164,6 +187,7 @@ export function Inventory() {
           hidden
           onChange={(e) => onPhoto(e.target.files?.[0])}
         />
+        <div className="scan-block">
         <button
           className="btn scan-primary"
           onClick={() => fileRef.current?.click()}
@@ -171,19 +195,26 @@ export function Inventory() {
           aria-describedby={isDemo() ? "scan-note" : undefined}
         >
           <ScanIcon size={20} />
-          {scanning ? "Reading your photo…" : "Scan groceries"}
+          {scanning ? "Reading your photo…" : "Scan your fridge"}
         </button>
+        {isDemo() && (
+          <button className="btn secondary sample-fridge" onClick={sampleFridge} disabled={scanning}>
+            Use a sample fridge
+          </button>
+        )}
         {isDemo() && !scansOn() && (
           <p id="scan-note" className="feedback">
-            Photo scanning is off in this demo, because it calls a paid AI model. Add ingredients by name instead.
+            Photo scanning is off in this demo, because it calls a paid AI model. Try the sample fridge, or add
+            ingredients by name.
           </p>
         )}
         {isDemo() && scansOn() && (
           <p id="scan-note" className="feedback">
-            Your photo is sent to Anthropic's Claude to be read; Forkcast doesn't keep it. Up to 10 scans a day in
-            this demo.
+            A photo of your open fridge or your shopping. It's sent to Anthropic's Claude to be read; Forkcast
+            doesn't keep it. Up to 10 scans a day in this demo, or try the sample fridge.
           </p>
         )}
+        </div>
         <form
           className="add-form"
           onSubmit={(e) => {
@@ -219,6 +250,7 @@ export function Inventory() {
           ) : (
             <>
               {feedback.added.length > 0 && <p>Added {feedback.added.join(", ")}.</p>}
+              {(feedback.removed?.length ?? 0) > 0 && <p>Removed {feedback.removed?.join(", ")}.</p>}
               {/* D66: re-adding something isn't "added" twice. */}
               {(feedback.already?.length ?? 0) > 0 && <p>Already in your kitchen: {feedback.already?.join(", ")}.</p>}
               {feedback.unknown
@@ -259,7 +291,7 @@ export function Inventory() {
 
       {loadError && <LoadError error={loadError} onRetry={refresh} />}
       {loaded && items.length === 0 && (
-        <p className="empty-note">Nothing here yet. Scan your shopping or add a few ingredients to see what you can cook.</p>
+        <p className="empty-note">Nothing here yet. Scan your fridge or add a few ingredients to see what you can cook.</p>
       )}
 
       <div className="kitchen-groups">

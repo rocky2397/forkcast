@@ -74,7 +74,7 @@ def main() -> None:
     args.out.parent.mkdir(parents=True, exist_ok=True)
 
     def run(p: dict) -> None:
-        record = {"code": p["code"], "name": p["name"], "truth": p["truth"], "model": vision.MODEL}
+        record = {"code": p["code"], "name": p["name"], "truth": p["truth"], "model": vision.LABEL_MODEL}
         try:
             raw = fetch(p["image"], args.cache / f"{p['code']}.jpg")
         except Exception as e:

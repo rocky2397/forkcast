@@ -344,3 +344,46 @@ def test_earlier_cooks_stay_days_back_for_a_new_visitor(demo_app, monkeypatch):
     days = con.execute("SELECT julianday('now') - julianday(logged_at) FROM meal_log WHERE recipe_id = 7").fetchone()[0]
     con.close()
     assert 1.99 < days < 2.01
+
+
+# --- the fridge scan (D69) ---
+
+
+def test_a_scan_marks_what_it_is_sure_of_and_merges_duplicates(scanning_app, monkeypatch):
+    from app import vision
+
+    seen = vision.ScanResult(items=[
+        vision.SeenItem(name="garlic", confidence=0.9),
+        vision.SeenItem(name="chicken breast", confidence=0.7),
+        vision.SeenItem(name="whole chicken", confidence=0.85),
+        vision.SeenItem(name="leek", confidence=0.6),
+    ])
+    monkeypatch.setattr(vision, "extract_items", lambda raw, media_type: seen)
+    # The real matcher makes both chickens "chicken"; the stand-in keeps names as written.
+    monkeypatch.setattr(main, "packaged", lambda n, name: "chicken" if "chicken" in name else name)
+    k, _ = _visit(scanning_app)
+    got = scanning_app.post("/api/vision/scan", files=PHOTO, headers={H: k}).json()["proposals"]
+    by = {p["canonical"]: p for p in got}
+    assert len(got) == 3  # the two chickens are one ingredient
+    assert by["chicken"]["seen"] == "whole chicken" and by["chicken"]["confidence"] == 0.85
+    assert by["garlic"]["sure"] and by["chicken"]["sure"] and not by["leek"]["sure"]
+
+
+def test_photos_are_read_by_haiku_5_5_and_labels_by_haiku_4_5():
+    from app import vision
+
+    assert vision.PHOTO_MODEL == "claude-haiku-5-5"  # D69, Test 8
+    assert vision.LABEL_MODEL == "claude-haiku-4-5"  # D37, Test 5
+    assert vision.extract_items.__defaults__ == ("claude-haiku-5-5",)
+
+
+def test_the_sample_fridge_needs_no_key_and_no_scan(demo_app, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    k, _ = _visit(demo_app)
+    r = demo_app.post("/api/vision/sample", headers={H: k})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["photo"] == "sample-fridge.jpg" and "Karel Cornelis" in body["credit"]
+    names = {p["canonical"] for p in body["proposals"]}
+    assert {"milk", "egg", "potato"} <= names
+    assert any(not p["sure"] for p in body["proposals"])  # the can it wasn't sure of

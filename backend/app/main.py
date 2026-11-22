@@ -5,6 +5,7 @@ Run from the repo root:
 """
 
 import asyncio
+import json
 import os
 import time
 from contextlib import asynccontextmanager, suppress
@@ -637,9 +638,44 @@ async def _read_photo(photo: UploadFile) -> bytes:
     return raw
 
 
+def _proposals(items) -> list[dict]:
+    """What the photo reader saw, matched to ingredients (D35) and marked sure
+    or not (D69). One proposal per ingredient: "chicken breast" and "whole
+    chicken" are both chicken, kept once at the higher confidence."""
+    from . import vision
+
+    out: list[dict] = []
+    by_canonical: dict[str, dict] = {}
+    for item in items:
+        canonical = packaged(normalizer, item.name)  # D35: read off a product
+        p = {"seen": item.name, "quantity": item.quantity, "confidence": item.confidence,
+             "canonical": canonical, "sure": item.confidence >= vision.SURE_LINE}
+        if canonical and canonical in by_canonical:
+            if item.confidence > by_canonical[canonical]["confidence"]:
+                by_canonical[canonical].update(p)
+            continue
+        if canonical:
+            by_canonical[canonical] = p
+        out.append(p)
+    return out
+
+
+@app.post("/api/vision/sample")
+def vision_sample():
+    """D69: the demo's "Use a sample fridge": a recorded scan of a public photo,
+    so a visitor sees the fridge scan without a camera or a paid call."""
+    from . import vision
+
+    data = json.loads((Path(__file__).parent / "sample_fridge.json").read_text())
+    if demo.enabled():
+        stats.event("sample_fridge_used")
+    items = [vision.SeenItem(**i) for i in data["items"]]
+    return {"proposals": _proposals(items), "photo": data["photo"], "credit": data["credit"]}
+
+
 @app.post("/api/vision/scan")
 async def vision_scan(photo: UploadFile = File(...)):
-    """Groceries photo -> proposed items (nothing committed; client confirms)."""
+    """Fridge or groceries photo -> proposed items (nothing committed; client confirms)."""
     if demo.enabled():
         stats.event("photo_scan_tried")
         if not demo.scanning():
@@ -654,15 +690,7 @@ async def vision_scan(photo: UploadFile = File(...)):
         result = vision.extract_items(raw, photo.content_type)
     except Exception as e:  # surface API failures as a clean 502
         raise HTTPException(502, f"vision extraction failed: {e}")
-    proposals = []
-    for item in result.items:
-        proposals.append({
-            "seen": item.name,
-            "quantity": item.quantity,
-            "confidence": item.confidence,
-            "canonical": packaged(normalizer, item.name),  # D35: read off a product
-        })
-    return {"proposals": proposals}
+    return {"proposals": _proposals(result.items)}
 
 
 class ProfileIn(BaseModel):

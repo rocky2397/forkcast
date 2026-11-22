@@ -14,9 +14,9 @@ tells you what to buy to unlock more.
   recipes you can really cook: 65% → 92%. Suggested swaps a cook would use:
   33% → 95%. A typed German food within 10% of the calories on its pack:
   64% → 76%. [How the tests work](#evaluation)
-- **Decisions in writing.** 68 product decisions, each with the options turned
+- **Decisions in writing.** 69 product decisions, each with the options turned
   down and why ([APP_DECISIONS.md](APP_DECISIONS.md)).
-- **Built to ship.** 505 tests and a browser test of a first visit on every
+- **Built to ship.** 508 tests and a browser test of a first visit on every
   change, a check of the live demo after every deploy, and no serious
   accessibility problems on any screen.
 - **Built with AI.** Claude Code wrote most of the code; the product calls
@@ -61,9 +61,11 @@ leaves" all have to become `basil`, both for what is in your kitchen and for
 every line of every recipe. Once both sides use the same list, the rest is
 comparison.
 
-1. **Your kitchen.** You type items (in English or German), photograph your groceries or scan a
-   barcode. A photo goes to a small vision model (Claude Haiku), which returns
-   a list you confirm before anything is saved. A barcode is looked up in Open
+1. **Your kitchen.** You type items (in English or German), photograph your open fridge or
+   your shopping, or scan a barcode. A photo goes to a small vision model
+   (Claude Haiku 5.5), which returns a list you check before anything is
+   saved: what it is sure of is ticked, what it isn't is offered, and food in
+   your kitchen that the photo didn't show is offered for removal (D69). A barcode is looked up in Open
    Food Facts, with a photo of the nutrition label as the fallback; a product
    Open Food Facts doesn't have is remembered under its barcode once its label
    has been read. Every item is then matched to the ingredient list.
@@ -228,17 +230,19 @@ designed on:
 | 1. Listed recipes really cookable | 65% | **92%** | 3 new kitchens |
 | 2. Suggested swaps that work | 33% | **95%** | new cases |
 | 3. Picks what people cook next (50 = coin flip) | 55 | **61** | 2,710 real food.com users |
-| 4. Photo scan proposes the right ingredient | 71% | **76%** | 289 unseen store photos |
+| 4. Photo scan proposes the right ingredient | 71% | **94%** | 289 unseen store photos |
 | 5. Label read with the right calories | 78% | **83%** | 150 fresh products |
 | 6. What you burn, off by (kcal a day, median) | 186 | **74** | 2,000 simulated people, 4 weeks |
 | 7. Typed food's calories within 10% of its label | 64% | **76%** | 33 held-out German products |
-| 8. Fridge photo: items found | 50% | **77%** with Haiku 5.5, not in the app yet | 51 photos of one staged fridge |
+| 8. Fridge photo: items found | 50% | **77%** | 51 photos of one staged fridge |
 
 **Test 4, photo scanning,** on phone photos from a public grocery dataset. A
 third of the misses were the ingredient matcher, not the camera: "orange
-juice" became *orange* and "yoghurt" nothing. After that fix (D35):
-vegetables 85%, fruit 76%, cartons 69%. Photos of a whole shopping haul are
-not tested yet ([details](eval/RESULTS-stage4.md)).
+juice" became *orange* and "yoghurt" nothing. After that fix (D35): 76%,
+with vegetables 85%, fruit 76% and cartons 69%. Switching the model from
+Claude Haiku 4.5 to Haiku 5.5 (D69) took it to 94% (cartons 92%) at a fifth
+of the price. Photos of a whole fridge are Test 8
+([details](eval/RESULTS-stage4.md)).
 
 **Test 5, nutrition labels,** on products from Open Food Facts, with database
 disagreements checked by eye. The reader got all four values right for about
@@ -275,11 +279,12 @@ within 10% to 85%. Those numbers are no longer unseen: the cans come from the
 same source as the test ([details](eval/RESULTS-stage7.md)).
 
 **Test 8, a photo of the whole fridge,** on a public set of photos of one
-fridge filled at random with 30 kinds of food, every item labelled. Today's
-scanner model, Claude Haiku 4.5, found half of what was in the photo. Claude
-Haiku 5.5 found 77% at a fifth of the price, and Claude Sonnet 5.5 80% for
-twenty times more. With Haiku 5.5, keeping only what it is at least 70% sure
-of leaves about 3 fixes per scan, against typing 11 items. Two answers first
+fridge filled at random with 30 kinds of food, every item labelled. The
+scanner's old model, Claude Haiku 4.5, found half of what was in the photo.
+Claude Haiku 5.5 found 77% at a fifth of the price, and Claude Sonnet 5.5 80%
+for twenty times more. With Haiku 5.5, keeping only what it is at least 70%
+sure of leaves about 3 fixes per scan, against typing 11 items, so the scan
+now uses Haiku 5.5 with that line (D69). Two answers first
 marked wrong were right: the "butter" is margarine and some "milk" is soy
 milk, as crops of the photos showed; both scores are reported. A lived-in
 fridge is harder than this staged one ([details](eval/RESULTS-stage8.md)).
@@ -448,7 +453,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 505 pytest tests in about three seconds, offline and without the
+- **Tests:** 508 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -478,7 +483,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 68 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 69 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -581,6 +586,10 @@ the same recipe corpus as the demo.
   Kaggle's [*Food.com Recipes and User Interactions*](https://www.kaggle.com/datasets/shuyangli94/food-com-recipes-and-user-interactions)
   (Majumder et al., [EMNLP 2019](https://aclanthology.org/D19-1613/)). Not
   redistributed here; only food.com user ids for the frozen test split are.
+- **Fridge photos (test 8, and the demo's sample fridge):** the
+  [aicook dataset](https://universe.roboflow.com/karel-cornelis-q2qqg/aicook-lcv4d)
+  by Karel Cornelis (Erasmus Brussels), MIT licence. One photo ships, resized,
+  as `frontend/public/sample-fridge.jpg`; the others are not redistributed.
 - **Packaged food:** [Open Food Facts](https://world.openfoodfacts.org), ODbL.
 - **Ingredient nutrition:** U.S. Department of Agriculture, Agricultural
   Research Service, [FoodData Central](https://fdc.nal.usda.gov), SR Legacy

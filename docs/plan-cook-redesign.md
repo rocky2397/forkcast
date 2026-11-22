@@ -137,10 +137,14 @@ $2.80 in all.
 **Test 8 done (22 November 2026),** [results](../eval/RESULTS-stage8.md):
 Haiku 4.5 finds 50% of what is in the photo, Haiku 5.5 77%, Sonnet 5.5 80%.
 Choice: Haiku 5.5, confidence line 70% (about 3 fixes per scan against
-typing 11 items). Cost $1.64. Still to do: real household fridge photos, and
-Test 4's grocery photos with Haiku 5.5.
+typing 11 items). Cost $1.64. Still to do: real household fridge photos. Test 4's grocery
+photos with Haiku 5.5: 94% (Haiku 4.5: 76%), rerun 22 November.
 
-**Then build it:**
+**Built (D69, 22 November 2026),** with one change: "Looks gone" is never
+pre-ticked, because even Haiku 5.5 misses one item in five; you tick what you
+used up. The sample fridge doesn't compare with your kitchen.
+
+**Then build it** (as planned):
 
 - The scan returns a confidence for each item. The confirm screen shows
   "Confident" (70% sure or more, kept) and "Not sure" (kept only if tapped),
