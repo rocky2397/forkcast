@@ -14,9 +14,9 @@ tells you what to buy to unlock more.
   recipes you can really cook: 65% → 92%. Suggested swaps a cook would use:
   33% → 95%. A typed German food within 10% of the calories on its pack:
   64% → 76%. [How the tests work](#evaluation)
-- **Decisions in writing.** 70 product decisions, each with the options turned
+- **Decisions in writing.** 71 product decisions, each with the options turned
   down and why ([APP_DECISIONS.md](APP_DECISIONS.md)).
-- **Built to ship.** 510 tests and a browser test of a first visit on every
+- **Built to ship.** 514 tests and a browser test of a first visit on every
   change, a check of the live demo after every deploy, and no serious
   accessibility problems on any screen.
 - **Built with AI.** Claude Code wrote most of the code; the product calls
@@ -87,6 +87,9 @@ comparison.
    "I ate it" logs it and takes what ran out off the kitchen. Recipes give no
    amounts, so fresh meat, fish and greens start ticked as run out and the
    rest as some left, one tap each to change, with Undo (D70).
+8. **A shopping list.** What ran out, what a recipe is missing and the "worth
+   buying" picks go on it in one tap; ticking what you bought moves it into
+   the kitchen (D71).
 
 ### The ingredient map
 
@@ -458,7 +461,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 510 pytest tests in about three seconds, offline and without the
+- **Tests:** 514 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -488,7 +491,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 70 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 71 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 
@@ -562,7 +565,7 @@ ops/e2e.sh            # needs Google Chrome, the corpus and the Epicure weights
 
 It starts the app on an empty data dir and makes a first visit in Chrome:
 the welcome, a profile with a goal weight and the day it gives, the kitchen, the recipe feed, a cooked recipe
-and what ran out, fixing the kitchen on a recipe, cooking and eating with Undo, a fridge scan (the model's
+and what ran out, fixing the kitchen on a recipe, cooking and eating with Undo, the shopping list, a fridge scan (the model's
 answer faked), a typed meal, a product that isn't on Open Food Facts (the
 label reader faked, the rest real) added to a meal with a banana, a product that starts at one serving, a meal built from ingredients and logged again,
 everyday words, a line with amounts and a dish, fat levels and a can, German

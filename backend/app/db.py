@@ -148,6 +148,13 @@ CREATE TABLE IF NOT EXISTS day_check (
     day      TEXT PRIMARY KEY,    -- local date, YYYY-MM-DD
     complete INTEGER NOT NULL     -- 1 complete, 0 incomplete
 );
+
+-- D71: what to buy, one row per ingredient, and why it's there.
+CREATE TABLE IF NOT EXISTS shopping_list (
+    canonical TEXT PRIMARY KEY,
+    reason    TEXT NOT NULL,      -- ran_out, missing, worth_buying, typed
+    added_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 # Kept for the split script and anything wanting the whole shape at once.

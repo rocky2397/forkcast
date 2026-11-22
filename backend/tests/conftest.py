@@ -55,7 +55,7 @@ def db():
         "DELETE FROM recipe_ingredients; DELETE FROM recipes;"
         "DELETE FROM inventory; DELETE FROM meal_log; DELETE FROM meal_ingredients; DELETE FROM meal_products;"
         "DELETE FROM profile; DELETE FROM favourite_meals;"
-        "DELETE FROM weight_log; DELETE FROM day_check;"
+        "DELETE FROM weight_log; DELETE FROM day_check; DELETE FROM shopping_list;"
     )
     for rid, name, kcal, p, c, f, ings in _RECIPES:
         con.execute(

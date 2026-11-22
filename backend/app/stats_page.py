@@ -34,6 +34,11 @@ ACTIONS = {
     "sample_profile_used": "Sample profiles used",
     "sample_fridge_used": "Sample fridges scanned",
     "kitchen_fixed_on_recipe": "Kitchen fixed on a recipe",
+    "list_added_ran_out": "Put on the list: ran out",
+    "list_added_missing": "Put on the list: missing from a recipe",
+    "list_added_worth_buying": "Put on the list: worth buying",
+    "list_added_typed": "Put on the list: typed",
+    "list_bought": "Bought from the list",
     "picks_seen": "Meal picks shown",
 }
 
@@ -58,6 +63,10 @@ ROUTES = {
     "POST /api/nutrition/scan": "Label scan",
     "POST /api/stats/step": "Count a step",
     "POST /api/vision/sample": "Sample fridge",
+    "GET /api/list": "Shopping list",
+    "POST /api/list": "Add to the list",
+    "DELETE /api/list/{canonical}": "Remove from the list",
+    "POST /api/list/bought": "Bought from the list",
     "GET /api/normalize": "Match an ingredient name",
     "GET /api/ingredients/{name}/neighbors": "Similar ingredients",
     "other": "Unknown addresses",

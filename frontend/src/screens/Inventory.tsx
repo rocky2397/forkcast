@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, isDemo, pretty, scansOn, type InventoryItem, type ScanProposal } from "../api";
 import { ScanConfirm, type ScanOutcome } from "./ScanConfirm";
+import { ShoppingList } from "./ShoppingList";
 import { foodColor, kitchenGroup, KITCHEN_GROUPS } from "../format";
 import { Guide, GuideHint, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
@@ -167,6 +168,10 @@ export function Inventory() {
               text: "Type ingredients, several at once with commas. Each is matched to Forkcast's list of 1,790 ingredients; anything it can't match is shown so you can rephrase it.",
             },
             {
+              term: "Shopping list",
+              text: "What ran out after “I ate it”, what a recipe is missing and Worth buying picks can go on it, or type things in. Tick what you bought and it moves into your kitchen.",
+            },
+            {
               term: "No need to add basics",
               text: "Salt, pepper, oil, butter, flour and sugar are assumed in every kitchen.",
             },
@@ -288,6 +293,8 @@ export function Inventory() {
           )}
         </div>
       )}
+
+      <ShoppingList onKitchenChange={refresh} />
 
       {loadError && <LoadError error={loadError} onRetry={refresh} />}
       {loaded && items.length === 0 && (

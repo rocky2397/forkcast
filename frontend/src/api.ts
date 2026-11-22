@@ -46,6 +46,17 @@ export interface TasteProfile {
   profile: { ingredient: string; similarity: number }[];
 }
 
+/** D71: one food on the shopping list, and why it's there. */
+export interface ListItem {
+  canonical: string;
+  name: string;
+  reason: "ran_out" | "missing" | "worth_buying" | "typed";
+  family: string | null;
+  /** Already back in the kitchen (bought some other way). */
+  in_kitchen: boolean;
+}
+type ListReply = { items: ListItem[] };
+
 export interface ScanProposal {
   seen: string;
   quantity: string | null;
@@ -538,6 +549,22 @@ export const api = {
   removeInventory: (name: string, source?: "recipe") =>
     req<{ removed: string }>(`/api/inventory/${encodeURIComponent(name)}${source ? `?source=${source}` : ""}`, {
       method: "DELETE",
+    }),
+  // D71: the shopping list.
+  list: () => req<ListReply>("/api/list"),
+  addToList: (items: string[], reason: ListItem["reason"] = "typed") =>
+    req<ListReply & { added: string[]; already: string[]; unknown: string[] }>("/api/list", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ items, reason }),
+    }),
+  removeFromList: (canonical: string) =>
+    req<ListReply>(`/api/list/${encodeURIComponent(canonical)}`, { method: "DELETE" }),
+  boughtFromList: (items: string[]) =>
+    req<ListReply & { moved: string[] }>("/api/list/bought", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ items }),
     }),
   normalize: (q: string) =>
     req<{ query: string; canonical: string | null }>(`/api/normalize?q=${encodeURIComponent(q)}`),
