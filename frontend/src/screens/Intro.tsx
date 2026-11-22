@@ -25,7 +25,7 @@ const STEPS = [
   },
   {
     title: "Say you ate it",
-    text: "Tap “I cooked this”, or log anything else by photo, barcode or a few words. With your weigh-ins, Forkcast learns what you really burn.",
+    text: "Tap “I ate it”, or log anything else by photo, barcode or a few words. With your weigh-ins, Forkcast learns what you really burn.",
   },
 ];
 

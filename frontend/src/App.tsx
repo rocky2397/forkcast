@@ -53,6 +53,13 @@ export default function App() {
     }
     window.scrollTo(0, 0); // a new screen starts at its top, not where the last one was
   }
+  /** D70: open a recipe from anywhere (the "Cooking now" card on Today). */
+  function openRecipe(id: number) {
+    setTab("recipes");
+    history.pushState({ tab: "recipes", recipe: id }, "");
+    setTabKey((k) => k + 1);
+    window.scrollTo(0, 0);
+  }
   useEffect(() => {
     if (!history.state?.tab) history.replaceState({ tab: "today" }, "");
     const onPop = (e: PopStateEvent) => {
@@ -173,7 +180,7 @@ export default function App() {
       )}
       <main className="main">
         {tab === "today" ? (
-          <Today key={tabKey} />
+          <Today key={tabKey} onOpenRecipe={openRecipe} />
         ) : tab === "inventory" ? (
           <Inventory key={tabKey} />
         ) : (

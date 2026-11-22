@@ -172,7 +172,7 @@ export function Inventory() {
             },
             {
               term: "When something runs out",
-              text: "After you cook, “I cooked this” asks what ran out and takes it off this list.",
+              text: "After you eat a recipe, “I ate it” asks what ran out and takes it off this list. On a recipe, “Don't have it” and “Have it” fix this list too.",
             },
           ]}
         />

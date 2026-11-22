@@ -13,6 +13,7 @@ import { useMediaQuery } from "../useMediaQuery";
 import { Guide, GuideHint, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
 import { RecipeView } from "./RecipeView";
+import { CookingCard } from "../CookingCard";
 
 const MACRO_LABELS: Record<MacroFocus["macro"], string> = {
   protein_g: "protein",
@@ -121,6 +122,16 @@ export function Recipes() {
             )}
           </p>
         )}
+
+        <CookingCard
+          onOpen={(rid) => {
+            setOpenId(rid);
+            if (!wide) {
+              history.pushState({ tab: "recipes", recipe: rid }, "");
+              window.scrollTo(0, 0);
+            }
+          }}
+        />
 
         <div className="filter-row">
           <div className="filter-tabs" role="group" aria-label="How many ingredients you're missing">

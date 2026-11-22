@@ -160,6 +160,11 @@ used up. The sample fridge doesn't compare with your kitchen.
 
 ## Stage 3: the Cook screen (D70, large)
 
+**In three parts.** Part 1, the recipe page (D70, built 22 November 2026):
+"Don't have it" / "Have it", "I'm cooking this" (pinned on Today and
+Recipes), "I ate it" with meat, fish and greens pre-ticked and Undo. Part 2,
+the shopping list. Part 3, the Cook and Progress tabs.
+
 - **Two tabs: Cook and Progress.** The kitchen list moves behind "See what's
   in your fridge" on Cook.
 - **Cook** shows what's left of today, the "Update my fridge" card, the three

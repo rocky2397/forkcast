@@ -11,6 +11,11 @@ STAPLES = {
     "olive_oil", "butter", "flour", "all_purpose_flour",
 }
 
+# D70: fresh food that usually all goes into one dish. "I ate it" starts these
+# ticked as run out; everything else starts as "some left". Recipes give no
+# amounts (D59), so this is a guess shown where one tap changes it.
+RUNS_OUT_FAMILIES = frozenset({"meat", "seafood", "cooking_green", "salad_green"})
+
 
 def cookable(
     con: sqlite3.Connection,

@@ -33,6 +33,7 @@ ACTIONS = {
     "welcome_finished": "Welcomes finished",
     "sample_profile_used": "Sample profiles used",
     "sample_fridge_used": "Sample fridges scanned",
+    "kitchen_fixed_on_recipe": "Kitchen fixed on a recipe",
     "picks_seen": "Meal picks shown",
 }
 

@@ -21,6 +21,7 @@ import {
 } from "../api";
 import { DayCheck, ProgressCard } from "./Progress";
 import { WeightCard } from "./Weight";
+import { CookingCard } from "../CookingCard";
 import { ProfileForm } from "./ProfileForm";
 import { rememberSample, usingSample } from "../sample";
 import { detectBarcode } from "../barcode";
@@ -150,7 +151,7 @@ function mealTime(m: DayMeal): string {
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export function Today() {
+export function Today({ onOpenRecipe }: { onOpenRecipe?: (id: number) => void } = {}) {
   const [day, setDay] = useState<DaySummary | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [weight, setWeight] = useState<WeightSummary | null>(null);
@@ -497,6 +498,7 @@ export function Today() {
           </>
         )}
       </p>
+      {isToday && onOpenRecipe && <CookingCard onOpen={onOpenRecipe} />}
 
       {guide.hint && <GuideHint onOpen={guide.show} onDismiss={guide.dismiss} />}
       {guide.open && (
@@ -570,7 +572,7 @@ export function Today() {
           {ready && meals.length === 0 && (
             <p className="empty-note">
               {isToday
-                ? 'Nothing logged yet. Cook a recipe and tap "I cooked this", or log a meal.'
+                ? 'Nothing logged yet. Cook a recipe and tap "I ate it", or log a meal.'
                 : `Nothing logged on ${short}. Log what you ate that day.`}
             </p>
           )}

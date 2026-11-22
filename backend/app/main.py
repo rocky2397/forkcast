@@ -278,7 +278,7 @@ def get_inventory():
 
 
 @app.post("/api/inventory")
-def add_inventory(body: InventoryAdd):
+def add_inventory(body: InventoryAdd, source: Literal["recipe"] | None = None):
     added, unknown, already = [], [], []
     with connect() as con:
         have = {r["canonical"] for r in con.execute("SELECT canonical FROM inventory")}
@@ -298,6 +298,8 @@ def add_inventory(body: InventoryAdd):
         con.commit()
     for canonical in added:
         stats.event("ingredient_added", item=canonical, stage="added")
+    if source == "recipe" and added:
+        stats.event("kitchen_fixed_on_recipe")  # D70: "Have it" on a recipe
     # D46: "Did you mean…?" for what wasn't recognised (never counted or stored).
     suggestions = {raw: normalizer.suggest(raw) for raw in unknown}
     return {"added": added, "added_names": [foods.kitchen_label(c) for c in added],
@@ -306,7 +308,7 @@ def add_inventory(body: InventoryAdd):
 
 
 @app.delete("/api/inventory/{name}")
-def remove_inventory(name: str):
+def remove_inventory(name: str, source: Literal["recipe"] | None = None):
     canonical = normalizer.match(name) or name
     with connect() as con:
         cur = con.execute("DELETE FROM inventory WHERE canonical = ?", (canonical,))
@@ -314,6 +316,8 @@ def remove_inventory(name: str):
     if cur.rowcount == 0:
         raise HTTPException(404, f"not in inventory: {name!r}")
     stats.event("ingredient_removed")
+    if source == "recipe":
+        stats.event("kitchen_fixed_on_recipe")  # D70: "Don't have it" on a recipe
     return {"removed": canonical}
 
 
@@ -352,11 +356,14 @@ def recipe_detail(recipe_id: int):
                 "canonical": i["canonical"],
                 "in_inventory": bool(i["in_inventory"]),
                 "staple": i["canonical"] in recipes.STAPLES,
-                "sub": (
+                "sub": (sub := (
                     substitutions.suggest(i["canonical"], cands)
                     if i["canonical"] and not i["in_inventory"]
                     else None
-                ),
+                )),
+                # D70: what "I ate it" starts ticked as run out.
+                "runs_out": NAME_TO_CLASS.get(i["canonical"]) in recipes.RUNS_OUT_FAMILIES,
+                "sub_runs_out": bool(sub) and NAME_TO_CLASS.get(sub) in recipes.RUNS_OUT_FAMILIES,
             }
             for i in ings
         ],

@@ -63,7 +63,14 @@ export function ScanConfirm({
   const owned = new Set(kitchen.map((k) => k.canonical));
   const chips = CUPBOARD.filter(([c]) => !owned.has(c) && !seen.has(c));
 
-  const [add, setAdd] = useState<Set<string>>(() => new Set(sure.map((p) => p.canonical!)));
+  // Your taps, on top of the model's sure / not sure. Kept apart from the
+  // default so the kitchen arriving after the scan can't leave a stale tick.
+  const [picked, setPicked] = useState<Map<string, boolean>>(new Map());
+  const add = new Set(
+    fresh
+      .filter((p) => p.canonical && (picked.get(p.canonical) ?? (p.sure ?? true)))
+      .map((p) => p.canonical!),
+  );
   const [remove, setRemove] = useState<Set<string>>(new Set());
   const [extra, setExtra] = useState<string[]>([]);
   const [typed, setTyped] = useState("");
@@ -115,7 +122,7 @@ export function ScanConfirm({
           type="checkbox"
           checked={!!p.canonical && add.has(p.canonical)}
           disabled={!p.canonical}
-          onChange={() => p.canonical && toggle(add, setAdd, p.canonical)}
+          onChange={() => p.canonical && setPicked(new Map(picked).set(p.canonical, !add.has(p.canonical)))}
         />
         <span className="scan-name">
           {p.canonical ? pretty(p.canonical) : p.seen}
