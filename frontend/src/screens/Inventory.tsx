@@ -145,11 +145,12 @@ export function Inventory({
         photo={scan.photo}
         credit={scan.credit}
         compare={!scan.sample}
-        onDone={(outcome: ScanOutcome | null) => {
+        onDone={async (outcome: ScanOutcome | null) => {
+          // Reload first, so the note and the updated list show together.
+          await refresh();
           if (scan.photo?.startsWith("blob:")) URL.revokeObjectURL(scan.photo);
           setScan(null);
           if (outcome) setFeedback(outcome);
-          refresh();
         }}
       />
     );

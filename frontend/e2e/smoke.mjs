@@ -299,7 +299,12 @@ async function run(page) {
       await page.getByRole("button", { name: "+ Pasta" }).click();
       await page.getByRole("button", { name: "Update kitchen: add 3, remove 1" }).click();
       await expectText(page.locator(".notice"), new RegExp(`Removed ${goneName}`, "i"), "used up removed");
-      const list = (await page.locator(".kitchen-group").allTextContents()).join(" ").toLowerCase();
+      // The kitchen list reloads after the update; give a slow machine a moment.
+      let list = "";
+      for (const until = Date.now() + 10_000; Date.now() < until; await new Promise((r) => setTimeout(r, 200))) {
+        list = (await page.locator(".kitchen-group").allTextContents()).join(" ").toLowerCase();
+        if (["egg", "leek", "pasta"].every((w) => list.includes(w)) && !list.includes(goneName.toLowerCase())) break;
+      }
       for (const want of ["egg", "leek", "pasta"]) if (!list.includes(want)) throw new Error(`${want} should be in the kitchen after the scan`);
       if (list.includes(goneName.toLowerCase())) throw new Error(`${goneName} was ticked as used up but is still there`);
       await page.unroute("**/api/vision/scan");
