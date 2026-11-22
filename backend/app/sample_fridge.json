@@ -1,0 +1,57 @@
+{
+ "about": "D69: a recorded scan for the demo's 'Use a sample fridge'. Claude Haiku 5.5's answer, as it came, to photo DSC_6082 of the aicook dataset (Karel Cornelis, MIT licence; Test 8, eval/RESULTS-stage8.md).",
+ "photo": "sample-fridge.jpg",
+ "credit": "Sample photo from the aicook dataset by Karel Cornelis (MIT licence)",
+ "items": [
+  {
+   "name": "milk",
+   "quantity": "1 carton",
+   "confidence": 0.85
+  },
+  {
+   "name": "potato",
+   "quantity": "5",
+   "confidence": 0.9
+  },
+  {
+   "name": "egg",
+   "quantity": "5",
+   "confidence": 0.9
+  },
+  {
+   "name": "blueberry",
+   "quantity": "1 container",
+   "confidence": 0.9
+  },
+  {
+   "name": "canned food",
+   "quantity": "1 can",
+   "confidence": 0.6
+  },
+  {
+   "name": "lime",
+   "quantity": "3",
+   "confidence": 0.9
+  },
+  {
+   "name": "tomato",
+   "quantity": "3",
+   "confidence": 0.9
+  },
+  {
+   "name": "smoked salmon",
+   "quantity": "1 package",
+   "confidence": 0.7
+  },
+  {
+   "name": "chicken breast",
+   "quantity": "1 package",
+   "confidence": 0.7
+  },
+  {
+   "name": "whole chicken",
+   "quantity": "1",
+   "confidence": 0.85
+  }
+ ]
+}

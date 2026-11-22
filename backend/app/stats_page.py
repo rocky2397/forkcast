@@ -32,6 +32,7 @@ ACTIONS = {
     "barcode_lookup": "Barcode lookups",
     "welcome_finished": "Welcomes finished",
     "sample_profile_used": "Sample profiles used",
+    "sample_fridge_used": "Sample fridges scanned",
     "picks_seen": "Meal picks shown",
 }
 
@@ -55,6 +56,7 @@ ROUTES = {
     "POST /api/vision/scan": "Photo scan",
     "POST /api/nutrition/scan": "Label scan",
     "POST /api/stats/step": "Count a step",
+    "POST /api/vision/sample": "Sample fridge",
     "GET /api/normalize": "Match an ingredient name",
     "GET /api/ingredients/{name}/neighbors": "Similar ingredients",
     "other": "Unknown addresses",

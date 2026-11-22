@@ -1,7 +1,7 @@
 """Stage 4: does the photo scanner name groceries correctly?
 
 usage: python run_vision.py <GroceryStoreDataset dir> <model> <effort|-> <out.jsonl>
-           [--per-class N] [--split test] [--limit N]
+           [--per-class N] [--split test] [--limit N] [--budget 0.25]
 
 Runs Forkcast's own scanner (backend/app/vision.py, unchanged prompt and
 schema) on photos from the Grocery Store Dataset (Klasson et al., WACV 2019,
@@ -19,6 +19,10 @@ effort: "-" sends no effort (the model's default); otherwise e.g. "low".
 Needs Anthropic credentials in the environment and the Epicure weights
 (HF_HOME) for the matcher. Rows already in out.jsonl are skipped, so an
 interrupted run resumes.
+
+--budget is a hard cap in dollars for this output file (earlier rows
+included), as in run_fridge.py: a call only starts if what is spent, plus
+what the running calls may cost, plus this one stays under it.
 """
 
 import argparse
@@ -62,14 +66,26 @@ def main() -> None:
     ap.add_argument("--per-class", type=int, default=5)
     ap.add_argument("--split", default="test")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--budget", type=float, default=0.0, help="hard cap in dollars; 0 means none")
     args = ap.parse_args()
+    from score_vision import PRICE  # same folder
+
+    def dollars(r: dict) -> float:
+        pin, pout = PRICE[args.model]
+        return (r.get("input_tokens", 0) * pin + r.get("output_tokens", 0) * pout) / 1e6
+
+    if args.budget and args.model not in PRICE:
+        sys.exit(f"no price for {args.model} in score_vision.PRICE")
 
     rows = sample(args.dataset, args.split, args.per_class)
     if args.limit:
         rows = rows[: args.limit]
     done = set()
+    spent = 0.0
     if args.out.exists():
-        done = {json.loads(line)["photo"] for line in args.out.read_text().splitlines() if line.strip()}
+        old = [json.loads(line) for line in args.out.read_text().splitlines() if line.strip()]
+        done = {r["photo"] for r in old}
+        spent = sum(dollars(r) for r in old) if args.budget else 0.0
     todo = [r for r in rows if r[0] not in done]
     print(f"{len(rows)} photos, {len(done)} already done, {len(todo)} to run", flush=True)
 
@@ -90,11 +106,23 @@ def main() -> None:
         return response
 
     client.messages.parse = recording_parse
-    lock = threading.Lock()
+    lock = threading.Condition()
     args.out.parent.mkdir(parents=True, exist_ok=True)
+    state = {"spent": spent, "running": 0, "stopped": "",
+             "per_call": dollars({"input_tokens": 6000, "output_tokens": 2000}) if args.budget else 0.0}
 
     def run(row: tuple[str, str]) -> None:
         path, label = row
+        if args.budget:
+            with lock:
+                while not state["stopped"] and state["spent"] + (state["running"] + 1) * state["per_call"] > args.budget:
+                    if state["running"] == 0:
+                        state["stopped"] = f"budget of ${args.budget:.2f} reached"
+                    else:
+                        lock.wait()
+                if state["stopped"]:
+                    return
+                state["running"] += 1
         raw = (args.dataset / "dataset" / path).read_bytes()
         began = time.perf_counter()
         usage.value = None
@@ -114,6 +142,12 @@ def main() -> None:
             record["input_tokens"] = u.input_tokens
             record["output_tokens"] = u.output_tokens
         with lock:
+            if args.budget:
+                state["running"] -= 1
+                cost = dollars(record)
+                state["spent"] += cost
+                state["per_call"] = cost if cost and state["per_call"] > 10 * cost else max(state["per_call"], cost)
+                lock.notify_all()
             with args.out.open("a") as f:
                 f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
@@ -121,7 +155,7 @@ def main() -> None:
         for n, _ in enumerate(pool.map(run, todo), 1):
             if n % 25 == 0:
                 print(f"  {n}/{len(todo)}", flush=True)
-    print("done", flush=True)
+    print(f"{state['stopped'] or 'done'}" + (f"; ${state['spent']:.3f} spent in this file" if args.budget else ""), flush=True)
 
 
 if __name__ == "__main__":

@@ -13,6 +13,11 @@ camera: similar-looking fruit and look-alike cartons. Nothing is saved
 without you ticking it on the confirm screen, but that screen shows the
 matched ingredient, so a wrong match still looks just like a right one.
 
+**Update, 22 November 2026:** the newer Claude Haiku 5.5, which the scanner
+now uses (D69, chosen in Test 8), proposes the right ingredient for **94%**
+of the same 289 photos (91 to 97) and 93% of the other 405, at a fifth of
+Haiku 4.5's price (see below).
+
 ## What was tested
 
 - **Photos:** 405 from the [Grocery Store Dataset](https://github.com/marcusklasson/GroceryStoreDataset)
@@ -96,6 +101,28 @@ labelled ingredient strings from stages 1 and 2 (one better, none worse),
 and the whole recipe corpus (25 strings in 511 of 794,000 recipe rows move,
 all to the right name; published in corpus release `corpus-20261115-d35`).
 
+## Haiku 5.5 (D69)
+
+Same photos, same prompt and schema, same matcher (with D35), only the model
+swapped. Run on 22 November 2026, after Test 8 had chosen Haiku 5.5 for
+whole-fridge photos, to check that single groceries don't get worse.
+
+| | Haiku 4.5 | Haiku 5.5 |
+|---|---|---|
+| **289 validation photos** | 76% (71 to 81) | **94%** (91 to 97) |
+| vegetables | 85% | 99% |
+| fruit | 76% | 93% |
+| cartons | 69% | 92% |
+| **405 test photos** | 75% (70 to 79) | **93%** (90 to 95) |
+| Cost per scan | $0.0009 | **$0.0002** |
+| Seconds per scan (median) | 1.1 | 1.9 |
+
+The look-alikes that Haiku 4.5 mixed up (nectarine and apple, satsuma and
+orange, Swedish sour cream and milk cartons) are mostly right now; passion
+fruit is still the hardest. Proposals stay at about two per photo. The whole
+run cost $0.12; every answer is in `labeling/vision/haiku-5-5_val5.jsonl` and
+`_test5.jsonl`. Neither set was used to choose the model.
+
 ## What this does and doesn't measure
 
 - **Harder than your kitchen in some ways:** small, low-resolution photos
@@ -106,9 +133,9 @@ all to the right name; published in corpus release `corpus-20261115-d35`).
   a photo of a whole shopping haul, several items at once. This set says
   nothing about that, so it needs the planned second half: 20 to 30 photos
   of real shopping, labelled blind.
-- **One model:** Claude Haiku 4.5, the one the app uses. Claude Haiku 5.5 is
-  newer and a tenth of the price, but the API credential used here was
-  refused for it (rate limited on every request), so it is not compared yet.
+- **Two models:** Claude Haiku 4.5, and since 22 November 2026 Claude Haiku
+  5.5 (above). The first attempt at Haiku 5.5 was refused (rate limited on
+  every request); a new key worked.
 
 ## What to fix first
 

@@ -51,6 +51,8 @@ export interface ScanProposal {
   quantity: string | null;
   confidence: number;
   canonical: string | null;
+  /** D69: at or above the 70% line, so the confirm screen keeps it. */
+  sure?: boolean;
 }
 
 export interface Profile {
@@ -556,6 +558,9 @@ export const api = {
     form.append("photo", file);
     return req<{ proposals: ScanProposal[] }>("/api/vision/scan", { method: "POST", body: form });
   },
+  /** D69: the demo's recorded scan of a public fridge photo (no model call). */
+  sampleScan: () =>
+    req<{ proposals: ScanProposal[]; photo: string; credit: string }>("/api/vision/sample", { method: "POST" }),
   profile: () => req<{ profile: Profile | null; targets: Targets | null }>(`/api/profile?tz=${tzMinutes()}`),
   /** D68: `sample` says it's the demo's made-up person (counted, never stored as such). */
   saveProfile: (p: Profile, sample = false) =>

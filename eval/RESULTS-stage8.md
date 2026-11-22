@@ -49,7 +49,7 @@ corrected key.
 
 ## Results
 
-| | Haiku 4.5 (today) | Haiku 5.5 | Sonnet 5.5 |
+| | Haiku 4.5 (before D69) | Haiku 5.5 | Sonnet 5.5 |
 |---|---|---|---|
 | **Items found** | **50%** (47 to 53) | **77%** (75 to 80) | **80%** (78 to 83) |
 | with the key as first written | 47% | 72% | 75% |
@@ -90,7 +90,7 @@ Haiku 4.5's confidence barely helps (7.9 fixes at its best), as Test 4 found.
 
 ## What this decides
 
-1. **The fridge scan uses Claude Haiku 5.5** (D69). Sonnet finds 3 points
+1. **The fridge scan uses Claude Haiku 5.5** (D69, built 22 November 2026). Sonnet finds 3 points
    more for twenty times the price, within the range of chance on 51 photos.
    At the demo's cap of 200 scans a day, Haiku 5.5 costs about $0.12 a day.
 2. **The confirm screen splits at 70%:** "Confident" items are kept, "Not

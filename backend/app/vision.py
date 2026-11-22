@@ -1,9 +1,11 @@
-"""Photo intake (D8): groceries photo -> structured item list via Claude vision.
+"""Photo intake (D8): fridge or groceries photo -> structured item list via Claude vision.
 
-Model is claude-haiku-4-5 per decision D8 (pure read-into-schema work; the
-mandatory confirm screen makes occasional misreads cheap). Structured outputs
-guarantee validated JSON. Results are proposals — nothing is written to the
-inventory here; the client confirms and calls POST /api/inventory.
+Photos of food are read by Claude Haiku 5.5 (D69, from Test 8: on whole-fridge
+photos it found 77% of the items against Haiku 4.5's 50%, at a fifth of the
+price, and its confidence separates right from wrong). Labels stay on Haiku
+4.5, the model Test 5 measured. Structured outputs guarantee validated JSON.
+Results are proposals: nothing is written to the inventory here; the client
+confirms and calls POST /api/inventory.
 """
 
 import base64
@@ -12,7 +14,12 @@ from functools import lru_cache
 import anthropic
 from pydantic import BaseModel
 
-MODEL = "claude-haiku-4-5"
+PHOTO_MODEL = "claude-haiku-5-5"  # D69
+LABEL_MODEL = "claude-haiku-4-5"  # D37, Test 5
+# D69: at or above this the confirm screen keeps an item ("Confident"); below
+# it the item is offered but not ticked ("Not sure"). Chosen in Test 8, where
+# it left the fewest fixes per scan (eval/RESULTS-stage8.md).
+SURE_LINE = 0.7
 
 PROMPT = """List every distinct food item you can identify in this photo.
 
@@ -40,7 +47,7 @@ def _client() -> anthropic.Anthropic:
     return anthropic.Anthropic()  # ANTHROPIC_AUTH_TOKEN / ANTHROPIC_API_KEY from env
 
 
-def _parse(image_bytes: bytes, media_type: str, prompt: str, output_format, model: str = MODEL, **options):
+def _parse(image_bytes: bytes, media_type: str, prompt: str, output_format, model: str, **options):
     """One vision call. `model` and `options` (e.g. output_config) exist for the eval."""
     data = base64.standard_b64encode(image_bytes).decode()
     response = _client().messages.parse(
@@ -59,7 +66,7 @@ def _parse(image_bytes: bytes, media_type: str, prompt: str, output_format, mode
     return response.parsed_output
 
 
-def extract_items(image_bytes: bytes, media_type: str, model: str = MODEL, **options) -> ScanResult:
+def extract_items(image_bytes: bytes, media_type: str, model: str = PHOTO_MODEL, **options) -> ScanResult:
     return _parse(image_bytes, media_type, PROMPT, ScanResult, model, **options)
 
 
@@ -125,4 +132,4 @@ class ProductScan(BaseModel):
 
 
 def extract_product(image_bytes: bytes, media_type: str) -> ProductScan:
-    return _parse(image_bytes, media_type, PRODUCT_PROMPT, ProductScan)
+    return _parse(image_bytes, media_type, PRODUCT_PROMPT, ProductScan, LABEL_MODEL)

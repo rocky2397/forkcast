@@ -47,7 +47,7 @@ STAGE_FROM = {"welcomed": "2026-11-22", "profiled": "2026-11-22", "picks": "2026
 # Steps only the browser sees, which it reports by name (POST /api/stats/step).
 STEPS = {"welcome_finished": "welcomed"}
 EVENTS = frozenset({
-    "welcome_finished", "sample_profile_used", "picks_seen",
+    "welcome_finished", "sample_profile_used", "picks_seen", "sample_fridge_used",
     "ingredient_added", "ingredient_removed",
     "recipe_opened", "recipe_cooked",
     "rated_liked", "rated_not_for_me", "rating_cleared",
