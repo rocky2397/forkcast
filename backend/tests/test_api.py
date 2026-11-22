@@ -72,6 +72,25 @@ def test_recipe_detail_flags_inventory_and_staples(client):
     assert ings["salt"]["staple"] is True
 
 
+def test_fresh_meat_fish_and_greens_are_flagged_as_running_out(client):
+    """D70: "I ate it" starts these ticked as run out; the rest as some left."""
+    ings = {i["canonical"]: i for i in client.get("/api/recipes/1").json()["ingredients"]}
+    assert ings["chicken"]["runs_out"] is True
+    assert ings["onion"]["runs_out"] is False
+    assert all(i["sub_runs_out"] is False for i in ings.values() if not i["sub"])
+
+
+def test_fixing_the_kitchen_on_a_recipe_is_counted(client, monkeypatch):
+    """D70: Have it / Don't have it on a recipe use the kitchen routes, tagged."""
+    seen = []
+    monkeypatch.setattr(main.stats, "event", lambda name, *a, **k: seen.append(name))
+    assert client.delete("/api/inventory/onion?source=recipe").status_code == 200
+    assert client.post("/api/inventory?source=recipe", json={"items": ["onion"]}).json()["added"] == ["onion"]
+    client.post("/api/inventory", json={"items": ["leek"]})  # from the kitchen: not counted as a fix
+    assert seen.count("kitchen_fixed_on_recipe") == 2
+    assert client.post("/api/inventory?source=elsewhere", json={"items": ["x"]}).status_code == 422
+
+
 def test_logging_a_cook_without_a_body_keeps_the_inventory(client, db):
     assert client.post("/api/recipes/1/cooked").json()["removed"] == []
     assert db.execute("SELECT COUNT(*) c FROM inventory").fetchone()["c"] == 5

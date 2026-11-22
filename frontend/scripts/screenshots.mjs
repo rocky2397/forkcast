@@ -266,10 +266,10 @@ async function recordDemo(browser, videoDir) {
   await glide(page, await yOf(page.locator(".swap-note").first()) - 200, 1300);
   await pause(2400);
 
-  // Cook mode: one step at a time, screen kept on.
-  await glide(page, await yOf(page.getByRole("button", { name: "Start cook mode" })) - 300, 900);
+  // "I'm cooking this" (D70): pinned, and cook mode one step at a time, screen kept on.
+  await glide(page, await yOf(page.getByRole("button", { name: "I'm cooking this" })) - 300, 900);
   await pause(500);
-  await page.getByRole("button", { name: "Start cook mode" }).click();
+  await page.getByRole("button", { name: "I'm cooking this" }).click();
   await pause(1800);
   await page.getByRole("button", { name: "Next" }).click();
   await pause(1800);

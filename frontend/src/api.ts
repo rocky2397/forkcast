@@ -346,6 +346,9 @@ export interface RecipeDetail {
     in_inventory: boolean;
     staple: boolean;
     sub: string | null;
+    /** D70: fresh meat, fish or greens, which "I ate it" starts as run out. */
+    runs_out?: boolean;
+    sub_runs_out?: boolean;
   }[];
 }
 
@@ -524,15 +527,18 @@ export const api = {
   },
   logout: () => req<{ authenticated: boolean }>("/api/logout", { method: "POST" }),
   inventory: () => req<{ items: InventoryItem[] }>("/api/inventory"),
-  addInventory: (items: string[]) =>
+  addInventory: (items: string[], source?: "recipe") =>
     // D46: suggestions holds "Did you mean…?" names for what wasn't recognised.
-    req<{ added: string[]; added_names?: string[]; already?: string[]; unknown: string[]; suggestions?: Record<string, string[]> }>("/api/inventory", {
+    req<{ added: string[]; added_names?: string[]; already?: string[]; unknown: string[]; suggestions?: Record<string, string[]> }>(`/api/inventory${source ? `?source=${source}` : ""}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ items }),
     }),
-  removeInventory: (name: string) =>
-    req<{ removed: string }>(`/api/inventory/${encodeURIComponent(name)}`, { method: "DELETE" }),
+  /** D70: `source: "recipe"` counts a fix made on a recipe ("Don't have it"). */
+  removeInventory: (name: string, source?: "recipe") =>
+    req<{ removed: string }>(`/api/inventory/${encodeURIComponent(name)}${source ? `?source=${source}` : ""}`, {
+      method: "DELETE",
+    }),
   normalize: (q: string) =>
     req<{ query: string; canonical: string | null }>(`/api/normalize?q=${encodeURIComponent(q)}`),
   /** `exact`: only recipes missing exactly `maxMissing` (the feed's tabs). */

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, pretty, type RecipeDetail } from "../api";
+import { cookingNow, startCooking, stopCooking } from "../cooking";
 import { displayName, sentence } from "../format";
 import { BackIcon, CloseIcon, NextIcon } from "../Icons";
+import { errorText } from "../LoadError";
 
 type Ingredient = RecipeDetail["ingredients"][number];
 
@@ -18,6 +20,11 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
   const [moreText, setMoreText] = useState(false);
   // D56: how much of it was eaten; one serving unless said otherwise.
   const [servings, setServings] = useState(1);
+  // D70: pinned while you cook; what "I ate it" logged, so it can be undone.
+  const [pinned, setPinned] = useState(() => cookingNow()?.id === id);
+  const [logged, setLogged] = useState<{ mealId: number; removed: string[] } | null>(null);
+  const [fixing, setFixing] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api.recipe(id).then(setRecipe);
@@ -26,19 +33,44 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
   // What the cook could have run out of: in-inventory recipe ingredients
   // (staples excluded — nobody finishes the salt on one dish) plus any
   // suggested substitute, which is in the inventory by construction.
+  // D70: fresh meat, fish and greens usually all go in, so they start ticked.
   const depletable = useMemo(() => {
     if (!recipe) return [];
     const seen = new Set<string>();
-    const out: { canonical: string; usedFor: string | null }[] = [];
+    const out: { canonical: string; usedFor: string | null; runsOut: boolean }[] = [];
     for (const ing of recipe.ingredients) {
-      const c = ing.in_inventory && !ing.staple ? ing.canonical : ing.sub;
+      const own = ing.in_inventory && !ing.staple;
+      const c = own ? ing.canonical : ing.sub;
       if (c && !seen.has(c)) {
         seen.add(c);
-        out.push({ canonical: c, usedFor: ing.in_inventory ? null : ing.canonical });
+        out.push({ canonical: c, usedFor: own ? null : ing.canonical, runsOut: !!(own ? ing.runs_out : ing.sub_runs_out) });
       }
     }
     return out;
   }, [recipe]);
+
+  /** D70: "Don't have it" / "Have it": fix the kitchen where the guess shows. */
+  async function fix(canonical: string, have: boolean) {
+    if (fixing) return;
+    setFixing(canonical);
+    setError(null);
+    try {
+      if (have) await api.addInventory([canonical], "recipe");
+      else await api.removeInventory(canonical, "recipe");
+      setRecipe(await api.recipe(id));
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setFixing(null);
+    }
+  }
+
+  function cookNow() {
+    if (!recipe) return;
+    startCooking(id, displayName(recipe.name));
+    setPinned(true);
+    if (recipe.steps.length > 0) setCooking(true);
+  }
 
   function toggle(c: string) {
     setUsedUp((prev) => {
@@ -53,6 +85,7 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
     if (busy || cooked) return;
     if (!confirming) {
       // D56/D58: ask how much was eaten (and what ran out) in a panel brought into view.
+      setUsedUp(new Set(depletable.filter((d) => d.runsOut).map((d) => d.canonical)));
       setConfirming(true);
       requestAnimationFrame(() =>
         document.querySelector(".cook-confirm")?.scrollIntoView({ block: "center", behavior: "smooth" }),
@@ -60,15 +93,38 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
       return;
     }
     setBusy(true);
+    setError(null);
     try {
-      await api.logCooked(id, [...usedUp], servings);
+      const res = await api.logCooked(id, [...usedUp], servings);
       setCooked(true);
       setConfirming(false);
+      setLogged({ mealId: res.meal_log_id, removed: res.removed });
+      stopCooking(id);
+      setPinned(false);
       // D60: what ran out is off the kitchen list now; show the recipe against what's left.
       if (usedUp.size > 0) {
         setUsedUp(new Set());
         api.recipe(id).then(setRecipe);
       }
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** D70: take the meal back off the log and put back what was ticked as run out. */
+  async function undo() {
+    if (!logged || busy) return;
+    setBusy(true);
+    try {
+      await api.deleteMeal(logged.mealId);
+      if (logged.removed.length) await api.addInventory(logged.removed);
+      setLogged(null);
+      setCooked(false);
+      setRecipe(await api.recipe(id));
+    } catch (e) {
+      setError(errorText(e));
     } finally {
       setBusy(false);
     }
@@ -146,8 +202,8 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
             The recipe source lists ingredients without amounts; the method gives most of them. Calories are for
             one serving.
           </p>
-          <IngredientGroup label="In your kitchen" kind="have" items={have} />
-          <IngredientGroup label="Missing" kind="missing" items={missing} />
+          <IngredientGroup label="In your kitchen" kind="have" items={have} onFix={fix} fixing={fixing} />
+          <IngredientGroup label="Missing" kind="missing" items={missing} onFix={fix} fixing={fixing} />
           {swaps.map(([food, sub]) => (
             <p key={food} className="swap-note">
               No {pretty(food ?? "")}? Your <strong>{pretty(sub)}</strong> works instead.
@@ -179,8 +235,11 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
               </label>
               {depletable.length > 0 && (
                 <>
-              <h3>Did anything run out?</h3>
-              <p className="feedback">Tick what's used up and it comes off your kitchen list.</p>
+              <h3>What ran out?</h3>
+              <p className="feedback">
+                Ticked items come off your kitchen list. Fresh meat, fish and greens usually all go in, so they start
+                ticked; untick what's left.
+              </p>
               <ul className="scan-list">
                 {depletable.map((d) => (
                   <li key={d.canonical}>
@@ -194,6 +253,7 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
                         {pretty(d.canonical)}
                         {d.usedFor && <span className="sub-hint"> (used for {pretty(d.usedFor)})</span>}
                       </span>
+                      <span className="scan-qty">{usedUp.has(d.canonical) ? "Ran out" : "Some left"}</span>
                     </label>
                   </li>
                 ))}
@@ -211,18 +271,50 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
                 </button>
               </div>
             </div>
+          ) : logged ? (
+            <div className="notice cook-done" role="status">
+              <p>
+                Logged. Enjoy!
+                {logged.removed.length > 0 && <> {logged.removed.map(pretty).join(", ")} came off your kitchen list.</>}
+              </p>
+              <button className="link" onClick={undo} disabled={busy}>
+                Undo
+              </button>
+            </div>
           ) : (
             <div className="detail-actions">
-              {steps.length > 0 && (
-                <button className="btn" onClick={() => setCooking(true)}>
-                  Start cook mode
+              {pinned ? (
+                steps.length > 0 && (
+                  <button className="btn" onClick={() => setCooking(true)}>
+                    Open cook mode
+                  </button>
+                )
+              ) : (
+                <button className="btn" onClick={cookNow}>
+                  I'm cooking this
                 </button>
               )}
-              <button className="btn secondary" onClick={logCooked} disabled={busy || cooked}>
-                {cooked ? "Logged. Enjoy!" : "I cooked this"}
+              <button className={pinned ? "btn" : "btn secondary"} onClick={logCooked} disabled={busy || cooked}>
+                I ate it
               </button>
             </div>
           )}
+          {pinned && !confirming && !logged && (
+            <p className="field-hint cooking-note">
+              Pinned while you cook. Say “I ate it” when you've eaten, or{" "}
+              <button
+                className="link"
+                onClick={() => {
+                  stopCooking(id);
+                  setPinned(false);
+                }}
+              >
+                stop cooking
+              </button>
+              .
+            </p>
+          )}
+          {error && <p className="error">{error}</p>}
         </section>
       </div>
 
@@ -246,16 +338,49 @@ const GROUP_HINTS: Record<string, string> = {
   pantry: "Basics Forkcast assumes every kitchen has.",
 };
 
-function IngredientGroup({ label, kind, items }: { label: string; kind: string; items: Ingredient[] }) {
+/** D70: rows in "In your kitchen" offer "Don't have it", rows in "Missing"
+ *  offer "Have it", so a wrong guess about the kitchen is fixed where it shows. */
+function IngredientGroup({
+  label,
+  kind,
+  items,
+  onFix,
+  fixing,
+}: {
+  label: string;
+  kind: string;
+  items: Ingredient[];
+  onFix?: (canonical: string, have: boolean) => void;
+  fixing?: string | null;
+}) {
   if (items.length === 0) return null;
+  const shown = new Set<string>();
   return (
     <>
       <p className={`group-label ${kind}`}>{label}</p>
       {GROUP_HINTS[kind] && <p className="group-hint">{GROUP_HINTS[kind]}</p>}
       <ul className={`ingredient-list ${kind}`}>
-        {items.map((ing, i) => (
-          <li key={i}>{ing.raw}</li>
-        ))}
+        {items.map((ing, i) => {
+          // One button per food: "lime zest" and "lime juice" both fix lime.
+          const c = ing.canonical;
+          const button = onFix && c && !shown.has(c) && (kind === "have" || kind === "missing");
+          if (c) shown.add(c);
+          return (
+            <li key={i}>
+              <span className="ingredient-raw">{ing.raw}</span>
+              {button && (
+                <button
+                  className="have-toggle"
+                  onClick={() => onFix(c, kind === "missing")}
+                  disabled={fixing != null}
+                  aria-label={`${kind === "have" ? "Don't have it" : "Have it"}: ${pretty(c)}`}
+                >
+                  {fixing === c ? "…" : kind === "have" ? "Don't have it" : "Have it"}
+                </button>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </>
   );

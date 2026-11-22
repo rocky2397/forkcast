@@ -160,15 +160,16 @@ async function run(page) {
       await card.click();
       await expectText(page.locator(".recipe-detail h1"), new RegExp(name.slice(0, 12).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "recipe title");
       await audit(page, "recipe");
-      await page.getByRole("button", { name: "I cooked this" }).click();
-      // "Did anything run out?": tick the first item; it should leave the kitchen.
-      await page.getByRole("heading", { name: "Did anything run out?" }).waitFor();
+      await page.getByRole("button", { name: "I ate it" }).click();
+      // "What ran out?": D70 may start some ticked; tick just the first, which should leave the kitchen.
+      await page.getByRole("heading", { name: "What ran out?" }).waitFor();
+      for (const box of await page.locator(".cook-confirm .scan-list input[type=checkbox]").all()) await box.uncheck();
       const first = page.locator(".scan-list li").first();
       usedUp = (await first.locator(".scan-name").innerText()).split("(")[0].trim();
       await first.getByRole("checkbox").check();
       // D66: a double tap logs the recipe once (counted on Today below).
       await page.getByRole("button", { name: "Log it and remove 1 from your kitchen" }).evaluate((b) => { b.click(); b.click(); });
-      await page.getByRole("button", { name: "Logged. Enjoy!" }).waitFor();
+      await expectText(page.locator(".cook-done"), /Logged\. Enjoy!/, "logged");
       // D60: the recipe now reads against what's left: what ran out is missing.
       await expectText(page.locator(".recipe-detail"), /1 ingredient away/i, "recipe after cooking");
     }],
@@ -177,6 +178,41 @@ async function run(page) {
       await page.locator(".kitchen-group").first().waitFor();
       const list = (await page.locator(".kitchen-group").allTextContents()).join(" ").toLowerCase();
       if (list.includes(usedUp.toLowerCase())) throw new Error(`"${usedUp}" was ticked as used up but is still in the kitchen`);
+    }],
+    ["fix the kitchen on a recipe, cook it, eat it, undo (D70)", async () => {
+      await tab(page, "Recipes").click();
+      await page.locator(".recipe-card").first().click();
+      await page.locator(".recipe-detail h1").waitFor();
+      const title = (await page.locator(".recipe-detail h1").innerText()).trim();
+      // "Don't have it" moves a food to Missing; "Have it" brings it back.
+      const dont = page.getByRole("button", { name: /^Don't have it: / }).first();
+      const food = (await dont.getAttribute("aria-label")).replace("Don't have it: ", "");
+      await dont.click();
+      await page.getByRole("button", { name: `Have it: ${food}` }).click();
+      await page.getByRole("button", { name: `Don't have it: ${food}` }).waitFor();
+      // "I'm cooking this" pins it; Today shows it and leads back.
+      await page.getByRole("button", { name: "I'm cooking this" }).click();
+      const close = page.getByRole("button", { name: "Close cook mode" });
+      if (await close.isVisible()) await close.click();
+      await expectText(page.locator(".cooking-note"), /Pinned while you cook/, "pinned note");
+      await tab(page, "Today").click();
+      await expectText(page.locator(".cooking-card"), new RegExp(title.slice(0, 12).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "cooking now card");
+      await audit(page, "today, cooking now");
+      await page.getByRole("button", { name: "Back to the recipe" }).click();
+      await page.getByRole("button", { name: "I ate it" }).click();
+      // Each row says what its tick means.
+      for (const row of await page.locator(".cook-confirm .scan-list li").all()) {
+        const ticked = await row.getByRole("checkbox").isChecked();
+        await expectText(row.locator(".scan-qty"), ticked ? /Ran out/ : /Some left/, "ran out or some left");
+      }
+      await audit(page, "recipe, what ran out");
+      await page.getByRole("button", { name: /^Log it/ }).click();
+      await expectText(page.locator(".cook-done"), /Logged\. Enjoy!/, "logged");
+      // Undo takes the meal off the log and puts back what ran out (the meal counts below stay right).
+      await page.locator(".cook-done").getByRole("button", { name: "Undo" }).click();
+      await page.getByRole("button", { name: "I ate it" }).waitFor();
+      await tab(page, "Today").click();
+      if (await page.locator(".cooking-card").count()) throw new Error("the pin should go once you ate it");
     }],
     ["a fridge scan: confident, not sure, looks gone (D69)", async () => {
       // Only the model's reply is faked: what Haiku 5.5 returns, as the scan route shapes it.
@@ -534,7 +570,7 @@ async function run(page) {
       await tab(page, "Recipes").click();
       await page.locator(".recipe-card").first().click();
       await expectText(page.locator(".amounts-note"), /without amounts/, "no amounts, said");
-      await page.getByRole("button", { name: "I cooked this" }).click();
+      await page.getByRole("button", { name: "I ate it" }).click();
       await expectText(page.locator(".cook-confirm"), /How much did you eat\?/, "servings asked");
       await page.getByRole("button", { name: "Cancel" }).click();
       await tab(page, "Recipes").click();
