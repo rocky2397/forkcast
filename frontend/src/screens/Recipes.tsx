@@ -29,6 +29,22 @@ export function Recipes() {
   const [tasteInfo, setTasteInfo] = useState<TasteProfile | null>(null);
   const [focus, setFocus] = useState<MacroFocus | null>(null);
   const [basket, setBasket] = useState<ShoppingItem[]>([]);
+  // D71: Worth buying picks put on the shopping list from here.
+  const [listed, setListed] = useState<Set<string>>(new Set());
+  const [listFailed, setListFailed] = useState<string | null>(null);
+  function putOnList(canonical: string) {
+    setListed((prev) => new Set(prev).add(canonical));
+    setListFailed(null);
+    api.addToList([canonical], "worth_buying").catch(() => {
+      // D66: a failed request says so.
+      setListed((prev) => {
+        const next = new Set(prev);
+        next.delete(canonical);
+        return next;
+      });
+      setListFailed(canonical);
+    });
+  }
   // D66: an open recipe on a phone is a step in the browser's history: Back closes it.
   const [openId, setOpenId] = useState<number | null>(() => history.state?.recipe ?? null);
   useEffect(() => {
@@ -232,6 +248,19 @@ export function Recipes() {
                   <div className="shopping-examples">
                     {item.examples.map(displayName).join(" · ")}
                   </div>
+                  {/* D71: one tap onto the shopping list. */}
+                  <button
+                    className="link list-add"
+                    onClick={() => putOnList(item.canonical)}
+                    disabled={listed.has(item.canonical)}
+                    aria-label={listed.has(item.canonical) ? `${pretty(item.canonical)} is on your list` : `Put ${pretty(item.canonical)} on the shopping list`}
+                  >
+                    {listed.has(item.canonical)
+                      ? "On your list"
+                      : listFailed === item.canonical
+                        ? "Couldn't add it. Try again"
+                        : "Put on the shopping list"}
+                  </button>
                 </li>
               ))}
             </ol>

@@ -901,3 +901,36 @@ def test_a_canned_ingredient_is_logged_kept_and_put_back(foods_client):
     assert foods_client.get("/api/day").json()["meals"][0]["ingredients"][0]["canned"] is True
     bad = foods_client.post("/api/meals", json={"name": "x", "ingredients": [{"canonical": "banana", "grams": 1, "canned": True}]})
     assert bad.status_code == 422 and "no canned form" in bad.json()["detail"]
+
+
+# --- D71: the shopping list ---
+
+
+def test_the_shopping_list_adds_once_and_says_why(client):
+    r = client.post("/api/list", json={"items": ["yeast", "chicken"], "reason": "ran_out"}).json()
+    assert r["added"] and r["unknown"] == []
+    again = client.post("/api/list", json={"items": ["yeast"], "reason": "missing"}).json()
+    assert again["added"] == [] and len(again["already"]) == 1
+    items = {i["canonical"]: i for i in client.get("/api/list").json()["items"]}
+    assert items["yeast"]["reason"] == "ran_out"  # the first reason stays
+    assert items["chicken"]["in_kitchen"] is True and items["yeast"]["in_kitchen"] is False
+
+
+def test_bought_moves_into_the_kitchen_and_off_the_list(client, db):
+    client.post("/api/list", json={"items": ["yeast", "milk"]})
+    r = client.post("/api/list/bought", json={"items": ["yeast", "unicorn"]}).json()
+    assert len(r["moved"]) == 1
+    assert [i["canonical"] for i in r["items"]] == ["milk"]
+    assert db.execute("SELECT 1 FROM inventory WHERE canonical = 'yeast'").fetchone() is not None
+
+
+def test_removing_from_the_list(client):
+    client.post("/api/list", json={"items": ["yeast"]})
+    assert client.delete("/api/list/yeast").json()["items"] == []
+    assert client.delete("/api/list/yeast").status_code == 200  # already gone: fine
+
+
+def test_the_list_refuses_odd_input(client):
+    assert client.post("/api/list", json={"items": []}).status_code == 422
+    assert client.post("/api/list", json={"items": ["x" * 81]}).status_code == 422
+    assert client.post("/api/list", json={"items": ["yeast"], "reason": "because"}).status_code == 422

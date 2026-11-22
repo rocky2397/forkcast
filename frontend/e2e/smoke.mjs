@@ -170,6 +170,9 @@ async function run(page) {
       // D66: a double tap logs the recipe once (counted on Today below).
       await page.getByRole("button", { name: "Log it and remove 1 from your kitchen" }).evaluate((b) => { b.click(); b.click(); });
       await expectText(page.locator(".cook-done"), /Logged\. Enjoy!/, "logged");
+      // D71: what ran out can go on the shopping list.
+      await page.getByRole("button", { name: "Put what ran out on the shopping list" }).click();
+      await expectText(page.locator(".cook-done"), /On your shopping list\./, "ran out, on the list");
       // D60: the recipe now reads against what's left: what ran out is missing.
       await expectText(page.locator(".recipe-detail"), /1 ingredient away/i, "recipe after cooking");
     }],
@@ -178,6 +181,31 @@ async function run(page) {
       await page.locator(".kitchen-group").first().waitFor();
       const list = (await page.locator(".kitchen-group").allTextContents()).join(" ").toLowerCase();
       if (list.includes(usedUp.toLowerCase())) throw new Error(`"${usedUp}" was ticked as used up but is still in the kitchen`);
+    }],
+    ["the shopping list (D71)", async () => {
+      // A Worth buying pick goes on the list in one tap.
+      await tab(page, "Recipes").click();
+      const pick = page.getByRole("button", { name: /^Put .+ on the shopping list$/ }).first();
+      await pick.waitFor({ timeout: 30_000 });
+      const picked = (await pick.getAttribute("aria-label")).replace(/^Put | on the shopping list$/g, "");
+      await pick.click();
+      await page.getByRole("button", { name: `${picked} is on your list` }).waitFor();
+      // The Kitchen shows the list: what ran out (from the cooked recipe) and the pick, each with its reason.
+      await tab(page, "Kitchen").click();
+      const list = page.locator(".buy-list");
+      await expectText(list, new RegExp(`${usedUp}[\\s\\S]*Ran out`, "i"), "ran out on the list");
+      await expectText(list, /Worth buying/, "pick on the list");
+      // Typed in, then taken off again.
+      await list.getByRole("textbox", { name: "Add to the shopping list" }).fill("milk");
+      await list.getByRole("button", { name: "Add to list" }).click();
+      await list.getByRole("button", { name: "Take milk off the list" }).click();
+      await expectText(list, /^(?![\s\S]*\bmilk\b)/i, "milk taken off");
+      await audit(page, "kitchen, shopping list");
+      // Bought: ticked goes into the kitchen and off the list.
+      await list.getByRole("checkbox", { name: new RegExp(usedUp, "i") }).check();
+      await list.getByRole("button", { name: "Put 1 in your kitchen" }).click();
+      await expectText(list, new RegExp(`In your kitchen now: ${usedUp}`, "i"), "bought");
+      await expectText(page.locator(".kitchen-groups"), new RegExp(usedUp, "i"), "back in the kitchen");
     }],
     ["fix the kitchen on a recipe, cook it, eat it, undo (D70)", async () => {
       await tab(page, "Recipes").click();
@@ -188,8 +216,9 @@ async function run(page) {
       const dont = page.getByRole("button", { name: /^Don't have it: / }).first();
       const food = (await dont.getAttribute("aria-label")).replace("Don't have it: ", "");
       await dont.click();
-      await page.getByRole("button", { name: `Have it: ${food}` }).click();
-      await page.getByRole("button", { name: `Don't have it: ${food}` }).waitFor();
+      // exact: "Have it: x" is also a substring of "Don't have it: x".
+      await page.getByRole("button", { name: `Have it: ${food}`, exact: true }).click();
+      await page.getByRole("button", { name: `Don't have it: ${food}`, exact: true }).waitFor();
       // "I'm cooking this" pins it; Today shows it and leads back.
       await page.getByRole("button", { name: "I'm cooking this" }).click();
       const close = page.getByRole("button", { name: "Close cook mode" });

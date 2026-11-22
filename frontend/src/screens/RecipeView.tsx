@@ -24,6 +24,8 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
   const [pinned, setPinned] = useState(() => cookingNow()?.id === id);
   const [logged, setLogged] = useState<{ mealId: number; removed: string[] } | null>(null);
   const [fixing, setFixing] = useState<string | null>(null);
+  // D71: what went on the shopping list from this page ("ran_out", "missing").
+  const [listed, setListed] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -113,6 +115,21 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
     }
   }
 
+  /** D71: put foods on the shopping list, saying why. */
+  async function toList(names: string[], reason: "ran_out" | "missing") {
+    if (busy || names.length === 0) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await api.addToList(names, reason);
+      setListed(new Set(listed).add(reason));
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   /** D70: take the meal back off the log and put back what was ticked as run out. */
   async function undo() {
     if (!logged || busy) return;
@@ -120,6 +137,11 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
     try {
       await api.deleteMeal(logged.mealId);
       if (logged.removed.length) await api.addInventory(logged.removed);
+      // D71: they're back in the kitchen, so off the shopping list again.
+      if (listed.has("ran_out")) for (const c of logged.removed) await api.removeFromList(c);
+      const next = new Set(listed);
+      next.delete("ran_out");
+      setListed(next);
       setLogged(null);
       setCooked(false);
       setRecipe(await api.recipe(id));
@@ -149,6 +171,7 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
   const missing = recipe.ingredients.filter((i) => !i.in_inventory && !i.staple);
   const pantry = recipe.ingredients.filter((i) => !i.in_inventory && i.staple);
   const missingFoods = [...new Set(missing.map((i) => i.canonical ?? i.raw))];
+  const missingNames = [...new Set(missing.map((i) => i.canonical).filter((c): c is string => !!c))];
   const swaps = [...new Map(missing.filter((i) => i.sub).map((i) => [i.canonical, i.sub as string]))];
   const status =
     missingFoods.length === 0
@@ -204,6 +227,14 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
           </p>
           <IngredientGroup label="In your kitchen" kind="have" items={have} onFix={fix} fixing={fixing} />
           <IngredientGroup label="Missing" kind="missing" items={missing} onFix={fix} fixing={fixing} />
+          {missingNames.length > 0 &&
+            (listed.has("missing") ? (
+              <p className="field-hint list-done">On your shopping list.</p>
+            ) : (
+              <button className="link list-add" onClick={() => toList(missingNames, "missing")} disabled={busy}>
+                Put the missing {missingNames.length === 1 ? "one" : missingNames.length} on the shopping list
+              </button>
+            ))}
           {swaps.map(([food, sub]) => (
             <p key={food} className="swap-note">
               No {pretty(food ?? "")}? Your <strong>{pretty(sub)}</strong> works instead.
@@ -276,6 +307,17 @@ export function RecipeView({ id, onBack }: { id: number; onBack: () => void }) {
               <p>
                 Logged. Enjoy!
                 {logged.removed.length > 0 && <> {logged.removed.map(pretty).join(", ")} came off your kitchen list.</>}
+                {logged.removed.length > 0 &&
+                  (listed.has("ran_out") ? (
+                    <> On your shopping list.</>
+                  ) : (
+                    <>
+                      {" "}
+                      <button className="link" onClick={() => toList(logged.removed, "ran_out")} disabled={busy}>
+                        Put what ran out on the shopping list
+                      </button>
+                    </>
+                  ))}
               </p>
               <button className="link" onClick={undo} disabled={busy}>
                 Undo
@@ -366,7 +408,8 @@ function IngredientGroup({
           const button = onFix && c && !shown.has(c) && (kind === "have" || kind === "missing");
           if (c) shown.add(c);
           return (
-            <li key={i}>
+            // Keyed by the line itself, so a row's button never turns into another food's.
+            <li key={`${ing.raw}|${ing.canonical}|${i}`}>
               <span className="ingredient-raw">{ing.raw}</span>
               {button && (
                 <button

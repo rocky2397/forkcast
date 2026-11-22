@@ -484,6 +484,87 @@ def cookable_recipes(
     }
 
 
+# --- D71: the shopping list ---------------------------------------------------
+
+class ListAdd(BaseModel):
+    items: list[str] = Field(min_length=1, max_length=50)
+    reason: Literal["ran_out", "missing", "worth_buying", "typed"] = "typed"
+
+    @field_validator("items")
+    @classmethod
+    def _short(cls, v: list[str]) -> list[str]:
+        if any(len(x) > 80 for x in v):
+            raise ValueError("each item at most 80 characters")
+        return v
+
+
+class ListBought(BaseModel):
+    items: list[str] = Field(min_length=1, max_length=50)
+
+
+def _list_items(con) -> list[dict]:
+    have = {r["canonical"] for r in con.execute("SELECT canonical FROM inventory")}
+    rows = con.execute("SELECT canonical, reason, added_at FROM shopping_list ORDER BY added_at, canonical").fetchall()
+    return [{"canonical": r["canonical"], "name": foods.kitchen_label(r["canonical"]), "reason": r["reason"],
+             "family": NAME_TO_CLASS.get(r["canonical"]), "in_kitchen": r["canonical"] in have} for r in rows]
+
+
+@app.get("/api/list")
+def get_list():
+    """D71: the shopping list, oldest first."""
+    with connect() as con:
+        return {"items": _list_items(con)}
+
+
+@app.post("/api/list")
+def add_to_list(body: ListAdd):
+    """D71: put foods on the list; names are matched like the kitchen's."""
+    added, already, unknown = [], [], []
+    with connect() as con:
+        on = {r["canonical"] for r in con.execute("SELECT canonical FROM shopping_list")}
+        for raw in body.items:
+            c = foods.kitchen_match(normalizer, raw)
+            if c is None:
+                unknown.append(raw)
+            elif c in on:
+                if c not in already and c not in added:
+                    already.append(c)
+            else:
+                con.execute("INSERT INTO shopping_list (canonical, reason) VALUES (?, ?)", (c, body.reason))
+                added.append(c)
+                on.add(c)
+        con.commit()
+        items = _list_items(con)
+    if added:
+        stats.event(f"list_added_{body.reason}")
+    return {"added": [foods.kitchen_label(c) for c in added], "already": [foods.kitchen_label(c) for c in already],
+            "unknown": unknown, "items": items}
+
+
+@app.delete("/api/list/{canonical}")
+def remove_from_list(canonical: str):
+    with connect() as con:
+        con.execute("DELETE FROM shopping_list WHERE canonical = ?", (canonical,))
+        con.commit()
+        return {"items": _list_items(con)}
+
+
+@app.post("/api/list/bought")
+def list_bought(body: ListBought):
+    """D71: what was bought goes into the kitchen and off the list."""
+    with connect() as con:
+        on = {r["canonical"] for r in con.execute("SELECT canonical FROM shopping_list")}
+        moved = [c for c in dict.fromkeys(body.items) if c in on]
+        for c in moved:
+            con.execute("INSERT OR IGNORE INTO inventory (canonical) VALUES (?)", (c,))
+            con.execute("DELETE FROM shopping_list WHERE canonical = ?", (c,))
+        con.commit()
+        items = _list_items(con)
+    if moved:
+        stats.event("list_bought")
+    return {"moved": [foods.kitchen_label(c) for c in moved], "items": items}
+
+
 @app.get("/api/shopping")
 def shopping_suggestions(
     basket: int = Query(3, ge=1, le=5),
