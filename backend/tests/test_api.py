@@ -822,6 +822,63 @@ def test_a_pot_needs_ingredients_and_no_more_eaten_than_made(foods_client):
     assert foods_client.post("/api/meals", json=big).status_code == 200
 
 
+# D75: what's left of a pot, in the kitchen.
+
+CHILI = {"name": "Chili", "ingredients": [{"canonical": "banana", "grams": 472}],
+         "products": [{**SKYR, "grams": 400}], "pot": 4}
+
+
+def test_the_rest_of_a_pot_waits_in_the_kitchen(foods_client, db):
+    stocked = db.execute("SELECT COUNT(*) FROM inventory").fetchone()[0]
+    first = foods_client.post("/api/meals", json={**CHILI, "keep": True}).json()
+    assert first["leftover_id"] is not None
+    [left] = foods_client.get("/api/leftovers").json()["items"]
+    assert (left["name"], left["portions_left"], left["pot"], left["frozen"], left["stale"]) == ("Chili", 3, 4, False, False)
+    assert left["per_portion"]["calories"] == first["calories"]
+    # Eating a portion logs the same share of the same pot and counts down.
+    eaten = foods_client.post(f"/api/leftovers/{left['id']}/eat").json()
+    assert eaten["portions_left"] == 2 and eaten["calories"] == pytest.approx(first["calories"], abs=0.2)
+    meal = next(m for m in foods_client.get("/api/day").json()["meals"] if m["id"] == eaten["meal_log_id"])
+    assert (meal["pot"], meal["portions"], len(meal["ingredients"])) == (4, 1, 2)
+    # Undo: the meal goes, the portion comes back.
+    foods_client.delete(f"/api/meals/{eaten['meal_log_id']}")
+    foods_client.put(f"/api/leftovers/{left['id']}", json={"portions_left": 3})
+    assert foods_client.get("/api/leftovers").json()["items"][0]["portions_left"] == 3
+    # The pot's own copy: deleting the first meal doesn't take the leftovers with it.
+    foods_client.delete(f"/api/meals/{first['meal_log_id']}")
+    assert foods_client.post(f"/api/leftovers/{left['id']}/eat", json={"portions": 3}).json()["portions_left"] == 0
+    assert foods_client.get("/api/leftovers").json()["items"] == []  # eaten up: gone from the kitchen
+    assert foods_client.post(f"/api/leftovers/{left['id']}/eat").status_code == 404
+    # Leftovers aren't ingredients: the kitchen list doesn't change.
+    assert db.execute("SELECT COUNT(*) FROM inventory").fetchone()[0] == stocked
+
+
+def test_only_what_is_left_can_be_eaten_and_only_a_pot_is_kept(foods_client):
+    lid = foods_client.post("/api/meals", json={**CHILI, "portions": 3, "keep": True}).json()["leftover_id"]
+    assert foods_client.post(f"/api/leftovers/{lid}/eat", json={"portions": 2}).status_code == 422
+    plate = {"name": "Plate", "ingredients": [{"canonical": "banana", "grams": 118}], "keep": True}
+    assert foods_client.post("/api/meals", json=plate).status_code == 422
+    # A pot eaten up at once leaves nothing to keep.
+    assert foods_client.post("/api/meals", json={**CHILI, "portions": 4, "keep": True}).json()["leftover_id"] is None
+    # And without keep, nothing goes into the kitchen.
+    foods_client.post("/api/meals", json=CHILI)
+    assert len(foods_client.get("/api/leftovers").json()["items"]) == 1
+
+
+def test_the_fridge_asks_after_four_days_and_the_freezer_does_not(foods_client, db):
+    lid = foods_client.post("/api/meals", json={**CHILI, "keep": True}).json()["leftover_id"]
+    db.execute("UPDATE leftovers SET made_at = datetime('now', '-5 days'), fridge_since = datetime('now', '-5 days')")
+    db.commit()
+    assert foods_client.get("/api/leftovers").json()["items"][0]["stale"] is True
+    frozen = foods_client.put(f"/api/leftovers/{lid}", json={"frozen": True}).json()["items"][0]
+    assert frozen["frozen"] is True and frozen["stale"] is False and frozen["fridge_days"] is None
+    # Out of the freezer, the fridge days start again.
+    thawed = foods_client.put(f"/api/leftovers/{lid}", json={"frozen": False}).json()["items"][0]
+    assert thawed["stale"] is False and thawed["fridge_days"] < 0.1
+    assert foods_client.delete(f"/api/leftovers/{lid}").json()["items"] == []
+    assert foods_client.delete(f"/api/leftovers/{lid}").status_code == 404
+
+
 # D52: serving and pack sizes from Open Food Facts.
 
 @pytest.mark.parametrize("value, unit, expected", [

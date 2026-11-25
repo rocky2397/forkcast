@@ -147,6 +147,7 @@ const servingsText = (n: number) => `${n === 0.5 ? "½" : n === 1.5 ? "1½" : n}
 /** D74: "1 of 4 portions", "½ of 6 portions". */
 const portionText = (ate: number, pot: number) => `${ate === 0.5 ? "½" : ate === 1.5 ? "1½" : ate} of ${pot} portions`;
 const num = (s: string) => Number(s.replace(",", "."));
+const fmtPortions = (n: number) => `${n === 0.5 ? "½" : n === 1.5 ? "1½" : Math.round(n * 100) / 100} portion${n === 1 ? "" : "s"}`;
 
 /** D56: a product row of a logged meal, back in the form to edit it. */
 function partFromLogged(i: MealIngredient): Part {
@@ -208,7 +209,8 @@ export function Today({
   // D73: something logged before went into this meal ("Add to meal").
   const [fromEarlier, setFromEarlier] = useState(false);
   // D74: the ingredients are a whole pot: how many portions it made, how many you ate.
-  const [pot, setPot] = useState<{ made: string; ate: string } | null>(null);
+  // D75: and whether the portions not eaten go into the kitchen.
+  const [pot, setPot] = useState<{ made: string; ate: string; keep: boolean } | null>(null);
   // D58: the calories-and-macros fields, behind a link, so the form opens on
   // one box rather than two that look alike.
   const [typing, setTyping] = useState(false);
@@ -284,6 +286,7 @@ export function Today({
           ...(products.length > 0 && { products }),
           ...(fromEarlier && editingId === null && { source: "earlier" as const }),
           ...(pot && { pot: num(pot.made), portions: num(pot.ate) }),
+          ...(pot && pot.keep && editingId === null && num(pot.made) > num(pot.ate) && { keep: true }),
         };
       } else {
         body = {
@@ -387,7 +390,7 @@ export function Today({
     closeForm();
     if (m.ingredients.length > 0) {
       setParts(await partsOfLogged(m.ingredients));
-      if (m.pot) setPot({ made: String(m.pot), ate: String(m.portions ?? 1) });
+      if (m.pot) setPot({ made: String(m.pot), ate: String(m.portions ?? 1), keep: false });
       setMeal({ ...EMPTY_MEAL, name: m.name ?? "" });
     } else {
       const v = (n: number | null) => (n == null ? "" : String(Math.round(n * 10) / 10));
@@ -597,7 +600,7 @@ export function Today({
             },
             {
               term: "Log a meal",
-              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference; beans and peas can also come from a can, drained. Each food starts at the amount you had last time, once you've logged it. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there. Add to meal puts one into a new meal with other things, under a name of your own: a usual breakfast becomes one tap. Cooked a whole pot? Add everything that went in, say how many portions it made and how many you ate; the next portion is one tap under Log again.",
+              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference; beans and peas can also come from a can, drained. Each food starts at the amount you had last time, once you've logged it. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there. Add to meal puts one into a new meal with other things, under a name of your own: a usual breakfast becomes one tap. Cooked a whole pot? Add everything that went in, say how many portions it made and how many you ate. The rest can wait in your kitchen: Cook offers it before anything new, one tap a portion, and asks after four days in the fridge whether it's still good.",
             },
             {
               term: "Liked · Not for me",
@@ -836,15 +839,22 @@ export function Today({
                           const f = num(pot.ate) / num(pot.made);
                           return `Your share: ${fmt(t.calories * f)} kcal · ${fmt(t.protein_g * f)} g protein · ${fmt(t.carbs_g * f)} g carbs · ${fmt(t.fat_g * f)} g fat. `;
                         })()}
-                        Log the next portion under Log again, one tap.
+                        {editingId !== null || !pot.keep ? "Log the next portion under Log again, one tap." : ""}
                       </p>
+                    )}
+                    {/* D75: the rest waits in the kitchen, and Cook offers it before cooking again. */}
+                    {editingId === null && !potProblem && num(pot.made) > num(pot.ate) && (
+                      <label className="pot-keep">
+                        <input type="checkbox" checked={pot.keep} onChange={(e) => setPot({ ...pot, keep: e.target.checked })} />
+                        Keep the other {fmtPortions(num(pot.made) - num(pot.ate))} in your kitchen
+                      </label>
                     )}
                     <button type="button" className="link-button" onClick={() => setPot(null)}>
                       I ate all of it
                     </button>
                   </fieldset>
                 ) : (
-                  <button type="button" className="link-button pot-open" onClick={() => setPot({ made: "4", ate: "1" })}>
+                  <button type="button" className="link-button pot-open" onClick={() => setPot({ made: "4", ate: "1", keep: true })}>
                     Cooked a whole pot? Split it into portions
                   </button>
                 ))}

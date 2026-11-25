@@ -607,6 +607,33 @@ async function run(page) {
       await page.getByRole("button", { name: "Save changes" }).click();
       await expectText(pots.nth(1).locator(".meal-macros"), /^2 of 4 portions · /, "two portions");
     }],
+    ["what's left of the pot waits in the kitchen (D75)", async () => {
+      // The pot above was logged with "Keep the other 3 portions in your kitchen" ticked, as it starts.
+      await tab(page, "Cook").click();
+      const ready = page.locator(".leftovers-cook");
+      await expectText(ready, /Cooked and ready[\s\S]*Smoke test pot[\s\S]*3 portions left, made today/, "the rest of the pot on Cook");
+      await audit(page, "cook, cooked and ready");
+      await page.getByRole("button", { name: "Eat a portion of Smoke test pot" }).click();
+      await expectText(ready.locator(".leftover-note"), /Logged a portion of Smoke test pot\. 2 portions left\./, "one eaten");
+      await ready.getByRole("button", { name: "Undo" }).click();
+      await expectText(ready, /3 portions left/, "Undo puts it back");
+      await page.getByRole("button", { name: "Eat a portion of Smoke test pot" }).click();
+      await expectText(ready, /2 portions left/, "eaten again");
+      // In the kitchen: the freezer, and gone.
+      await tab(page, "Kitchen").click();
+      const cooked = page.locator(".leftovers-kitchen");
+      await expectText(cooked, /Smoke test pot[\s\S]*2 portions left/, "in the kitchen");
+      await cooked.getByRole("button", { name: "Move to the freezer" }).click();
+      await expectText(cooked, /in the freezer/, "frozen");
+      await audit(page, "kitchen, cooked");
+      await cooked.getByRole("button", { name: "Back to the fridge" }).click();
+      await page.getByRole("button", { name: "Smoke test pot is gone" }).click();
+      await cooked.waitFor({ state: "detached" });
+      // The portion eaten is on the day, as a share of the pot.
+      await tab(page, "Today").click();
+      const pots = page.locator(".meal-list li").filter({ has: page.locator(".meal-name", { hasText: "Smoke test pot" }) });
+      await expectText(pots.nth(2).locator(".meal-macros"), /^1 of 4 portions · /, "the portion from the kitchen");
+    }],
     ["edit, undo, servings and an earlier day (D56)", async () => {
       // Edit: back into the form, filled in, and saved over.
       await page.getByRole("button", { name: "Edit Smoke test porridge" }).first().click();
