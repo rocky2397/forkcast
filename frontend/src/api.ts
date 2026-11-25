@@ -221,6 +221,8 @@ export type MealIn =
       /** D74: the ingredients are a pot that made this many portions; `portions` were eaten. */
       pot?: number;
       portions?: number;
+      /** D75: keep the portions not eaten in the kitchen. */
+      keep?: boolean;
     };
 
 export interface MealIngredient {
@@ -311,6 +313,22 @@ export interface FoodLookup {
   canonical: string | null;
   food: Food | null;
   suggestions: { canonical: string; name: string }[];
+}
+
+/** D75: what's left of a pot cooked ahead, in the kitchen. */
+export interface Leftover {
+  id: number;
+  name: string;
+  pot: number;
+  portions_left: number;
+  /** UTC, as SQLite writes it: "2026-11-25 18:02:11". */
+  made_at: string;
+  frozen: boolean;
+  /** Days in the fridge; null in the freezer. */
+  fridge_days: number | null;
+  /** In the fridge longer than cooked food keeps. */
+  stale: boolean;
+  per_portion: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
 }
 
 /** D50: a typed or built meal to log again in one tap. */
@@ -576,6 +594,21 @@ export const api = {
     }),
   removeFromList: (canonical: string) =>
     req<ListReply>(`/api/list/${encodeURIComponent(canonical)}`, { method: "DELETE" }),
+  /** D75: what's left of pots cooked ahead. */
+  leftovers: () => req<{ items: Leftover[]; fridge_days: number }>("/api/leftovers"),
+  eatLeftover: (id: number, portions = 1, logged_at?: string) =>
+    req<{ meal_log_id: number; portions_left: number; calories: number }>(`/api/leftovers/${id}/eat`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ portions, ...(logged_at && { logged_at }) }),
+    }),
+  changeLeftover: (id: number, change: { portions_left?: number; frozen?: boolean }) =>
+    req<{ items: Leftover[] }>(`/api/leftovers/${id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(change),
+    }),
+  removeLeftover: (id: number) => req<{ items: Leftover[] }>(`/api/leftovers/${id}`, { method: "DELETE" }),
   boughtFromList: (items: string[]) =>
     req<ListReply & { moved: string[] }>("/api/list/bought", {
       method: "POST",

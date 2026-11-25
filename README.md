@@ -15,9 +15,9 @@ tells you what to buy to unlock more.
   recipes you can really cook: 65% → 92%. Suggested swaps a cook would use:
   33% → 95%. A typed German food within 10% of the calories on its pack:
   64% → 76%. [How the tests work](#evaluation)
-- **Decisions in writing.** 74 product decisions, each with the options turned
+- **Decisions in writing.** 75 product decisions, each with the options turned
   down and why ([APP_DECISIONS.md](APP_DECISIONS.md)).
-- **Built to ship.** 519 tests and a browser test of a first visit on every
+- **Built to ship.** 522 tests and a browser test of a first visit on every
   change, a check of the live demo after every deploy, and no serious
   accessibility problems on any screen.
 - **Built with AI.** Claude Code wrote most of the code; the product calls
@@ -202,8 +202,11 @@ breakfasts and snacks. "Add to meal" puts them together: a protein shake, a
 quark and an oat bowl logged on their own become one meal under a name of your
 own, with the totals added up, and that is one tap from then on. Cooking for
 several days works the same way: enter everything that went into the pot once,
-say it made four portions and you ate one, and the meal counts a quarter; the
-next portion is one tap under "Log again".
+say it made four portions and you ate one, and the meal counts a quarter. The
+other three wait in the kitchen: Cook shows "Cooked and ready: Chili, 3 portions
+left" before any recipe, "Eat a portion" logs one and counts down, a portion can
+move to the freezer, and after four days in the fridge the app asks whether it's
+still good instead of suggesting it.
 
 Logs can be fixed: a meal can be edited, a removed one comes back with Undo,
 a cooked recipe can count as half a serving or two, and "‹ Earlier" goes back
@@ -468,7 +471,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 519 pytest tests in about three seconds, offline and without the
+- **Tests:** 522 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -502,7 +505,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 74 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 75 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

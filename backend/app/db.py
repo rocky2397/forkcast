@@ -156,6 +156,23 @@ CREATE TABLE IF NOT EXISTS shopping_list (
     reason    TEXT NOT NULL,      -- ran_out, missing, worth_buying, typed
     added_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- D75: what's left of a pot cooked ahead, kept in the kitchen and counted down.
+-- parts is the pot's own copy of its ingredients and products (JSON), so a
+-- portion can be logged after the meal it came from was edited or deleted.
+-- Cooked food keeps a few days in the fridge, counted from fridge_since; in
+-- the freezer it doesn't go off.
+CREATE TABLE IF NOT EXISTS leftovers (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    name         TEXT NOT NULL,
+    parts        TEXT NOT NULL,
+    pot          REAL NOT NULL,       -- portions the pot made
+    portions_left REAL NOT NULL,
+    calories     REAL, protein_g REAL, carbs_g REAL, fat_g REAL,   -- one portion
+    made_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    fridge_since TEXT NOT NULL DEFAULT (datetime('now')),
+    frozen       INTEGER NOT NULL DEFAULT 0
+);
 """
 
 # Kept for the split script and anything wanting the whole shape at once.

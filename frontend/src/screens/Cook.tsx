@@ -4,6 +4,7 @@ import { CookingCard } from "../CookingCard";
 import { mealOfDay } from "../format";
 import { ScanIcon } from "../Icons";
 import { InstallHint } from "../InstallHint";
+import { Leftovers } from "./Leftovers";
 import { errorText } from "../LoadError";
 import { RecipeCard } from "./Recipes";
 
@@ -35,8 +36,9 @@ export function Cook({
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const loadDay = () => api.day().then(setDay).catch(() => {});
   useEffect(() => {
-    api.day().then(setDay).catch(() => {});
+    loadDay();
     // Cookable now first; if fewer than three, the ones a single item away.
     // An empty kitchen gets no suggestions: "one thing away" would be any
     // one-ingredient recipe, which helps nobody.
@@ -83,6 +85,9 @@ export function Cook({
       )}
 
       <CookingCard onOpen={onOpenRecipe} />
+
+      {/* D75: a pot cooked ahead comes before cooking something new. */}
+      <Leftovers where="cook" onEaten={loadDay} />
 
       <section className="fridge-card" aria-labelledby="fridge-title">
         <h2 id="fridge-title" className="group-label">

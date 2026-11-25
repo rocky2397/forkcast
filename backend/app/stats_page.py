@@ -44,6 +44,10 @@ ACTIONS = {
     "opened_from_home_screen": "Opened from the home screen",
     "app_installed": "Installed on a phone or computer",
     "meal_pot": "Meals logged as a portion of a pot",
+    "leftover_kept": "Pots kept in the kitchen",
+    "leftover_eaten": "Portions eaten from the kitchen",
+    "leftover_frozen": "Portions moved to the freezer",
+    "leftover_gone": "Cooked food marked as gone",
 }
 
 ROUTES = {

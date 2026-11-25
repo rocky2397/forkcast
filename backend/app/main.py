@@ -951,6 +951,8 @@ class MealAdd(BaseModel):
     # `portions` were eaten (one when left out); the meal counts that share.
     pot: float | None = Field(None, gt=1, le=50)
     portions: float | None = Field(None, gt=0, le=50)
+    # D75: keep the portions not eaten in the kitchen, to eat later.
+    keep: bool = False
 
 
 def _pot_share(body: "MealAdd") -> float:
@@ -1018,24 +1020,43 @@ def _write_parts(con, meal_id: int, items: list[dict], products: list[dict]) -> 
         )
 
 
+def _insert_meal(con, body: MealAdd, values: dict, items: list[dict], products: list[dict]) -> int:
+    cur = con.execute(
+        "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g, logged_at, pot, portions)"
+        " VALUES (?, ?, ?, ?, ?, COALESCE(?, datetime('now')), ?, ?)",
+        (body.name, *(values[k] for k in foods.MACROS), _logged_at(body.logged_at), *_pot_columns(body)),
+    )
+    _write_parts(con, cur.lastrowid, items, products)
+    return cur.lastrowid
+
+
 @app.post("/api/meals")
 def add_meal(body: MealAdd):
     values, items, products = _meal_values(body)
-    when = _logged_at(body.logged_at)
+    if body.keep and body.pot is None:
+        raise HTTPException(422, "Only a pot has portions left to keep.")
+    leftover = None
     with connect() as con:
-        cur = con.execute(
-            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g, logged_at, pot, portions)"
-            " VALUES (?, ?, ?, ?, ?, COALESCE(?, datetime('now')), ?, ?)",
-            (body.name, *(values[k] for k in foods.MACROS), when, *_pot_columns(body)),
-        )
-        _write_parts(con, cur.lastrowid, items, products)
+        meal_id = _insert_meal(con, body, values, items, products)
+        eaten = body.portions if body.portions is not None else 1.0
+        if body.keep and body.pot - eaten > 0:
+            # D75: the rest of the pot goes into the kitchen, one portion's numbers kept for showing.
+            per = {k: round(values[k] / eaten, 1) for k in foods.MACROS}
+            leftover = con.execute(
+                "INSERT INTO leftovers (name, parts, pot, portions_left, calories, protein_g, carbs_g, fat_g)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (body.name, json.dumps({"ingredients": items, "products": products}), body.pot,
+                 body.pot - eaten, *(per[k] for k in foods.MACROS)),
+            ).lastrowid
         con.commit()
     stats.event("meal_built" if items or products else "meal_typed")  # how, never what
     if body.source == "earlier":
         stats.event("meal_from_earlier")
     if body.pot is not None:
         stats.event("meal_pot")
-    return {"logged": True, "meal_log_id": cur.lastrowid, **values}
+    if leftover is not None:
+        stats.event("leftover_kept")
+    return {"logged": True, "meal_log_id": meal_id, "leftover_id": leftover, **values}
 
 
 @app.put("/api/meals/{meal_id:int}")
@@ -1259,6 +1280,113 @@ def restore_meal(body: Snapshot):
         _write_parts(con, cur.lastrowid, items, products)
         con.commit()
     return {"restored": cur.lastrowid}
+
+
+# D75: what's left of pots cooked ahead.
+
+FRIDGE_DAYS = 4  # cooked food keeps three to four days in the fridge
+
+
+def _leftover(row) -> dict:
+    days = row["fridge_days"]
+    return {
+        "id": row["id"], "name": row["name"], "pot": row["pot"], "portions_left": row["portions_left"],
+        "made_at": row["made_at"], "frozen": bool(row["frozen"]),
+        "fridge_days": None if row["frozen"] else round(days, 1),
+        # In the fridge longer than cooked food keeps: ask, don't offer it as dinner.
+        "stale": not row["frozen"] and days > FRIDGE_DAYS,
+        "per_portion": {k: row[k] for k in foods.MACROS},
+    }
+
+
+def _leftovers(con) -> list[dict]:
+    # Rows eaten up stay a day, so Undo can put a portion back; then they go.
+    con.execute("DELETE FROM leftovers WHERE portions_left <= 0 AND julianday('now') - julianday(made_at) > 1")
+    rows = con.execute(
+        """SELECT *, julianday('now') - julianday(fridge_since) AS fridge_days FROM leftovers
+           WHERE portions_left > 0 ORDER BY frozen, made_at, id"""
+    ).fetchall()
+    return [_leftover(r) for r in rows]
+
+
+@app.get("/api/leftovers")
+def get_leftovers():
+    """D75: cooked portions in the kitchen: fridge first, oldest first."""
+    with connect() as con:
+        items = _leftovers(con)
+        con.commit()
+    return {"items": items, "fridge_days": FRIDGE_DAYS}
+
+
+class Eat(BaseModel):
+    portions: float = Field(1, gt=0, le=50)
+    logged_at: str | None = None  # D56: on another day
+
+
+@app.post("/api/leftovers/{leftover_id:int}/eat")
+def eat_leftover(leftover_id: int, body: Eat | None = None):
+    """D75: log a portion of a pot in the kitchen, as a share of the same pot (D74), and count it down."""
+    body = body or Eat()
+    with connect() as con:
+        row = con.execute("SELECT * FROM leftovers WHERE id = ?", (leftover_id,)).fetchone()
+        if row is None or row["portions_left"] <= 0:
+            raise HTTPException(404, f"no portions left of {leftover_id}")
+        if body.portions > row["portions_left"] + 1e-9:
+            raise HTTPException(422, f"Only {row['portions_left']:g} left.")
+        parts = json.loads(row["parts"])
+        meal = MealAdd(name=row["name"], ingredients=parts["ingredients"] or None, products=parts["products"] or None,
+                       pot=row["pot"], portions=body.portions, logged_at=body.logged_at)
+        values, items, products = _meal_values(meal)
+        meal_id = _insert_meal(con, meal, values, items, products)
+        left = round(row["portions_left"] - body.portions, 3)
+        con.execute("UPDATE leftovers SET portions_left = ? WHERE id = ?", (left, leftover_id))
+        con.commit()
+    stats.event("leftover_eaten")
+    return {"meal_log_id": meal_id, "portions_left": left, **values}
+
+
+class LeftoverChange(BaseModel):
+    portions_left: float | None = Field(None, ge=0, le=50)  # Undo, or a correction
+    frozen: bool | None = None
+
+
+@app.put("/api/leftovers/{leftover_id:int}")
+def change_leftover(leftover_id: int, body: LeftoverChange):
+    """D75: put a portion back (Undo), or move it to the freezer and back.
+
+    Out of the freezer, the fridge days start again.
+    """
+    with connect() as con:
+        row = con.execute("SELECT frozen FROM leftovers WHERE id = ?", (leftover_id,)).fetchone()
+        if row is None:
+            raise HTTPException(404, f"no leftover {leftover_id}")
+        if body.portions_left is not None:
+            con.execute("UPDATE leftovers SET portions_left = ? WHERE id = ?", (body.portions_left, leftover_id))
+        if body.frozen is not None and body.frozen != bool(row["frozen"]):
+            con.execute(
+                "UPDATE leftovers SET frozen = ?, fridge_since = CASE WHEN ? THEN fridge_since ELSE datetime('now') END"
+                " WHERE id = ?",
+                (int(body.frozen), int(body.frozen), leftover_id),
+            )
+            if body.frozen:
+                stats.event("leftover_frozen")
+        con.commit()
+        items = _leftovers(con)
+        con.commit()
+    return {"items": items}
+
+
+@app.delete("/api/leftovers/{leftover_id:int}")
+def remove_leftover(leftover_id: int):
+    """D75: it's gone (eaten without logging, or thrown away)."""
+    with connect() as con:
+        if con.execute("DELETE FROM leftovers WHERE id = ?", (leftover_id,)).rowcount == 0:
+            raise HTTPException(404, f"no leftover {leftover_id}")
+        con.commit()
+        items = _leftovers(con)
+        con.commit()
+    stats.event("leftover_gone")
+    return {"items": items}
 
 
 @app.get("/api/day")

@@ -1060,4 +1060,16 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .pot-row input { width: 4.5em; }
 .pot .field-hint { margin: 8px 0 2px; }
 .pot-open { display: inline-block; margin: 10px 0 2px; }
+.pot-keep { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; font-size: 15px; }
+.pot-keep input { width: 20px; height: 20px; min-height: 0; flex: none; margin: 0; padding: 0; }
+
+/* D75: cooked portions in the kitchen */
+.leftovers { margin: 16px 0; }
+.leftover-list { list-style: none; margin: 6px 0 0; padding: 0; }
+.leftover { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.leftover-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 180px; }
+.leftover-meta { font-size: 14px; color: var(--ink-2); }
+.leftover-ask { font-size: 14px; color: var(--accent); }
+.leftover-actions { display: flex; align-items: center; gap: 12px; }
+.leftover-note { margin: 8px 0 0; font-size: 14px; }
 

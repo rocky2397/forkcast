@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, isDemo, pretty, scansOn, type InventoryItem, type ScanProposal } from "../api";
 import { ScanConfirm, type ScanOutcome } from "./ScanConfirm";
 import { ShoppingList } from "./ShoppingList";
+import { Leftovers } from "./Leftovers";
 import { foodColor, kitchenGroup, KITCHEN_GROUPS } from "../format";
 import { Guide, GuideHint, HelpButton } from "../Guide";
 import { useGuide } from "../useGuide";
@@ -321,6 +322,7 @@ export function Inventory({
         </div>
       )}
 
+      <Leftovers where="kitchen" />
       <ShoppingList onKitchenChange={refresh} />
 
       {loadError && <LoadError error={loadError} onRetry={refresh} />}
