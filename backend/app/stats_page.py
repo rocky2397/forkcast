@@ -40,6 +40,9 @@ ACTIONS = {
     "list_added_typed": "Put on the list: typed",
     "list_bought": "Bought from the list",
     "picks_seen": "Meal picks shown",
+    "meal_from_earlier": "Meals put together from earlier ones",
+    "opened_from_home_screen": "Opened from the home screen",
+    "app_installed": "Installed on a phone or computer",
 }
 
 ROUTES = {

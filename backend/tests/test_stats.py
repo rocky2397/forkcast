@@ -109,6 +109,24 @@ def test_the_first_visit_steps_are_counted(app):
     assert "Finished the welcome" in app.get("/stats").text
 
 
+def test_home_screen_opens_and_earlier_meals_are_counted(app):
+    # D73: plain counts, not funnel steps.
+    a = _new_visitor(app)
+    for step in ("opened_from_home_screen", "app_installed"):
+        assert app.post("/api/stats/step", json={"step": step}, headers={H: a}).json() == {"counted": True}
+    product = {"name": "Oats with yogurt", "grams": 100, "calories_100g": 420, "protein_g_100g": 15,
+               "carbs_g_100g": 60, "fat_g_100g": 12}
+    meal = {"name": "Breakfast", "products": [product], "source": "earlier"}
+    assert app.post("/api/meals", json=meal, headers={H: a}).status_code == 200
+    assert app.post("/api/meals", json={**meal, "source": None}, headers={H: a}).status_code == 200
+    assert app.post("/api/meals", json={**meal, "source": "made_up"}, headers={H: a}).status_code == 422
+    s = stats.summary(lambda ids: {})
+    assert s["events"]["opened_from_home_screen"] == 1 and s["events"]["app_installed"] == 1
+    assert s["events"]["meal_from_earlier"] == 1 and s["events"]["meal_built"] == 2
+    assert "opened_from_home_screen" not in s["funnel"]
+    assert "Opened from the home screen" in app.get("/stats").text
+
+
 def test_new_steps_are_shared_out_of_the_days_that_counted_them(app, tmp_path):
     # A day written before D68 has no "welcomed": its visitors don't dilute the share.
     (tmp_path / "stats" / "2026-11-19.json").write_text(json.dumps(

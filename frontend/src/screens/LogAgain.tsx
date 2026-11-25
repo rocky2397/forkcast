@@ -5,14 +5,17 @@ import { StarIcon } from "../Icons";
 const fmt = (n: number) => Math.round(n).toLocaleString("en");
 const SHOWN = 4;
 
-/** D50: meals typed or built before, to log again in one tap. Starred ones stay on top. */
+/** D50: meals typed or built before, to log again in one tap. Starred ones stay on top.
+ *  D73: or to put together into a new meal of your own ("Add to meal"). */
 export function LogAgain({
   meals,
   onChange,
+  onAddToMeal,
   loggedAt,
 }: {
   meals: RecentMeal[];
   onChange: () => Promise<unknown>;
+  onAddToMeal: (meal: RecentMeal) => void;
   /** D56: log on an earlier day, at noon. */
   loggedAt?: string;
 }) {
@@ -52,15 +55,26 @@ export function LogAgain({
               {m.name}
               <span className="again-kcal">{fmt(m.calories)} kcal</span>
             </span>
-            <button
-              type="button"
-              className="pill"
-              aria-label={`Log ${m.name} again`}
-              onClick={() => run(m.meal_id, () => api.logAgain(m.meal_id, loggedAt))}
-              disabled={busy !== null}
-            >
-              {busy === m.meal_id ? "…" : "Log"}
-            </button>
+            <span className="again-actions">
+              <button
+                type="button"
+                className="pill"
+                aria-label={`Log ${m.name} again`}
+                onClick={() => run(m.meal_id, () => api.logAgain(m.meal_id, loggedAt))}
+                disabled={busy !== null}
+              >
+                {busy === m.meal_id ? "…" : "Log"}
+              </button>
+              <button
+                type="button"
+                className="link-button again-add"
+                aria-label={`Add ${m.name} to a new meal`}
+                onClick={() => onAddToMeal(m)}
+                disabled={busy !== null}
+              >
+                Add to meal
+              </button>
+            </span>
           </li>
         ))}
       </ul>

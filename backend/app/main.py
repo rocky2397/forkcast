@@ -208,7 +208,9 @@ def stats_step(body: Step):
     stage = stats.STEPS.get(body.step)
     if stage:
         stats.event(body.step, stage=stage)
-    return {"counted": bool(stage) and stats.enabled()}
+    elif body.step in stats.BROWSER_EVENTS:  # D73: opened from the home screen, installed
+        stats.event(body.step)
+    return {"counted": bool(stage or body.step in stats.BROWSER_EVENTS) and stats.enabled()}
 
 
 @app.post("/api/login")
@@ -916,6 +918,9 @@ class MealProduct(BaseModel):
     protein_g_100g: float = Field(ge=0, le=100)
     carbs_g_100g: float = Field(ge=0, le=100)
     fat_g_100g: float = Field(ge=0, le=100)
+    # D73: a meal typed in as numbers, joined whole ("Add to meal"): how many of
+    # it. Its grams are then only a stand-in weight that carries its values.
+    meals: float | None = Field(None, gt=0, le=20)
 
 
 PRODUCT_VALUES = {"calories": "calories_100g", "protein_g": "protein_g_100g",
@@ -936,9 +941,12 @@ class MealAdd(BaseModel):
     # D49: or built from ingredients; the server works the numbers out.
     ingredients: list[MealIngredient] | None = Field(None, min_length=1, max_length=30)
     # D51: and packaged products, with their own values per 100 g.
-    products: list["MealProduct"] | None = Field(None, min_length=1, max_length=10)
+    # D73: up to 20, since earlier meals can join one ("Add to meal").
+    products: list["MealProduct"] | None = Field(None, min_length=1, max_length=20)
     # D56: when it was eaten, for a meal logged later; now when left out.
     logged_at: str | None = None
+    # D73: put together from meals logged before ("Add to meal"); counted, never stored.
+    source: Literal["earlier"] | None = None
 
 
 def _meal_values(body: "MealAdd") -> tuple[dict, list[dict], list[dict]]:
@@ -972,11 +980,13 @@ def _write_parts(con, meal_id: int, items: list[dict], products: list[dict]) -> 
         )
     con.executemany(
             """INSERT INTO meal_products (meal_id, name, barcode, grams, calories_100g, protein_g_100g,
-                                          carbs_g_100g, fat_g_100g, canonical)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                                          carbs_g_100g, fat_g_100g, canonical, meals)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             [(meal_id, p["name"], p["barcode"], p["grams"], p["calories_100g"], p["protein_g_100g"],
               p["carbs_g_100g"], p["fat_g_100g"],
-              packaged(normalizer, p["name"]) if normalizer else None)  # D35: a product's name
+              # D35: a product's name; D73: not a typed meal's, which says nothing sure about what's in it
+              packaged(normalizer, p["name"]) if normalizer and not p.get("meals") else None,
+              p.get("meals"))
              for p in products],
         )
 
@@ -994,6 +1004,8 @@ def add_meal(body: MealAdd):
         _write_parts(con, cur.lastrowid, items, products)
         con.commit()
     stats.event("meal_built" if items or products else "meal_typed")  # how, never what
+    if body.source == "earlier":
+        stats.event("meal_from_earlier")
     return {"logged": True, "meal_log_id": cur.lastrowid, **values}
 
 
@@ -1108,9 +1120,9 @@ def log_again(meal_id: int, body: Again | None = None):
         )
         con.execute(
             """INSERT INTO meal_products (meal_id, name, barcode, grams, calories_100g, protein_g_100g,
-                                          carbs_g_100g, fat_g_100g, canonical)
+                                          carbs_g_100g, fat_g_100g, canonical, meals)
                SELECT ?, name, barcode, grams, calories_100g, protein_g_100g, carbs_g_100g, fat_g_100g,
-                      canonical
+                      canonical, meals
                FROM meal_products WHERE meal_id = ? ORDER BY rowid""",
             (cur.lastrowid, meal_id),
         )
@@ -1173,7 +1185,7 @@ def delete_meal(meal_id: int):
         snapshot["ingredients"] = [dict(r) for r in con.execute(
             "SELECT canonical, grams, cooked, canned FROM meal_ingredients WHERE meal_id = ? ORDER BY rowid", (meal_id,))]
         snapshot["products"] = [dict(r) for r in con.execute(
-            "SELECT name, barcode, grams, calories_100g, protein_g_100g, carbs_g_100g, fat_g_100g, canonical"
+            "SELECT name, barcode, grams, calories_100g, protein_g_100g, carbs_g_100g, fat_g_100g, canonical, meals"
             " FROM meal_products WHERE meal_id = ? ORDER BY rowid", (meal_id,))]
         con.execute("DELETE FROM meal_log WHERE id = ?", (meal_id,))
         con.execute("DELETE FROM meal_ingredients WHERE meal_id = ?", (meal_id,))
@@ -1195,7 +1207,7 @@ class Snapshot(BaseModel):
     fat_g: float | None = Field(None, ge=0, le=500)
     servings: float | None = Field(None, gt=0, le=10)
     ingredients: list[dict] = Field(default_factory=list, max_length=30)
-    products: list[dict] = Field(default_factory=list, max_length=10)
+    products: list[dict] = Field(default_factory=list, max_length=20)
 
 
 @app.post("/api/meals/restore")
@@ -1287,7 +1299,7 @@ def _meal_ingredients(con, ids: list[int]) -> dict[int, list[dict]]:
         )
     for r in con.execute(  # D51: products after the USDA ingredients
         f"SELECT meal_id, name, barcode, grams, canonical, calories_100g, protein_g_100g, carbs_g_100g,"
-        f" fat_g_100g FROM meal_products"
+        f" fat_g_100g, meals FROM meal_products"
         f" WHERE meal_id IN ({','.join('?' * len(ids))}) ORDER BY rowid",
         ids,
     ):
@@ -1295,7 +1307,7 @@ def _meal_ingredients(con, ids: list[int]) -> dict[int, list[dict]]:
             {"canonical": r["canonical"], "name": r["name"], "grams": r["grams"],
              "cooked": False, "canned": False, "product": True,
              # D56: what's needed to edit the meal again
-             "barcode": r["barcode"], "per_100g": {
+             "barcode": r["barcode"], "meals": r["meals"], "per_100g": {
                  "calories": r["calories_100g"], "protein_g": r["protein_g_100g"],
                  "carbs_g": r["carbs_g_100g"], "fat_g": r["fat_g_100g"]}}
         )

@@ -8,6 +8,7 @@ import { Intro } from "./screens/Intro";
 import { api, isDemo, keepsStats, savesKitchens, setUnauthorizedHandler } from "./api";
 import { RecipesIcon, TodayIcon } from "./Icons";
 import "./App.css";
+import { installed } from "./install";
 
 // D72: two tabs. Cook is home; the kitchen and the full recipe list open from
 // it ("See what's in your fridge", "See all meals"). Progress is your day.
@@ -109,7 +110,11 @@ export default function App() {
     setUnauthorizedHandler(() => setGate("locked"));
     api
       .session()
-      .then((s) => setGate(s.authenticated ? "open" : "locked"))
+      .then((s) => {
+        setGate(s.authenticated ? "open" : "locked");
+        // D73: counted once per launch, after the session says whether the demo counts.
+        if (installed()) api.step("opened_from_home_screen");
+      })
       // No session endpoint reachable (offline PWA launch, backend down):
       // fall through to the app, which shows its own error state.
       .catch(() => setGate("open"));

@@ -412,8 +412,9 @@ async function builderShot(page) {
     if (amount) await page.getByLabel(`How much ${label}`).fill(amount);
   }
   await page.getByLabel("Name it (optional)").fill("Oat porridge");
-  // The fixed tab bar would sit across a full-page clip.
-  const hide = await page.addStyleTag({ content: ".tabbar { display: none !important; }" });
+  // The fixed tab bar and the sticky header would sit across a full-page clip;
+  // the earlier meals (D73) have a picture of their own.
+  const hide = await page.addStyleTag({ content: ".tabbar, .topbar, .earlier { display: none !important; }" });
   await page.waitForTimeout(300);
   const box = await page.evaluate(() => {
     const from = document.querySelector(".builder").getBoundingClientRect();
@@ -430,6 +431,34 @@ async function builderShot(page) {
   await hide.evaluate((el) => el.remove());
   await audit(page, "meal built from ingredients (phone)");
   console.log("  log-ingredients.jpg");
+  await page.getByRole("button", { name: "Cancel" }).click();
+}
+
+/** D73: "Add to meal": a meal typed in before, with two more things, named. Nothing is saved. */
+async function addToMealShot(page) {
+  await page.getByRole("button", { name: "Add Oats with yogurt and honey to a new meal" }).click();
+  const field = page.getByPlaceholder("e.g. 2 eggs, 50 g oats");
+  await field.fill("30 g protein powder, 1 banana");
+  await field.press("Enter");
+  await page.getByLabel("How much banana").waitFor();
+  await page.getByLabel("Name it (optional)").fill("My usual breakfast");
+  const hide = await page.addStyleTag({ content: ".tabbar, .topbar { display: none !important; }" });
+  await page.waitForTimeout(300);
+  const box = await page.evaluate(() => {
+    const from = document.querySelector(".earlier").getBoundingClientRect();
+    const to = document.querySelector(".meal-form .form-actions").getBoundingClientRect();
+    return { x: from.left + scrollX, y: from.top + scrollY, width: from.width, height: to.bottom - from.top };
+  });
+  await page.screenshot({
+    path: join(outDir, "add-to-meal.jpg"),
+    type: "jpeg",
+    quality: 86,
+    fullPage: true,
+    clip: { x: box.x - 14, y: box.y - 14, width: box.width + 28, height: box.height + 28 },
+  });
+  await hide.evaluate((el) => el.remove());
+  await audit(page, "earlier meals put together (phone)");
+  console.log("  add-to-meal.jpg");
   await page.getByRole("button", { name: "Cancel" }).click();
 }
 
@@ -469,6 +498,7 @@ async function main() {
     await phone.locator(".ring").waitFor();
     await shot(phone, "today", "today (phone)");
     await builderShot(phone);
+    await addToMealShot(phone);
 
     await tab(phone, "Kitchen").click();
     await phone.locator(".kitchen-group").first().waitFor();

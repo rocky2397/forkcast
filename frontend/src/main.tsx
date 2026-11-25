@@ -6,6 +6,7 @@ import '@fontsource-variable/inter/wght.css'
 import './index.css'
 import App from './App.tsx'
 import { registerSW } from 'virtual:pwa-register'
+import { watchInstall } from './install'
 
 // The service worker keeps an offline copy of the app. When a new version is
 // deployed, it installs in the background on the next launch and takes over;
@@ -28,6 +29,9 @@ registerSW({
     window.location.reload()
   },
 })
+
+// D73: the browser's install offer can come before any screen is drawn.
+watchInstall()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
