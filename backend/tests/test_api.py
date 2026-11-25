@@ -780,6 +780,48 @@ def test_earlier_meals_can_bring_up_to_twenty_products(foods_client):
     assert foods_client.post("/api/meals", json={"name": "Too many", "products": many + many[:1]}).status_code == 422
 
 
+# D74: a whole pot, and the portion of it eaten.
+
+def test_a_pot_counts_the_portion_eaten(foods_client, db):
+    pot = {"name": "Banana oat pot", "ingredients": [{"canonical": "banana", "grams": 472}],
+           "products": [{**SKYR, "grams": 400}], "pot": 4}
+    whole = KCAL["banana"] * 4.72 + 63 * 4
+    res = foods_client.post("/api/meals", json=pot).json()
+    assert res["calories"] == pytest.approx(whole / 4, abs=0.2)  # one portion when none is said
+    meal = foods_client.get("/api/day").json()["meals"][0]
+    assert (meal["pot"], meal["portions"]) == (4, 1)
+    # The ingredients stay the whole pot, to edit or log again.
+    assert [i["grams"] for i in meal["ingredients"]] == [472, 400]
+    two = foods_client.post("/api/meals", json={**pot, "portions": 2}).json()
+    assert two["calories"] == pytest.approx(whole / 2, abs=0.2)
+    # Log again: the same share of the same pot. Edit: a new share.
+    again = foods_client.post(f"/api/meals/{res['meal_log_id']}/again").json()["meal_log_id"]
+    meals = {m["id"]: m for m in foods_client.get("/api/day").json()["meals"]}
+    assert (meals[again]["calories"], meals[again]["pot"], meals[again]["portions"]) == (res["calories"], 4, 1)
+    edited = foods_client.put(f"/api/meals/{again}", json={**pot, "portions": 1.5}).json()
+    assert edited["calories"] == pytest.approx(whole * 1.5 / 4, abs=0.2)
+    # Undo keeps the pot.
+    snapshot = foods_client.delete(f"/api/meals/{again}").json()["meal"]
+    assert (snapshot["pot"], snapshot["portions"]) == (4, 1.5)
+    foods_client.post("/api/meals/restore", json=snapshot)
+    assert any(m["portions"] == 1.5 for m in foods_client.get("/api/day").json()["meals"])
+    # Log again lists it with its portion's numbers and the pot.
+    recent = foods_client.get("/api/meals/recent").json()["meals"][0]
+    assert recent["pot"] == 4 and recent["calories"] < whole
+
+
+def test_a_pot_needs_ingredients_and_no_more_eaten_than_made(foods_client):
+    typed = {"name": "Stew", "calories": 800, "protein_g": 40, "carbs_g": 60, "fat_g": 30, "pot": 4}
+    assert foods_client.post("/api/meals", json=typed).status_code == 422
+    pot = {"name": "Banana pot", "ingredients": [{"canonical": "banana", "grams": 472}]}
+    assert foods_client.post("/api/meals", json={**pot, "pot": 4, "portions": 5}).status_code == 422
+    assert foods_client.post("/api/meals", json={**pot, "portions": 1}).status_code == 422  # portions of what?
+    assert foods_client.post("/api/meals", json={**pot, "pot": 1}).status_code == 422  # one portion isn't a pot
+    # A pot bigger than 5,000 kcal is fine when the portion isn't.
+    big = {"name": "Party pot", "ingredients": [{"canonical": "banana", "grams": 5000}] * 2, "pot": 10}
+    assert foods_client.post("/api/meals", json=big).status_code == 200
+
+
 # D52: serving and pack sizes from Open Food Facts.
 
 @pytest.mark.parametrize("value, unit, expected", [

@@ -947,6 +947,29 @@ class MealAdd(BaseModel):
     logged_at: str | None = None
     # D73: put together from meals logged before ("Add to meal"); counted, never stored.
     source: Literal["earlier"] | None = None
+    # D74: the ingredients are a whole pot that made `pot` portions, of which
+    # `portions` were eaten (one when left out); the meal counts that share.
+    pot: float | None = Field(None, gt=1, le=50)
+    portions: float | None = Field(None, gt=0, le=50)
+
+
+def _pot_share(body: "MealAdd") -> float:
+    """D74: the part of the ingredients eaten: 1 of 4 portions is a quarter."""
+    if body.pot is None:
+        if body.portions is not None:
+            raise HTTPException(422, "Portions eaten need the portions the pot made.")
+        return 1.0
+    eaten = body.portions if body.portions is not None else 1.0
+    if eaten > body.pot:
+        raise HTTPException(422, f"That's more than the {body.pot:g} portions the pot made.")
+    return eaten / body.pot
+
+
+def _pot_columns(body: "MealAdd") -> tuple[float | None, float | None]:
+    """D74: (pot, portions) as stored: both NULL for an ordinary meal."""
+    if body.pot is None:
+        return None, None
+    return body.pot, body.portions if body.portions is not None else 1.0
 
 
 def _meal_values(body: "MealAdd") -> tuple[dict, list[dict], list[dict]]:
@@ -961,10 +984,14 @@ def _meal_values(body: "MealAdd") -> tuple[dict, list[dict], list[dict]]:
         except ValueError as e:
             raise HTTPException(422, f"{foods.label(e.args[0]).capitalize()} has no {e.args[1]} form.") from None
         extra = _product_totals(products)
-        values = {k: round(values[k] + extra[k], 1) for k in foods.MACROS}
+        # D74: a pot counts the share eaten.
+        share = _pot_share(body)
+        values = {k: round((values[k] + extra[k]) * share, 1) for k in foods.MACROS}
         if values["calories"] > 5000:
             raise HTTPException(422, "That's over 5,000 kcal for one meal. Check the amounts.")
     else:
+        if body.pot is not None:
+            raise HTTPException(422, "Only a meal built from ingredients can be a pot.")
         missing = [k for k in foods.MACROS if getattr(body, k) is None]
         if missing:
             raise HTTPException(422, "Give the meal's calories, protein, carbs and fat, or its ingredients.")
@@ -997,15 +1024,17 @@ def add_meal(body: MealAdd):
     when = _logged_at(body.logged_at)
     with connect() as con:
         cur = con.execute(
-            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g, logged_at)"
-            " VALUES (?, ?, ?, ?, ?, COALESCE(?, datetime('now')))",
-            (body.name, *(values[k] for k in foods.MACROS), when),
+            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g, logged_at, pot, portions)"
+            " VALUES (?, ?, ?, ?, ?, COALESCE(?, datetime('now')), ?, ?)",
+            (body.name, *(values[k] for k in foods.MACROS), when, *_pot_columns(body)),
         )
         _write_parts(con, cur.lastrowid, items, products)
         con.commit()
     stats.event("meal_built" if items or products else "meal_typed")  # how, never what
     if body.source == "earlier":
         stats.event("meal_from_earlier")
+    if body.pot is not None:
+        stats.event("meal_pot")
     return {"logged": True, "meal_log_id": cur.lastrowid, **values}
 
 
@@ -1025,8 +1054,8 @@ def edit_meal(meal_id: int, body: MealAdd):
             raise HTTPException(422, "A cooked recipe is changed by its servings.")
         con.execute(
             "UPDATE meal_log SET name = ?, calories = ?, protein_g = ?, carbs_g = ?, fat_g = ?,"
-            " logged_at = COALESCE(?, logged_at) WHERE id = ?",
-            (body.name, *(values[k] for k in foods.MACROS), when, meal_id),
+            " logged_at = COALESCE(?, logged_at), pot = ?, portions = ? WHERE id = ?",
+            (body.name, *(values[k] for k in foods.MACROS), when, *_pot_columns(body), meal_id),
         )
         con.execute("DELETE FROM meal_ingredients WHERE meal_id = ?", (meal_id,))
         con.execute("DELETE FROM meal_products WHERE meal_id = ?", (meal_id,))
@@ -1071,7 +1100,7 @@ def recent_meals(limit: int = Query(8, ge=1, le=20)):
     with connect() as con:
         favourites = {r[0] for r in con.execute("SELECT name_key FROM favourite_meals")}
         rows = con.execute(
-            """SELECT id, name, calories, protein_g, carbs_g, fat_g,
+            """SELECT id, name, calories, protein_g, carbs_g, fat_g, pot, portions,
                       julianday('now') - julianday(logged_at) AS age_days
                FROM meal_log
                WHERE recipe_id IS NULL AND name IS NOT NULL
@@ -1090,6 +1119,7 @@ def recent_meals(limit: int = Query(8, ge=1, le=20)):
         out.append({
             "meal_id": m["id"], "name": m["name"], "favourite": _name_key(m["name"]) in favourites,
             **{k: m[k] for k in foods.MACROS}, "ingredients": made_of.get(m["id"], []),
+            "pot": m["pot"], "portions": m["portions"],  # D74
         })
     return {"meals": out}
 
@@ -1103,14 +1133,16 @@ def log_again(meal_id: int, body: Again | None = None):
     """Log a copy of a typed or built meal now, with its ingredients (D50)."""
     with connect() as con:
         m = con.execute(
-            "SELECT name, calories, protein_g, carbs_g, fat_g FROM meal_log WHERE id = ? AND recipe_id IS NULL",
+            "SELECT name, calories, protein_g, carbs_g, fat_g, pot, portions FROM meal_log"
+            " WHERE id = ? AND recipe_id IS NULL",
             (meal_id,),
         ).fetchone()
         if m is None:
             raise HTTPException(404, f"no typed or built meal {meal_id}")
+        # D74: a pot's next portion is the same share of the same pot.
         cur = con.execute(
-            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g, logged_at)"
-            " VALUES (?, ?, ?, ?, ?, COALESCE(?, datetime('now')))",
+            "INSERT INTO meal_log (name, calories, protein_g, carbs_g, fat_g, pot, portions, logged_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')))",
             (*tuple(m), _logged_at(body.logged_at if body else None)),
         )
         con.execute(
@@ -1176,7 +1208,7 @@ def delete_meal(meal_id: int):
     can offer Undo (D56) by sending it back to /api/meals/restore."""
     with connect() as con:
         row = con.execute(
-            "SELECT recipe_id, logged_at, liked, name, calories, protein_g, carbs_g, fat_g, servings"
+            "SELECT recipe_id, logged_at, liked, name, calories, protein_g, carbs_g, fat_g, servings, pot, portions"
             " FROM meal_log WHERE id = ?", (meal_id,),
         ).fetchone()
         if row is None:
@@ -1206,6 +1238,8 @@ class Snapshot(BaseModel):
     carbs_g: float | None = Field(None, ge=0, le=1000)
     fat_g: float | None = Field(None, ge=0, le=500)
     servings: float | None = Field(None, gt=0, le=10)
+    pot: float | None = Field(None, gt=1, le=50)  # D74
+    portions: float | None = Field(None, gt=0, le=50)
     ingredients: list[dict] = Field(default_factory=list, max_length=30)
     products: list[dict] = Field(default_factory=list, max_length=20)
 
@@ -1217,10 +1251,10 @@ def restore_meal(body: Snapshot):
     products = [MealProduct(**p).model_dump() for p in body.products]
     with connect() as con:
         cur = con.execute(
-            "INSERT INTO meal_log (recipe_id, logged_at, liked, name, calories, protein_g, carbs_g, fat_g, servings)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO meal_log (recipe_id, logged_at, liked, name, calories, protein_g, carbs_g, fat_g, servings,"
+            " pot, portions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (body.recipe_id, body.logged_at, body.liked, body.name, body.calories, body.protein_g,
-             body.carbs_g, body.fat_g, body.servings),
+             body.carbs_g, body.fat_g, body.servings, body.pot, body.portions),
         )
         _write_parts(con, cur.lastrowid, items, products)
         con.commit()
@@ -1251,7 +1285,7 @@ def day_summary(
                       COALESCE(ml.protein_g, r.protein_g) AS protein_g,
                       COALESCE(ml.carbs_g, r.carbs_g)     AS carbs_g,
                       COALESCE(ml.fat_g, r.fat_g)         AS fat_g,
-                      ml.servings
+                      ml.servings, ml.pot, ml.portions
                FROM meal_log ml
                LEFT JOIN recipes r ON r.id = ml.recipe_id
                WHERE date(ml.logged_at, ?) = ?

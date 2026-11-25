@@ -43,6 +43,7 @@ ACTIONS = {
     "meal_from_earlier": "Meals put together from earlier ones",
     "opened_from_home_screen": "Opened from the home screen",
     "app_installed": "Installed on a phone or computer",
+    "meal_pot": "Meals logged as a portion of a pot",
 }
 
 ROUTES = {

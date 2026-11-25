@@ -1051,3 +1051,13 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 }
 .install-hint p { margin: 6px 0 10px; }
 .install-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+/* D74: a whole pot, split into portions */
+.pot { margin: 10px 0 4px; padding: 10px 14px 6px; border: 1px solid var(--line); border-radius: 12px; }
+.pot legend { padding: 0 4px; font-size: 14px; font-weight: 600; }
+.pot-row { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.pot-row label { display: inline-flex; align-items: center; gap: 8px; }
+.pot-row input { width: 4.5em; }
+.pot .field-hint { margin: 8px 0 2px; }
+.pot-open { display: inline-block; margin: 10px 0 2px; }
+

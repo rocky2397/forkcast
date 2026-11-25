@@ -51,7 +51,7 @@ BROWSER_EVENTS = frozenset({"opened_from_home_screen", "app_installed"})
 EVENTS = frozenset({
     "welcome_finished", "sample_profile_used", "picks_seen", "sample_fridge_used", "kitchen_fixed_on_recipe",
     "list_added_ran_out", "list_added_missing", "list_added_worth_buying", "list_added_typed", "list_bought",
-    "meal_from_earlier", "opened_from_home_screen", "app_installed",
+    "meal_from_earlier", "opened_from_home_screen", "app_installed", "meal_pot",
     "ingredient_added", "ingredient_removed",
     "recipe_opened", "recipe_cooked",
     "rated_liked", "rated_not_for_me", "rating_cleared",

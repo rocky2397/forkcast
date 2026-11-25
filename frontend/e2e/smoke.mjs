@@ -575,6 +575,38 @@ async function run(page) {
       await expectText(page.locator(".builder-total"), /Together: 210 kcal/, "half a typed meal");
       await page.getByRole("button", { name: "Cancel" }).click();
     }],
+    ["a whole pot, split into portions (D74)", async () => {
+      // A tester's friends cook for several days: the pot is entered once, each portion is a share of it.
+      await page.getByRole("button", { name: "Log a meal" }).click();
+      const field = page.getByPlaceholder("e.g. 2 eggs, 50 g oats");
+      await field.fill("400 g oats, 1600 g milk");
+      await field.press("Enter");
+      await page.getByLabel("How much milk").waitFor();
+      const kcalIn = (text) => Number(text.match(/([\d,]+) kcal/)[1].replace(",", ""));
+      const whole = kcalIn(await expectText(page.locator(".builder-total"), /Together: [\d,]+ kcal/, "the whole pot"));
+      await page.getByRole("button", { name: "Cooked a whole pot? Split it into portions" }).click();
+      const share = kcalIn(await expectText(page.locator(".pot-share"), /Your share: [\d,]+ kcal/, "a quarter"));
+      if (Math.abs(share - whole / 4) > 1) throw new Error(`a quarter of ${whole} kcal shown as ${share}`);
+      await page.getByLabel("I ate").fill("5");
+      await expectText(page.locator(".pot"), /That's more than the 4 portions it made\./, "can't eat more than the pot");
+      if (await page.getByRole("button", { name: "Log meal" }).isEnabled()) throw new Error("Log meal should wait for a possible share");
+      await page.getByLabel("I ate").fill("1");
+      await page.getByPlaceholder(/Oats, milk/).fill("Smoke test pot");
+      await audit(page, "today, a whole pot");
+      await page.getByRole("button", { name: "Log meal" }).click();
+      const pots = page.locator(".meal-list li").filter({ has: page.locator(".meal-name", { hasText: "Smoke test pot" }) });
+      await expectText(pots.first().locator(".meal-macros"), /^1 of 4 portions · /, "logged as one portion");
+      if (Math.abs(kcalIn(await pots.first().locator(".meal-macros").innerText()) - share) > 1) throw new Error("the logged portion isn't the share shown");
+      await expectText(pots.first().locator(".meal-ingredients"), /^Whole pot: oats 400 g · milk 1,?600 g/, "the pot's ingredients");
+      // The next portion: one tap.
+      await page.getByRole("button", { name: "Log Smoke test pot again" }).click();
+      await expectText(pots.nth(1).locator(".meal-macros"), /^1 of 4 portions · /, "the next portion");
+      // Hungrier the second time: two portions.
+      await page.getByRole("button", { name: "Edit Smoke test pot" }).last().click();
+      await page.getByLabel("I ate").fill("2");
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expectText(pots.nth(1).locator(".meal-macros"), /^2 of 4 portions · /, "two portions");
+    }],
     ["edit, undo, servings and an earlier day (D56)", async () => {
       // Edit: back into the form, filled in, and saved over.
       await page.getByRole("button", { name: "Edit Smoke test porridge" }).first().click();
