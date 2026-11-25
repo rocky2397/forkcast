@@ -170,6 +170,9 @@ _MEAL_LOG_ADDED = {
     "carbs_g": "REAL",
     "fat_g": "REAL",
     "servings": "REAL",  # D56: a cooked recipe eaten as more or less than one serving
+    # D74: a built meal that was a whole pot: how many portions it made, and how many were eaten.
+    "pot": "REAL",
+    "portions": "REAL",
 }
 
 

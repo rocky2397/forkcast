@@ -15,9 +15,9 @@ tells you what to buy to unlock more.
   recipes you can really cook: 65% → 92%. Suggested swaps a cook would use:
   33% → 95%. A typed German food within 10% of the calories on its pack:
   64% → 76%. [How the tests work](#evaluation)
-- **Decisions in writing.** 73 product decisions, each with the options turned
+- **Decisions in writing.** 74 product decisions, each with the options turned
   down and why ([APP_DECISIONS.md](APP_DECISIONS.md)).
-- **Built to ship.** 517 tests and a browser test of a first visit on every
+- **Built to ship.** 519 tests and a browser test of a first visit on every
   change, a check of the live demo after every deploy, and no serious
   accessibility problems on any screen.
 - **Built with AI.** Claude Code wrote most of the code; the product calls
@@ -172,7 +172,7 @@ ingredients. For a smoothie or a homemade sauce you add each ingredient and
 how much of it ("Haferflocken, 50 g", "banana, 1 medium") and Forkcast adds
 up the calories and macros.
 
-<p align="center"><img src="docs/screenshots/log-ingredients.jpg" width="300" alt="Building a meal on a phone: oats 50 g (181 kcal), milk 200 g (122 kcal) and one medium banana of 118 g (110 kcal), each naming the USDA food it uses, together 413 kcal, 14 g protein, 62 g carbs and 10 g fat, named Oat porridge"> <img src="docs/screenshots/add-to-meal.jpg" width="300" alt="Add to meal on a phone: chips for meals logged before (Oats with yogurt and honey, Dinner, Lunch, Breakfast); the oats meal, typed in as numbers earlier, as one row of 1 meal at 420 kcal, “Your numbers for the whole meal”; 30 g protein powder and a banana added; together 634 kcal and 43 g protein; named My usual breakfast, which then waits under Log again"></p>
+<p align="center"><img src="docs/screenshots/log-ingredients.jpg" width="300" alt="Building a meal on a phone: oats 50 g (181 kcal), milk 200 g (122 kcal) and one medium banana of 118 g (110 kcal), each naming the USDA food it uses, together 413 kcal, 14 g protein, 62 g carbs and 10 g fat, a link to split a whole pot into portions, named Oat porridge"> <img src="docs/screenshots/add-to-meal.jpg" width="300" alt="Add to meal on a phone: chips for meals logged before (Oats with yogurt and honey, Dinner, Lunch, Breakfast); the oats meal, typed in as numbers earlier, as one row of 1 meal at 420 kcal, “Your numbers for the whole meal”; 30 g protein powder and a banana added; together 634 kcal and 43 g protein; named My usual breakfast, which then waits under Log again"></p>
 
 The values per ingredient come from the USDA's food tables (FoodData
 Central), converted to EU labelling (carbs without fibre, as on a European
@@ -200,7 +200,10 @@ Meals you typed or built in the last month wait under "Log again", one tap
 each, and a starred one stays at the top: most people eat the same few
 breakfasts and snacks. "Add to meal" puts them together: a protein shake, a
 quark and an oat bowl logged on their own become one meal under a name of your
-own, with the totals added up, and that is one tap from then on.
+own, with the totals added up, and that is one tap from then on. Cooking for
+several days works the same way: enter everything that went into the pot once,
+say it made four portions and you ate one, and the meal counts a quarter; the
+next portion is one tap under "Log again".
 
 Logs can be fixed: a meal can be edited, a removed one comes back with Undo,
 a cooked recipe can count as half a serving or two, and "‹ Earlier" goes back
@@ -465,7 +468,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 517 pytest tests in about three seconds, offline and without the
+- **Tests:** 519 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -499,7 +502,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 73 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 74 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

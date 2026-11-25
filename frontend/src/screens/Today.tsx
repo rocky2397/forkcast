@@ -31,7 +31,19 @@ import { useGuide } from "../useGuide";
 import { BackIcon, CloseIcon, ScanIcon } from "../Icons";
 import { MealBuilder } from "./MealBuilder";
 import { LogAgain } from "./LogAgain";
-import { amountOf, asMealProduct, complete, defaultName, gramsOf, mealsText, productPart, wholeMealPart, wholeRow, type Part } from "../mealParts";
+import {
+  amountOf,
+  asMealProduct,
+  complete,
+  defaultName,
+  gramsOf,
+  mealsText,
+  productPart,
+  totalsOf,
+  wholeMealPart,
+  wholeRow,
+  type Part,
+} from "../mealParts";
 import { errorText } from "../LoadError";
 
 const GOAL_WORDS: Record<Profile["goal"], string> = {
@@ -132,6 +144,9 @@ function shiftDay(day: string, by: number): string {
 
 const SERVINGS = [0.5, 1, 1.5, 2, 3];
 const servingsText = (n: number) => `${n === 0.5 ? "½" : n === 1.5 ? "1½" : n} serving${n > 1 ? "s" : ""}`;
+/** D74: "1 of 4 portions", "½ of 6 portions". */
+const portionText = (ate: number, pot: number) => `${ate === 0.5 ? "½" : ate === 1.5 ? "1½" : ate} of ${pot} portions`;
+const num = (s: string) => Number(s.replace(",", "."));
 
 /** D56: a product row of a logged meal, back in the form to edit it. */
 function partFromLogged(i: MealIngredient): Part {
@@ -192,6 +207,8 @@ export function Today({
   const [mealError, setMealError] = useState<string | null>(null);
   // D73: something logged before went into this meal ("Add to meal").
   const [fromEarlier, setFromEarlier] = useState(false);
+  // D74: the ingredients are a whole pot: how many portions it made, how many you ate.
+  const [pot, setPot] = useState<{ made: string; ate: string } | null>(null);
   // D58: the calories-and-macros fields, behind a link, so the form opens on
   // one box rather than two that look alike.
   const [typing, setTyping] = useState(false);
@@ -266,6 +283,7 @@ export function Today({
           ...(ingredients.length > 0 && { ingredients }),
           ...(products.length > 0 && { products }),
           ...(fromEarlier && editingId === null && { source: "earlier" as const }),
+          ...(pot && { pot: num(pot.made), portions: num(pot.ate) }),
         };
       } else {
         body = {
@@ -288,12 +306,23 @@ export function Today({
     }
   }
 
-  const partsReady = parts.length > 0 && parts.every((p) => gramsOf(p) > 0);
+  // D74: a pot makes more than one portion, and you can't eat more than it made.
+  const potProblem = !pot
+    ? null
+    : !(num(pot.made) > 1)
+      ? "A pot makes more than one portion."
+      : !(num(pot.ate) > 0)
+        ? "Say how many portions you ate."
+        : num(pot.ate) > num(pot.made)
+          ? `That's more than the ${pot.made} portions it made.`
+          : null;
+  const partsReady = parts.length > 0 && parts.every((p) => gramsOf(p) > 0) && !potProblem;
 
   function closeForm() {
     setMeal(EMPTY_MEAL);
     setParts([]);
     setFromEarlier(false);
+    setPot(null);
     setAdding(false);
     setEditingId(null);
     setTyping(false);
@@ -333,7 +362,10 @@ export function Today({
   async function addEarlier(m: RecentMeal) {
     setMealError(null);
     try {
-      const rows = m.ingredients.length > 0 ? await partsOfLogged(m.ingredients) : [wholeMealPart(m)];
+      // D74: from a pot, only the share that meal was: 1 of 4 portions is a quarter of each ingredient.
+      const share = m.pot ? (m.portions ?? 1) / m.pot : 1;
+      const items = m.ingredients.map((i) => ({ ...i, grams: i.grams * share, meals: i.meals ? i.meals * share : i.meals }));
+      const rows = items.length > 0 ? await partsOfLogged(items) : [wholeMealPart(m)];
       setParts((ps) => [...ps, ...rows]);
       setFromEarlier(true);
       setTyping(false);
@@ -355,6 +387,7 @@ export function Today({
     closeForm();
     if (m.ingredients.length > 0) {
       setParts(await partsOfLogged(m.ingredients));
+      if (m.pot) setPot({ made: String(m.pot), ate: String(m.portions ?? 1) });
       setMeal({ ...EMPTY_MEAL, name: m.name ?? "" });
     } else {
       const v = (n: number | null) => (n == null ? "" : String(Math.round(n * 10) / 10));
@@ -564,7 +597,7 @@ export function Today({
             },
             {
               term: "Log a meal",
-              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference; beans and peas can also come from a can, drained. Each food starts at the amount you had last time, once you've logged it. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there. Add to meal puts one into a new meal with other things, under a name of your own: a usual breakfast becomes one tap.",
+              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference; beans and peas can also come from a can, drained. Each food starts at the amount you had last time, once you've logged it. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there. Add to meal puts one into a new meal with other things, under a name of your own: a usual breakfast becomes one tap. Cooked a whole pot? Add everything that went in, say how many portions it made and how many you ate; the next portion is one tap under Log again.",
             },
             {
               term: "Liked · Not for me",
@@ -765,6 +798,56 @@ export function Today({
                   )
                 }
               />
+              {parts.length > 0 &&
+                (pot ? (
+                  <fieldset className="pot">
+                    <legend>A whole pot</legend>
+                    <div className="pot-row">
+                      <label>
+                        It made
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="1"
+                          step="any"
+                          value={pot.made}
+                          onChange={(e) => setPot({ ...pot, made: e.target.value })}
+                        />
+                        portions
+                      </label>
+                      <label>
+                        I ate
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          step="any"
+                          value={pot.ate}
+                          onChange={(e) => setPot({ ...pot, ate: e.target.value })}
+                        />
+                      </label>
+                    </div>
+                    {potProblem ? (
+                      <p className="field-hint">{potProblem}</p>
+                    ) : (
+                      <p className="field-hint pot-share">
+                        {(() => {
+                          const t = totalsOf(parts);
+                          const f = num(pot.ate) / num(pot.made);
+                          return `Your share: ${fmt(t.calories * f)} kcal · ${fmt(t.protein_g * f)} g protein · ${fmt(t.carbs_g * f)} g carbs · ${fmt(t.fat_g * f)} g fat. `;
+                        })()}
+                        Log the next portion under Log again, one tap.
+                      </p>
+                    )}
+                    <button type="button" className="link-button" onClick={() => setPot(null)}>
+                      I ate all of it
+                    </button>
+                  </fieldset>
+                ) : (
+                  <button type="button" className="link-button pot-open" onClick={() => setPot({ made: "4", ate: "1" })}>
+                    Cooked a whole pot? Split it into portions
+                  </button>
+                ))}
               {parts.length === 0 && !typing && (
                 <button type="button" className="link-button type-numbers" onClick={() => setTyping(true)}>
                   Or type the calories yourself
@@ -842,11 +925,13 @@ export function Today({
                   </span>
                   <span className="meal-macros">
                     {m.servings != null && `${servingsText(m.servings)} · `}
+                    {m.pot != null && `${portionText(m.portions ?? 1, m.pot)} · `}
                     {fmt(m.calories ?? 0)} kcal · {fmt(m.protein_g ?? 0)} g protein · {fmt(m.carbs_g ?? 0)} g carbs ·{" "}
                     {fmt(m.fat_g ?? 0)} g fat
                   </span>
                   {m.ingredients.length > 0 && (
                     <span className="meal-ingredients">
+                      {m.pot != null && "Whole pot: "}
                       {m.ingredients
                         .map((i) =>
                           i.meals

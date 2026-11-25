@@ -200,6 +200,9 @@ export interface DayMeal {
   rate_note: string | null;
   /** D56: a cooked recipe eaten as more or less than one serving; null for one. */
   servings: number | null;
+  /** D74: a built meal that was a whole pot: the portions it made and how many were eaten. */
+  pot: number | null;
+  portions: number | null;
 }
 
 /** D56: a deleted meal as the server gave it back, to restore with Undo. */
@@ -215,6 +218,9 @@ export type MealIn =
       logged_at?: string;
       /** D73: put together from meals logged before; counted for the demo's usage page. */
       source?: "earlier";
+      /** D74: the ingredients are a pot that made this many portions; `portions` were eaten. */
+      pot?: number;
+      portions?: number;
     };
 
 export interface MealIngredient {
@@ -317,6 +323,9 @@ export interface RecentMeal {
   carbs_g: number;
   fat_g: number;
   ingredients: MealIngredient[];
+  /** D74: a pot: the portions it made and how many this meal was. */
+  pot?: number | null;
+  portions?: number | null;
 }
 
 export interface DaySummary {
