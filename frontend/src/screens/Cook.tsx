@@ -3,6 +3,7 @@ import { api, isDemo, scansOn, type CookableRecipe, type DaySummary, type MacroF
 import { CookingCard } from "../CookingCard";
 import { mealOfDay } from "../format";
 import { ScanIcon } from "../Icons";
+import { InstallHint } from "../InstallHint";
 import { errorText } from "../LoadError";
 import { RecipeCard } from "./Recipes";
 
@@ -150,6 +151,8 @@ export function Cook({
           Log it
         </button>
       </p>
+
+      <InstallHint />
     </div>
   );
 }

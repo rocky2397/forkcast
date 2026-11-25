@@ -31,7 +31,8 @@ import { useGuide } from "../useGuide";
 import { BackIcon, CloseIcon, ScanIcon } from "../Icons";
 import { MealBuilder } from "./MealBuilder";
 import { LogAgain } from "./LogAgain";
-import { amountOf, asMealProduct, complete, defaultName, gramsOf, productPart, type Part } from "../mealParts";
+import { amountOf, asMealProduct, complete, defaultName, gramsOf, mealsText, productPart, wholeMealPart, wholeRow, type Part } from "../mealParts";
+import { errorText } from "../LoadError";
 
 const GOAL_WORDS: Record<Profile["goal"], string> = {
   cut: "losing fat",
@@ -135,6 +136,8 @@ const servingsText = (n: number) => `${n === 0.5 ? "½" : n === 1.5 ? "1½" : n}
 /** D56: a product row of a logged meal, back in the form to edit it. */
 function partFromLogged(i: MealIngredient): Part {
   const v = i.per_100g ?? { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 };
+  // D73: a meal typed as numbers that joined this one whole.
+  if (i.meals) return wholeRow(i.name, v, i.grams / i.meals, i.meals);
   const part = productPart(
     {
       barcode: i.barcode ?? null, name: i.name, brand: null, source: "openfoodfacts",
@@ -143,6 +146,20 @@ function partFromLogged(i: MealIngredient): Part {
     String(i.grams),
   );
   return { ...part, product: { barcode: i.barcode ?? null, source: "logged" } };
+}
+
+/** D56: a logged meal's ingredients and products, back as rows to change.
+ *  D73: also how an earlier meal joins a new one ("Add to meal"). */
+async function partsOfLogged(items: MealIngredient[]): Promise<Part[]> {
+  return Promise.all(
+    items.map(async (i): Promise<Part> => {
+      if (i.product || !i.canonical) return partFromLogged(i);
+      const { food } = await api.foodByKey(i.canonical);
+      const canned = Boolean(i.canned && food.canned);
+      const form = canned && food.canned ? food.canned : i.cooked && food.cooked ? food.cooked : food;
+      return { food, ...amountOf(i.grams, form.portions), cooked: i.cooked, canned };
+    }),
+  );
 }
 
 function mealTime(m: DayMeal): string {
@@ -173,6 +190,8 @@ export function Today({
   // D49: a meal built from ingredients and amounts instead of typed numbers.
   const [parts, setParts] = useState<Part[]>([]);
   const [mealError, setMealError] = useState<string | null>(null);
+  // D73: something logged before went into this meal ("Add to meal").
+  const [fromEarlier, setFromEarlier] = useState(false);
   // D58: the calories-and-macros fields, behind a link, so the form opens on
   // one box rather than two that look alike.
   const [typing, setTyping] = useState(false);
@@ -246,6 +265,7 @@ export function Today({
           name: meal.name.trim() || defaultName(parts),
           ...(ingredients.length > 0 && { ingredients }),
           ...(products.length > 0 && { products }),
+          ...(fromEarlier && editingId === null && { source: "earlier" as const }),
         };
       } else {
         body = {
@@ -273,6 +293,7 @@ export function Today({
   function closeForm() {
     setMeal(EMPTY_MEAL);
     setParts([]);
+    setFromEarlier(false);
     setAdding(false);
     setEditingId(null);
     setTyping(false);
@@ -306,20 +327,34 @@ export function Today({
     await refresh();
   }
 
+  /** D73: a meal logged before joins the one being built: its ingredients and
+   *  products as rows, at the amounts you had, or one row for a meal typed in as
+   *  numbers. The totals add up as for any built meal. */
+  async function addEarlier(m: RecentMeal) {
+    setMealError(null);
+    try {
+      const rows = m.ingredients.length > 0 ? await partsOfLogged(m.ingredients) : [wholeMealPart(m)];
+      setParts((ps) => [...ps, ...rows]);
+      setFromEarlier(true);
+      setTyping(false);
+    } catch (e) {
+      setMealError(errorText(e));
+    }
+  }
+
+  /** D73: "Add to meal" on Log again: a new meal, starting with that one. */
+  async function startFromEarlier(m: RecentMeal) {
+    closeForm();
+    setAdding(true);
+    await addEarlier(m);
+    requestAnimationFrame(() => document.querySelector(".meal-form")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  }
+
   /** D56: back into the form, filled in, to change and save over. */
   async function startEdit(m: DayMeal) {
     closeForm();
     if (m.ingredients.length > 0) {
-      const rows = await Promise.all(
-        m.ingredients.map(async (i): Promise<Part> => {
-          if (i.product || !i.canonical) return partFromLogged(i);
-          const { food } = await api.foodByKey(i.canonical);
-          const canned = Boolean(i.canned && food.canned);
-          const form = canned && food.canned ? food.canned : i.cooked && food.cooked ? food.cooked : food;
-          return { food, ...amountOf(i.grams, form.portions), cooked: i.cooked, canned };
-        }),
-      );
-      setParts(rows);
+      setParts(await partsOfLogged(m.ingredients));
       setMeal({ ...EMPTY_MEAL, name: m.name ?? "" });
     } else {
       const v = (n: number | null) => (n == null ? "" : String(Math.round(n * 10) / 10));
@@ -529,7 +564,7 @@ export function Today({
             },
             {
               term: "Log a meal",
-              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference; beans and peas can also come from a can, drained. Each food starts at the amount you had last time, once you've logged it. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there.",
+              text: "Three ways: scan a barcode or a nutrition label, add the ingredients with how much of each, or type the numbers. A scanned product goes into the ingredient list, so skyr from a pack and a banana make one meal. Ingredient values are per 100 g from the USDA's food tables; each ingredient says which USDA food it used. Rice, pasta and beans can be weighed dry or cooked, which makes a big difference; beans and peas can also come from a can, drained. Each food starts at the amount you had last time, once you've logged it. Meals you typed or built in the last month wait under Log again, one tap each; star one to keep it there. Add to meal puts one into a new meal with other things, under a name of your own: a usual breakfast becomes one tap.",
             },
             {
               term: "Liked · Not for me",
@@ -584,7 +619,9 @@ export function Today({
                 : `Nothing logged on ${short}. Log what you ate that day.`}
             </p>
           )}
-          {!adding && <LogAgain meals={recent} onChange={() => refresh()} loggedAt={loggedAt} />}
+          {!adding && (
+            <LogAgain meals={recent} onChange={() => refresh()} onAddToMeal={startFromEarlier} loggedAt={loggedAt} />
+          )}
           {adding ? (
             <form
               className="meal-form"
@@ -705,6 +742,28 @@ export function Today({
                 parts={parts}
                 onChange={setParts}
                 onDish={(dish) => setMeal((m) => (m.name.trim() ? m : { ...m, name: dish }))}
+                more={
+                  // D73: meals logged before, to put together into this one.
+                  recent.length > 0 &&
+                  !typing && (
+                    <div className="earlier">
+                      <p className="field-hint">Or add something you logged before:</p>
+                      <div className="suggest-chips">
+                        {recent.map((m) => (
+                          <button
+                            key={m.meal_id}
+                            type="button"
+                            className="suggest-chip earlier-chip"
+                            aria-label={`Add ${m.name} to this meal`}
+                            onClick={() => addEarlier(m)}
+                          >
+                            + {m.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                }
               />
               {parts.length === 0 && !typing && (
                 <button type="button" className="link-button type-numbers" onClick={() => setTyping(true)}>
@@ -720,6 +779,11 @@ export function Today({
                   onChange={(e) => setMeal({ ...meal, name: e.target.value })}
                 />
               </label>
+              )}
+              {parts.length > 0 && fromEarlier && editingId === null && (
+                <p className="field-hint">
+                  It waits under Log again by this name, one tap next time. Star it there to keep it at the top.
+                </p>
               )}
               {parts.length === 0 && typing && (
               <div className="meal-form-grid">
@@ -784,7 +848,11 @@ export function Today({
                   {m.ingredients.length > 0 && (
                     <span className="meal-ingredients">
                       {m.ingredients
-                        .map((i) => `${i.name} ${fmt(i.grams)} g${i.cooked ? " cooked" : i.canned ? " canned" : ""}`)
+                        .map((i) =>
+                          i.meals
+                            ? `${i.name}, ${mealsText(i.meals)}`
+                            : `${i.name} ${fmt(i.grams)} g${i.cooked ? " cooked" : i.canned ? " canned" : ""}`,
+                        )
                         .join(" · ")}
                     </span>
                   )}

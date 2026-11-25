@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import { api, type Food, type FoodLookup, type LinePart } from "../api";
 import { CloseIcon } from "../Icons";
 import { amountOf, cap, formOf, gramsOf, partTotals, totalsOf, unitLabel, type Part } from "../mealParts";
@@ -10,6 +10,7 @@ const PRODUCT_SOURCE = {
   label: "read from the label",
   saved: "saved from your earlier scan",
   logged: "as you logged it", // D56: editing a logged meal
+  typed: "", // D73: a meal typed in as numbers; its row says so itself
 } as const;
 
 /** D54: what you had last time; else the food's usual portion (D60: 1 medium
@@ -52,11 +53,14 @@ export function MealBuilder({
   parts,
   onChange,
   onDish,
+  more,
 }: {
   parts: Part[];
   onChange: (parts: Part[]) => void;
   /** D62: a line that was only a dish ("Cappuccino") names the meal. */
   onDish?: (name: string) => void;
+  /** D73: other ways to add, under the ingredient box (meals logged before). */
+  more?: ReactNode;
 }) {
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
@@ -151,12 +155,14 @@ export function MealBuilder({
           )}
         </p>
       )}
+      {more}
 
       {parts.length > 0 && (
         <ul className="builder-list">
           {parts.map((p, i) => {
             const form = formOf(p);
             const t = partTotals(p);
+            const whole = p.product?.source === "typed"; // D73: counted in whole meals only
             // D65: a dish's note heads its own rows, not the whole list.
             const firstOfDish = p.dish && parts[i - 1]?.dish !== p.dish;
             return (
@@ -194,10 +200,10 @@ export function MealBuilder({
                     value={p.unit}
                     onChange={(e) => update(i, { unit: Number(e.target.value) })}
                   >
-                    <option value={-1}>g</option>
+                    {!whole && <option value={-1}>g</option>}
                     {form.portions.map((o, k) => (
                       <option key={o.label} value={k}>
-                        {unitLabel(o.label, o.grams)}
+                        {whole ? "× meal" : unitLabel(o.label, o.grams)}
                       </option>
                     ))}
                   </select>
@@ -233,7 +239,7 @@ export function MealBuilder({
                 </div>
                 {p.fromLast && <span className="builder-last">Same as last time. Change it to what you had.</span>}
                 {/* D60: "10" next to "× tbsp" is often 10 g meant; say what it is and offer grams. */}
-                {p.unit >= 0 && Number(p.amount.replace(",", ".")) >= 10 && (
+                {!whole && p.unit >= 0 && Number(p.amount.replace(",", ".")) >= 10 && (
                   <span className="builder-last">
                     That's {fmt(gramsOf(p))} g.{" "}
                     <button type="button" className="link-button" onClick={() => update(i, { unit: -1 })}>
@@ -242,7 +248,9 @@ export function MealBuilder({
                   </span>
                 )}
                 <span className="builder-source">
-                  {p.product ? (
+                  {whole ? (
+                    "Your numbers for the whole meal"
+                  ) : p.product ? (
                     `Per 100 g ${PRODUCT_SOURCE[p.product.source]}`
                   ) : (
                     <>

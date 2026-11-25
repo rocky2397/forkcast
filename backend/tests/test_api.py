@@ -744,6 +744,42 @@ def test_logging_again_and_deleting_carry_the_products(foods_client, db):
     assert db.execute("SELECT COUNT(*) FROM meal_products").fetchone()[0] == 0
 
 
+# D73: earlier meals put together into a new one ("Add to meal").
+
+# "Oats with honey", typed as 420 kcal: one meal is a 100 g stand-in row.
+OATS_MEAL = {"name": "Oats with honey", "barcode": None, "grams": 100, "calories_100g": 420,
+             "protein_g_100g": 12, "carbs_g_100g": 70, "fat_g_100g": 9, "meals": 1}
+
+
+def test_a_typed_meal_joins_whole_and_stays_whole(foods_client, db):
+    first = foods_client.post("/api/meals", json={
+        "name": "My breakfast", "source": "earlier",
+        "ingredients": [{"canonical": "banana", "grams": 118}],
+        "products": [{**OATS_MEAL, "grams": 150, "meals": 1.5}],
+    }).json()
+    assert first["calories"] == round(KCAL["banana"] * 1.18 + 420 * 1.5, 1)
+    row = foods_client.get("/api/day").json()["meals"][0]["ingredients"][1]
+    assert (row["name"], row["meals"], row["product"]) == ("Oats with honey", 1.5, True)
+    # Its name says nothing sure about what's in it, so it teaches no taste.
+    assert db.execute("SELECT canonical FROM meal_products").fetchone()[0] is None
+    # Log again and Undo keep it whole.
+    again = foods_client.post(f"/api/meals/{first['meal_log_id']}/again").json()["meal_log_id"]
+    snapshot = foods_client.delete(f"/api/meals/{again}").json()["meal"]
+    assert snapshot["products"][0]["meals"] == 1.5
+    assert foods_client.post("/api/meals/restore", json=snapshot).status_code == 200
+    rows = [m["ingredients"][1]["meals"] for m in foods_client.get("/api/day").json()["meals"]]
+    assert rows == [1.5, 1.5]
+    # A product from a scan isn't one.
+    foods_client.post("/api/meals", json={"name": "Skyr", "products": [{**SKYR, "grams": 150}]})
+    assert db.execute("SELECT meals FROM meal_products WHERE name = 'Skyr Natur'").fetchone()[0] is None
+
+
+def test_earlier_meals_can_bring_up_to_twenty_products(foods_client):
+    many = [{**SKYR, "grams": 10}] * 20
+    assert foods_client.post("/api/meals", json={"name": "Lots", "products": many}).status_code == 200
+    assert foods_client.post("/api/meals", json={"name": "Too many", "products": many + many[:1]}).status_code == 422
+
+
 # D52: serving and pack sizes from Open Food Facts.
 
 @pytest.mark.parametrize("value, unit, expected", [

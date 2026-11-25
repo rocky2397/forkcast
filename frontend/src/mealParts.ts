@@ -12,7 +12,8 @@ export interface Part {
   /** D64: from a can, drained (beans, peas); wins over cooked. */
   canned?: boolean;
   /** D51: a scanned product, with where its values came from. */
-  product?: { barcode: string | null; source: Product["source"] | "logged" };
+  /** D73 "typed": a meal typed in as numbers, joining as one row counted in whole meals. */
+  product?: { barcode: string | null; source: Product["source"] | "logged" | "typed" };
   /** D62: the dish this row is a typical share of ("Döner"), for the note above its rows. */
   dish?: string;
   /** D54: the amount is the one from last time, untouched so far. */
@@ -65,6 +66,43 @@ export function productPart(p: Product, grams: string): Part {
   return { food, amount: grams, unit: -1, cooked: false, product, fromLast };
 }
 
+/** D73: a meal typed in as numbers, as one row of a meal being built, counted
+ *  in whole meals. The server stores rows as grams and values per 100 g, so the
+ *  meal gets a stand-in weight: 100 g, or more when its numbers would be more
+ *  than any real food has per 100 g (900 kcal, 100 g of a macro). The row also
+ *  says how many meals it is, so nobody is shown the stand-in grams. */
+export function wholeMealPart(m: { name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number }): Part {
+  const grams = Math.ceil(100 * Math.max(1, m.calories / 900, m.protein_g / 100, m.carbs_g / 100, m.fat_g / 100));
+  const per = (v: number) => (v * 100) / grams;
+  return wholeRow(
+    m.name,
+    { calories: per(m.calories), protein_g: per(m.protein_g), carbs_g: per(m.carbs_g), fat_g: per(m.fat_g) },
+    grams,
+    1,
+  );
+}
+
+/** D73: the same row from a logged meal: its values per 100 g, its stand-in weight for one meal, how many. */
+export function wholeRow(name: string, per_100g: Food["per_100g"], gramsPerMeal: number, meals: number): Part {
+  const food: Food = {
+    canonical: "",
+    name: name.slice(0, 120), // the server's limit for a product row's name
+    checked: true,
+    usda: "",
+    fdc_id: 0,
+    per_100g,
+    portions: [{ label: "1 meal", grams: gramsPerMeal }],
+    cooked: null,
+  };
+  return { food, amount: String(meals), unit: 0, cooked: false, product: { barcode: null, source: "typed" } };
+}
+
+/** D73: "1 meal", "½ meal", "2 meals". */
+export function mealsText(n: number): string {
+  const amount = n === 0.5 ? "½" : String(Math.round(n * 100) / 100);
+  return `${amount} meal${n > 1 ? "s" : ""}`;
+}
+
 /** What the server is sent for a product row. */
 export function asMealProduct(p: Part): MealProduct {
   const v = p.food.per_100g;
@@ -76,6 +114,7 @@ export function asMealProduct(p: Part): MealProduct {
     protein_g_100g: v.protein_g,
     carbs_g_100g: v.carbs_g,
     fat_g_100g: v.fat_g,
+    ...(p.product?.source === "typed" && { meals: Number(p.amount.replace(",", ".")) || 0 }),
   };
 }
 

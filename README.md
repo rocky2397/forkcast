@@ -8,15 +8,16 @@ tells you what to buy to unlock more.
 **At a glance**
 
 - **Live, with testers.** The [demo](https://rockyyyy2397-forkcast.hf.space)
-  has been online since November 2026. Clearer scan messages and meals built
-  from ingredients came straight from a tester's requests.
+  has been online since November 2026. Clearer scan messages, meals built
+  from ingredients and earlier meals put together into one came straight from
+  a tester's requests.
 - **Measured, not assumed.** Eight tests on data from outside the app. Listed
   recipes you can really cook: 65% → 92%. Suggested swaps a cook would use:
   33% → 95%. A typed German food within 10% of the calories on its pack:
   64% → 76%. [How the tests work](#evaluation)
-- **Decisions in writing.** 72 product decisions, each with the options turned
+- **Decisions in writing.** 73 product decisions, each with the options turned
   down and why ([APP_DECISIONS.md](APP_DECISIONS.md)).
-- **Built to ship.** 514 tests and a browser test of a first visit on every
+- **Built to ship.** 517 tests and a browser test of a first visit on every
   change, a check of the live demo after every deploy, and no serious
   accessibility problems on any screen.
 - **Built with AI.** Claude Code wrote most of the code; the product calls
@@ -28,8 +29,9 @@ week), set up your own profile and start with an empty day. It is private to
 you and saved for your browser, so it is still there when you come back. It is deleted 30 days after your last visit,
 or at once with "Delete my data". Photo and label scanning work there too, up
 to 10 scans a day. After two days without visitors the server sleeps, and the
-next visit takes about a minute while it wakes up. Usage is counted only as
-[anonymous totals](https://rockyyyy2397-forkcast.hf.space/stats).
+next visit takes about a minute while it wakes up. On a phone it can go on the
+home screen and then opens full screen, like any app; Cook says how. Usage is
+counted only as [anonymous totals](https://rockyyyy2397-forkcast.hf.space/stats).
 
 <p align="center"><img src="docs/screenshots/demo.gif" width="300" alt="A 40-second walkthrough on a phone: the welcome (what you get, three steps a day, the profile typed in, and the day it gives: calories and protein), the meal picks on Cook, adding avocado and lime to the kitchen, the recipe list naming the cooked dish each recipe is like, its help panel explaining the coloured dots, a recipe one ingredient away that suggests red onion for the missing shallot, "I'm cooking this" and cook mode one step at a time, and the Progress screen with the recipe pinned and calories and macros left"></p>
 
@@ -170,7 +172,7 @@ ingredients. For a smoothie or a homemade sauce you add each ingredient and
 how much of it ("Haferflocken, 50 g", "banana, 1 medium") and Forkcast adds
 up the calories and macros.
 
-<p align="center"><img src="docs/screenshots/log-ingredients.jpg" width="300" alt="Building a meal on a phone: oats 50 g (181 kcal), milk 200 g (122 kcal) and one medium banana of 118 g (110 kcal), each naming the USDA food it uses, together 413 kcal, 14 g protein, 62 g carbs and 10 g fat, named Oat porridge"></p>
+<p align="center"><img src="docs/screenshots/log-ingredients.jpg" width="300" alt="Building a meal on a phone: oats 50 g (181 kcal), milk 200 g (122 kcal) and one medium banana of 118 g (110 kcal), each naming the USDA food it uses, together 413 kcal, 14 g protein, 62 g carbs and 10 g fat, named Oat porridge"> <img src="docs/screenshots/add-to-meal.jpg" width="300" alt="Add to meal on a phone: chips for meals logged before (Oats with yogurt and honey, Dinner, Lunch, Breakfast); the oats meal, typed in as numbers earlier, as one row of 1 meal at 420 kcal, “Your numbers for the whole meal”; 30 g protein powder and a banana added; together 634 kcal and 43 g protein; named My usual breakfast, which then waits under Log again"></p>
 
 The values per ingredient come from the USDA's food tables (FoodData
 Central), converted to EU labelling (carbs without fibre, as on a European
@@ -196,7 +198,9 @@ why.
 
 Meals you typed or built in the last month wait under "Log again", one tap
 each, and a starred one stays at the top: most people eat the same few
-breakfasts and snacks.
+breakfasts and snacks. "Add to meal" puts them together: a protein shake, a
+quark and an oat bowl logged on their own become one meal under a name of your
+own, with the totals added up, and that is one tap from then on.
 
 Logs can be fixed: a meal can be edited, a removed one comes back with Undo,
 a cooked recipe can count as half a serving or two, and "‹ Earlier" goes back
@@ -461,7 +465,7 @@ hard for any method. Details:
 - **Corpus:** 87,861 recipes and ~794k ingredient rows, with per-serving
   nutrition.
 - **Vision cost:** about $0.005 per Haiku scan. Barcode lookups cost nothing.
-- **Tests:** 514 pytest tests in about three seconds, offline and without the
+- **Tests:** 517 pytest tests in about three seconds, offline and without the
   corpus, frontend lint and build, and a browser smoke test of a first visit,
   all in CI. 55 of the pytest tests need the Epicure weights; CI caches them and
   fails rather than skip those tests.
@@ -495,7 +499,7 @@ current screens have none.
 ## Design decisions
 
 Every non-obvious choice is logged with its alternatives and why they were
-rejected: 72 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
+rejected: 73 decisions in [`APP_DECISIONS.md`](APP_DECISIONS.md).
 [`EPICURE_PAPER_NOTES.md`](EPICURE_PAPER_NOTES.md) covers what the embeddings
 can and cannot do. A few that shaped the app:
 

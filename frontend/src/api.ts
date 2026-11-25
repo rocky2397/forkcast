@@ -213,6 +213,8 @@ export type MealIn =
       ingredients?: { canonical: string; grams: number; cooked: boolean; canned?: boolean }[];
       products?: MealProduct[];
       logged_at?: string;
+      /** D73: put together from meals logged before; counted for the demo's usage page. */
+      source?: "earlier";
     };
 
 export interface MealIngredient {
@@ -227,6 +229,8 @@ export interface MealIngredient {
   product: boolean;
   /** D56: a product's barcode and values per 100 g, to edit the meal again. */
   barcode?: string | null;
+  /** D73: a meal typed in as numbers, joined whole: how many of it (grams are only a stand-in). */
+  meals?: number | null;
   per_100g?: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
 }
 
@@ -239,6 +243,8 @@ export interface MealProduct {
   protein_g_100g: number;
   carbs_g_100g: number;
   fat_g_100g: number;
+  /** D73: a meal typed in as numbers, joined whole: how many of it. */
+  meals?: number;
 }
 
 /** D49: one food's USDA values, per 100 g. */
@@ -503,8 +509,9 @@ export const api = {
     usageStats = Boolean(s.stats);
     return s;
   },
-  /** D68: a first-visit step only the browser sees, for the demo's anonymous funnel. */
-  step: (name: "welcome_finished") => {
+  /** D68: a first-visit step only the browser sees, for the demo's anonymous funnel;
+   *  D73: and opening it from the home screen, or installing it. */
+  step: (name: "welcome_finished" | "opened_from_home_screen" | "app_installed") => {
     if (!demo || !usageStats) return;
     req("/api/stats/step", {
       method: "POST",

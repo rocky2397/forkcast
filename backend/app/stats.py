@@ -46,9 +46,12 @@ FUNNEL = ("visited", "welcomed", "profiled", "picks", "added", "opened", "cooked
 STAGE_FROM = {"welcomed": "2026-11-22", "profiled": "2026-11-22", "picks": "2026-11-22"}
 # Steps only the browser sees, which it reports by name (POST /api/stats/step).
 STEPS = {"welcome_finished": "welcomed"}
+# D73: other things only the browser sees, counted as plain events.
+BROWSER_EVENTS = frozenset({"opened_from_home_screen", "app_installed"})
 EVENTS = frozenset({
     "welcome_finished", "sample_profile_used", "picks_seen", "sample_fridge_used", "kitchen_fixed_on_recipe",
     "list_added_ran_out", "list_added_missing", "list_added_worth_buying", "list_added_typed", "list_bought",
+    "meal_from_earlier", "opened_from_home_screen", "app_installed",
     "ingredient_added", "ingredient_removed",
     "recipe_opened", "recipe_cooked",
     "rated_liked", "rated_not_for_me", "rating_cleared",

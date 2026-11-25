@@ -541,6 +541,40 @@ async function run(page) {
       const copy = page.locator(".meal-list li").filter({ hasText: "Smoke test porridge" }).last();
       await expectText(copy.locator(".meal-ingredients"), /oats 50 g · milk 200 g · banana 118 g/, "with its ingredients");
     }],
+    ["put earlier meals together: Add to meal (D73)", async () => {
+      // A tester's ask: reuse meals logged before as parts of a new one, named, with the totals added up.
+      const kcalOf = async (name) =>
+        Number((await page.locator(".again-item").filter({ hasText: name }).locator(".again-kcal").innerText()).replace(/\D/g, ""));
+      const porridge = await kcalOf("Smoke test porridge");
+      const salad = await kcalOf("Smoke test salad");
+      await page.getByRole("button", { name: "Add Smoke test porridge to a new meal" }).click();
+      await page.getByLabel("How much oats").waitFor(); // a built meal comes back as its ingredients
+      // A meal typed in as numbers joins as one row, counted in whole meals.
+      await page.getByRole("button", { name: "Add Smoke test salad to this meal" }).click();
+      const whole = page.locator(".builder-item").filter({ hasText: "Your numbers for the whole meal" });
+      await expectText(whole, /Smoke test salad[\s\S]*420 kcal/, "the typed meal as one row");
+      const total = await expectText(page.locator(".builder-total"), /Together: [\d,]+ kcal/, "totals");
+      const sum = Number(total.match(/Together: ([\d,]+) kcal/)[1].replace(",", ""));
+      if (Math.abs(sum - (porridge + salad)) > 1) throw new Error(`together ${sum} kcal, expected ${porridge + salad}`);
+      await page.getByPlaceholder(/Oats, milk, banana/).fill("Smoke test breakfast");
+      await expectText(page.locator(".meal-form"), /It waits under Log again by this name/, "where it goes");
+      await audit(page, "today, add to meal");
+      await page.getByRole("button", { name: "Log meal" }).click();
+      const logged = page.locator(".meal-list li").filter({ hasText: "Smoke test breakfast" });
+      await expectText(logged.locator(".meal-macros"), new RegExp(`${sum.toLocaleString("en")} kcal`), "logged with the sum");
+      await expectText(page.locator(".again-item").first(), /Smoke test salad/, "the star still on top");
+      await expectText(page.locator(".again"), /Smoke test breakfast/, "and it waits under Log again");
+      // The typed meal is listed as a meal, not as the stand-in grams that carry its numbers, and stays one when edited.
+      await expectText(logged.locator(".meal-ingredients"), /Smoke test salad, 1 meal$/, "listed as one meal");
+      await page.getByRole("button", { name: "Edit Smoke test breakfast" }).click();
+      await expectText(page.locator(".builder-item").filter({ hasText: "Your numbers for the whole meal" }), /Smoke test salad/, "whole when edited");
+      await page.getByRole("button", { name: "Cancel" }).click();
+      // Half the typed meal is half its calories.
+      await page.getByRole("button", { name: "Add Smoke test salad to a new meal" }).click();
+      await page.getByLabel("How much Smoke test salad").fill("0.5");
+      await expectText(page.locator(".builder-total"), /Together: 210 kcal/, "half a typed meal");
+      await page.getByRole("button", { name: "Cancel" }).click();
+    }],
     ["edit, undo, servings and an earlier day (D56)", async () => {
       // Edit: back into the form, filled in, and saved over.
       await page.getByRole("button", { name: "Edit Smoke test porridge" }).first().click();
@@ -552,7 +586,9 @@ async function run(page) {
       await page.getByRole("button", { name: "Remove Smoke test salad" }).click();
       await expectText(page.locator(".undo-bar"), /Removed Smoke test salad\./, "undo bar");
       // D66: a second removal joins the first; Undo puts both back.
-      await page.locator(".meal-list li").filter({ hasText: "Smoke test salad" }).waitFor({ state: "detached" });
+      // By name: since D73 a meal can hold another ("Smoke test breakfast" has the salad in it).
+      await page.locator(".meal-list li").filter({ has: page.locator(".meal-name", { hasText: "Smoke test salad" }) })
+        .waitFor({ state: "detached" });
       const before = await page.locator(".meal-list li").count();
       await page.getByRole("button", { name: "Remove Smoke test porridge" }).first().click();
       await expectText(page.locator(".undo-bar"), /Removed 2 meals\./, "undo bar for two");
@@ -708,6 +744,36 @@ async function run(page) {
       await page.locator(".kitchen-group").first().waitFor();
       for (const path of blocked) expectedErrors.delete(path);
       await tab(page, "Today").click();
+    }],
+    ["the home-screen hint (D73)", async () => {
+      const browser = page.context().browser();
+      const open = async (options) => {
+        const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block", ...options });
+        const p = await ctx.newPage();
+        p.on("pageerror", (e) => problems.push(`JavaScript error (D73 hint): ${e.message}`));
+        return [ctx, p];
+      };
+      // An iPhone never offers to install: the hint says how.
+      const [phone, p] = await open({
+        userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+      });
+      await p.goto(base);
+      await expectText(p.locator(".install-hint"), /Tap Share, then Add to Home Screen/, "the iPhone steps");
+      await audit(p, "cook, home-screen hint");
+      await p.getByRole("button", { name: "Hide this" }).click();
+      await p.reload();
+      await p.getByRole("heading", { name: /What's for/ }).waitFor();
+      if (await p.locator(".install-hint").count()) throw new Error("Hide this should keep the hint away");
+      await phone.close();
+      // Inside another site's page (the Hugging Face page frames the demo), it can't be installed.
+      const [desk, f] = await open({});
+      await f.setContent(`<iframe title="Forkcast" src="${base}" style="width:390px;height:844px"></iframe>`);
+      const framed = f.frameLocator("iframe");
+      await expectText(framed.locator(".install-hint"), /can't be installed/, "the frame says to open it on its own");
+      if (!(await framed.getByRole("link", { name: "Open Forkcast on its own" }).getAttribute("href")).startsWith(base)) {
+        throw new Error("the link should open Forkcast itself");
+      }
+      await desk.close();
     }],
     ["everything is still there after a reload", async () => {
       await page.reload();
